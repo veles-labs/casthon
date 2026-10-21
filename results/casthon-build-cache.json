@@ -1,0 +1,135 @@
+{
+  "date": "2026-10-16",
+  "name": "MicroPython build caching and project interpreter pin",
+  "configuration": {
+    "table": "tool.casthon",
+    "micropython": "1.29.0",
+    "newProjectPinTested": true
+  },
+  "runtimeColdSeconds": 9.458,
+  "benchmarks": [
+    {
+      "case": "unchanged",
+      "seconds": 1.768,
+      "cachedArtifact": true,
+      "ccLines": [],
+      "sha256": "b864ad936e8e1eaac9af7aad53561df75267d0b88da9c041356c7f00d4910e4a",
+      "runtimeProfile": "444893d3174d646d03d7b48125d55d0bb76a3e60f17381f25cb781a3cb41556f"
+    },
+    {
+      "case": "new-project",
+      "seconds": 5.095,
+      "cachedArtifact": false,
+      "ccLines": [
+        "CC /Users/michal/Dev/cspr-py/.cache/cache-poc-yb8r09zl/token/build/counter/vm/frozen_content.c"
+      ],
+      "sha256": "b864ad936e8e1eaac9af7aad53561df75267d0b88da9c041356c7f00d4910e4a",
+      "runtimeProfile": "444893d3174d646d03d7b48125d55d0bb76a3e60f17381f25cb781a3cb41556f"
+    },
+    {
+      "case": "contract-edit",
+      "seconds": 4.745,
+      "cachedArtifact": false,
+      "ccLines": [
+        "CC /Users/michal/Dev/cspr-py/.cache/cache-poc-yb8r09zl/token/build/counter/vm/frozen_content.c"
+      ],
+      "sha256": "2475f832a15a0719ab7f557d58f1d3a988182a9b27170492d0155c8c38959bde",
+      "runtimeProfile": "444893d3174d646d03d7b48125d55d0bb76a3e60f17381f25cb781a3cb41556f"
+    },
+    {
+      "case": "mixin-edit",
+      "seconds": 4.679,
+      "cachedArtifact": false,
+      "ccLines": [
+        "CC /Users/michal/Dev/cspr-py/.cache/cache-poc-yb8r09zl/token/build/counter/vm/frozen_content.c"
+      ],
+      "sha256": "aeb7cf83657cb522a59a915db576e3eec4a84a8b101f9970b42cb373ada1da36",
+      "runtimeProfile": "444893d3174d646d03d7b48125d55d0bb76a3e60f17381f25cb781a3cb41556f"
+    },
+    {
+      "case": "corrupt-output",
+      "seconds": 3.148,
+      "cachedArtifact": false,
+      "ccLines": [],
+      "sha256": "aeb7cf83657cb522a59a915db576e3eec4a84a8b101f9970b42cb373ada1da36",
+      "runtimeProfile": "444893d3174d646d03d7b48125d55d0bb76a3e60f17381f25cb781a3cb41556f"
+    },
+    {
+      "case": "unchanged-project",
+      "seconds": 1.062,
+      "cachedArtifact": true,
+      "ccLines": [],
+      "sha256": "aeb7cf83657cb522a59a915db576e3eec4a84a8b101f9970b42cb373ada1da36",
+      "runtimeProfile": "444893d3174d646d03d7b48125d55d0bb76a3e60f17381f25cb781a3cb41556f"
+    }
+  ],
+  "assertions": {
+    "allNineExamplesShareRuntime": true,
+    "vmCompilesAcrossNineTargets": 1,
+    "coreObjectMtimesUnchangedForContractAndMixinEdits": true,
+    "cachedArtifactSkipsCompilationAndWasmPasses": true,
+    "changedContractAndMixinExecuteNewCodeInMeteredWasm": true,
+    "addedAndRemovedImportedModulesTested": true,
+    "corruptedMeteredOutputRebuilt": true,
+    "minificationReusesDefaultRuntime": true,
+    "pristineUpstreamFilesVerified": 6741,
+    "nativeErrorAuditMakefileUnchanged": true,
+    "nativeErrorAuditConfigurationUnchanged": true,
+    "nativeErrorCachedArtifactSeconds": 1.864
+  },
+  "validation": {
+    "nativeTests": 206,
+    "nativeSubtests": 232,
+    "rustCliTests": 10,
+    "wasmTests": 47,
+    "wasmSubtests": 423,
+    "nativeErrorCounterTests": 3,
+    "nativeErrorCounterSubtests": 6,
+    "minifiedCounterTests": 3,
+    "minifiedCounterSubtests": 6,
+    "cargoFmt": true,
+    "cargoClippyWarningsDenied": true,
+    "typecheckSourceFiles": 56,
+    "expectedTypingErrors": 42
+  },
+  "artifacts": {
+    "counter": {
+      "bytes": 350564,
+      "sha256": "b864ad936e8e1eaac9af7aad53561df75267d0b88da9c041356c7f00d4910e4a",
+      "meteredSha256": "2ab908fd23abf01bae4236aa3f4d8073694a11046674f341f50e305f5a950409",
+      "matchesBeforeCaching": true
+    },
+    "my_token": {
+      "bytes": 360618,
+      "sha256": "c8b544641bd859eb059fbbb4aa29364c2aa8b18df5c0aaccbf39487aae8014e1",
+      "meteredSha256": "23f83e8ae69299f17ab4f0224ea24cebcdfecfb7f42363d37beac3735d8cb149",
+      "matchesBeforeCaching": true
+    },
+    "counter_session": {
+      "bytes": 350206,
+      "sha256": "ef2af8d64385c88e3de71ff1b11509b377df3e76ebdfe68cd80cf0b5ae8aa771",
+      "meteredSha256": "be08d7ea2eab7a029a63867cccc4004621a7599c649eda242fa49b28518cf36a",
+      "matchesBeforeCaching": true
+    }
+  },
+  "minifiedCounter": {
+    "bytes": 345956,
+    "sha256": "5f365759aedc55faea3260a02c365534c7e6588dfa48195ce2255768315d3672"
+  },
+  "sourceSha256": {
+    "scripts/build.py": "426be6fd06fac768c6f319aac5c293113e31d6bd43ba771e9ae17c3db81fddda",
+    "scripts/build_cache.py": "79025fd842d9238a895e25859ed39871e69928cf0402732ed8ad693fc11e6d6c",
+    "scripts/softfloat.py": "fe9e0364ae8fe75a13a5fcef7e02fd5935e8305081baebd9172748e440acf2a2",
+    "native/Makefile": "31876b8abfae582294cfe71a60446a46bfc3564ee01bf9d2fa2eb5ffa6ca2724",
+    "native/micropython/port/Makefile": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae",
+    "tests/cli.rs": "c397fb5934f1c466df7cb8a344137c8bf618667bef6fef1ba00d2e43727b02d8",
+    "tests/test_build_cache.py": "6dcb9faefbd68e2e719db4d4dd13d9cdf9685aff48ff9ce11439e405b3c819a7",
+    "tests/build_bootstrap_probes.py": "1037a99000351bc4759973280ea3a125b9bf0768eb3252b8f28e522aca8e9e21",
+    "pyproject.toml": "f3ca26ce65ecb2c222d9ebb1d306b9235e429b7410e67f14cdf4f85d0076e84e"
+  },
+  "limitations": [
+    "The optional native-errors backend retains its audited Makefile and keeps runtime objects per contract.",
+    "Sources and compiler toolchains are already installed for the timings; this is not a first-install benchmark.",
+    "Builds remain serialized by the shared worker lock."
+  ]
+}

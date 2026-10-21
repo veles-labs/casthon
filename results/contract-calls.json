@@ -1,0 +1,234 @@
+{
+  "passed": true,
+  "date": "2026-10-15",
+  "runtime": "asyncify",
+  "micropython": "1.29.0",
+  "upstreamChanges": [],
+  "api": "ContractHash.call(function, *args, **kwargs)",
+  "example": "contracts/counter_session.py",
+  "wasmExports": [
+    "call"
+  ],
+  "tests": {
+    "native": 140,
+    "wasm": 32,
+    "live": 5,
+    "liveTransactions": 24,
+    "typecheck": {
+      "passed": true,
+      "rejectedMistakes": 20
+    }
+  },
+  "coverage": [
+    "Positional, named and keyword-only arguments",
+    "Ordinary integer and Unit returns",
+    "Nullable values and Key variants",
+    "Defaulted arguments are omitted from outgoing RuntimeArgs",
+    "Imported module ABI signatures and explicit installation metadata",
+    "Export aliases and ambiguous-name rejection",
+    "Rejected Python bindings and wire values before host calls",
+    "Native hash routing and rollback across nested calls",
+    "Plain and metered separate Wasm modules with the 500-slot limiter",
+    "Live Python session calling a deployed counter and rolling back a successful remote write"
+  ],
+  "network": "cspr-py-test-16b962a4ea52",
+  "networkStopped": true,
+  "cleanupErrors": [],
+  "diagnostics": ".cache/cspr-testing/live/test_counter.TestCounter/report.json",
+  "sessionTransactions": [
+    "f3891ff44e3015609d61e9b579d8cbab3359aeb2c23d8d262a2e97354229fb05",
+    "144e02e578361bb0047f45e5dc9dcc9e247b25817df15a74474feee3d1bee122",
+    "a5da72e8ba11782367873d57ad007ff0b07a4c19e48be53369d63fc0ec51f724"
+  ],
+  "artifacts": {
+    "basic": {
+      "bytes": 341709,
+      "sha256": "4decbf09a31f37c43dbd63691dcde1a767187761ba75db6b97e02e4ef7ea6529",
+      "exports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call"
+      ],
+      "heap": {
+        "mode": "emmalloc-gc0",
+        "allocator": "emmalloc",
+        "automaticCollection": false,
+        "gcEnabled": false,
+        "objectAllocator": "emmalloc",
+        "initialRegionBytes": 0,
+        "initialRegionPolicy": "fixed",
+        "initialMemoryBytes": 4194304,
+        "memoryGrowth": false,
+        "maximumMemoryBytes": 4194304
+      }
+    },
+    "counter": {
+      "bytes": 340878,
+      "sha256": "264bc9f56de8fa7c1f241f058e2539360b09da67a25882f0f9fedad57f13377f",
+      "exports": [
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments",
+        "call"
+      ],
+      "heap": {
+        "mode": "emmalloc-gc0",
+        "allocator": "emmalloc",
+        "automaticCollection": false,
+        "gcEnabled": false,
+        "objectAllocator": "emmalloc",
+        "initialRegionBytes": 0,
+        "initialRegionPolicy": "fixed",
+        "initialMemoryBytes": 4194304,
+        "memoryGrowth": false,
+        "maximumMemoryBytes": 4194304
+      }
+    },
+    "counter_session": {
+      "bytes": 341092,
+      "sha256": "e1bc5dc16ad4f902298c5f528a511b0e39caeeedd55bed4889789057e0949bf0",
+      "exports": [
+        "call"
+      ],
+      "heap": {
+        "mode": "emmalloc-gc0",
+        "allocator": "emmalloc",
+        "automaticCollection": false,
+        "gcEnabled": false,
+        "objectAllocator": "emmalloc",
+        "initialRegionBytes": 0,
+        "initialRegionPolicy": "fixed",
+        "initialMemoryBytes": 4194304,
+        "memoryGrowth": false,
+        "maximumMemoryBytes": 4194304
+      }
+    },
+    "api_smoke": {
+      "bytes": 341656,
+      "sha256": "8b03904979f3f5f53041b028fb79789c77d1c18c00590ae36ced455276984ce6",
+      "exports": [
+        "read_count",
+        "call",
+        "call_counter"
+      ],
+      "heap": {
+        "mode": "emmalloc-gc0",
+        "allocator": "emmalloc",
+        "automaticCollection": false,
+        "gcEnabled": false,
+        "objectAllocator": "emmalloc",
+        "initialRegionBytes": 0,
+        "initialRegionPolicy": "fixed",
+        "initialMemoryBytes": 4194304,
+        "memoryGrowth": false,
+        "maximumMemoryBytes": 4194304
+      }
+    },
+    "ffi_smoke": {
+      "bytes": 344479,
+      "sha256": "10872e6327080a90b610acedef69781b0af274f46320c3dd3413b1cf6a2bce73",
+      "exports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call"
+      ],
+      "heap": {
+        "mode": "emmalloc-gc0",
+        "allocator": "emmalloc",
+        "automaticCollection": false,
+        "gcEnabled": false,
+        "objectAllocator": "emmalloc",
+        "initialRegionBytes": 0,
+        "initialRegionPolicy": "fixed",
+        "initialMemoryBytes": 4194304,
+        "memoryGrowth": false,
+        "maximumMemoryBytes": 4194304
+      }
+    },
+    "dispatch_smoke": {
+      "bytes": 345551,
+      "sha256": "aa8b7bbbcfa3130b1020913309deea7d78113331e080e8693d195d229e50f991",
+      "exports": [
+        "value",
+        "call"
+      ],
+      "heap": {
+        "mode": "emmalloc-gc0",
+        "allocator": "emmalloc",
+        "automaticCollection": false,
+        "gcEnabled": false,
+        "objectAllocator": "emmalloc",
+        "initialRegionBytes": 0,
+        "initialRegionPolicy": "fixed",
+        "initialMemoryBytes": 4194304,
+        "memoryGrowth": false,
+        "maximumMemoryBytes": 4194304
+      }
+    },
+    "native_unwind": {
+      "bytes": 344058,
+      "sha256": "38604743ea9893f98505ad152950c74ef4170391a0ad8f5f25d6dc7aeb3787e7",
+      "exports": [
+        "call"
+      ],
+      "heap": {
+        "mode": "emmalloc-gc0",
+        "allocator": "emmalloc",
+        "automaticCollection": false,
+        "gcEnabled": false,
+        "objectAllocator": "emmalloc",
+        "initialRegionBytes": 0,
+        "initialRegionPolicy": "fixed",
+        "initialMemoryBytes": 4194304,
+        "memoryGrowth": false,
+        "maximumMemoryBytes": 4194304
+      }
+    },
+    "typed_exports": {
+      "bytes": 342145,
+      "sha256": "e4b4471a7b695a398235a1b5ad59e967594480dd2ea6cf71445a7ab1e26eda0f",
+      "exports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call"
+      ],
+      "heap": {
+        "mode": "emmalloc-gc0",
+        "allocator": "emmalloc",
+        "automaticCollection": false,
+        "gcEnabled": false,
+        "objectAllocator": "emmalloc",
+        "initialRegionBytes": 0,
+        "initialRegionPolicy": "fixed",
+        "initialMemoryBytes": 4194304,
+        "memoryGrowth": false,
+        "maximumMemoryBytes": 4194304
+      }
+    }
+  },
+  "limits": [
+    "The source signature describes the expected ABI; the installed code is not verified.",
+    "Typed outbound calls require a wire return annotation and an unambiguous export name.",
+    "Imports retain Python bodies and module initialization; interface-only extraction is not implemented.",
+    "This validation uses the default Asyncify backend; the preserved native-errors patches were unchanged."
+  ]
+}

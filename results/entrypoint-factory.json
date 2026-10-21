@@ -1,0 +1,205 @@
+{
+  "date": "2026-10-15T13:41:01.825764+00:00",
+  "feature": "EntryPoint.from_function",
+  "suites": {
+    "native": {
+      "tests": 130,
+      "seconds": 0.344,
+      "passed": true,
+      "log": ".cache/entrypoint-native.log"
+    },
+    "asyncify": {
+      "tests": 29,
+      "seconds": 36.406,
+      "passed": true,
+      "log": ".cache/entrypoint-wasm-asyncify.log"
+    },
+    "native-errors": {
+      "tests": 29,
+      "seconds": 25.254,
+      "passed": true,
+      "log": ".cache/entrypoint-wasm-native.log"
+    },
+    "live": {
+      "tests": 4,
+      "seconds": 97.935,
+      "passed": true,
+      "log": ".cache/entrypoint-live.log"
+    }
+  },
+  "typeCheckedFiles": 45,
+  "rejectedTypeMistakes": 15,
+  "storedHiLevelAbi": [
+    {
+      "name": "increment",
+      "args": {},
+      "returns": "Unit"
+    },
+    {
+      "name": "increment_by",
+      "args": {
+        "amount": "U32"
+      },
+      "returns": "Unit"
+    },
+    {
+      "name": "get",
+      "args": {},
+      "returns": "U32"
+    },
+    {
+      "name": "get_increments",
+      "args": {
+        "owner": "Key"
+      },
+      "returns": "U32"
+    }
+  ],
+  "storedHiLevelAbiBytes": "04000000030000006765740300000067657400000000040101000e0000006765745f696e6372656d656e74730e0000006765745f696e6372656d656e747301000000050000006f776e65720b0401010009000000696e6372656d656e7409000000696e6372656d656e7400000000090101000c000000696e6372656d656e745f62790c000000696e6372656d656e745f62790100000006000000616d6f756e740409010100",
+  "optionalArguments": {
+    "Optional": "Option<T> wire encoding",
+    "missingUsesPythonDefault": true,
+    "pythonDefaultsChangeStoredCLType": false
+  },
+  "pythonInspectionFrozen": false,
+  "interpreterChangesForThisFeature": false,
+  "preservedMicropythonPatchSha256": {
+    "stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+  },
+  "artifacts": {
+    "asyncify": {
+      "counter": {
+        "path": "build/counter.wasm",
+        "bytes": 344009,
+        "sha256": "8bbed643da259d8cb5d548dd8b80ace280bc19f3a2b7e3d524c79c332c6d2d67",
+        "deltaBytes": 851,
+        "upstreamFilesVerified": 6741
+      },
+      "hi_level": {
+        "path": "build/hi_level.wasm",
+        "bytes": 343097,
+        "sha256": "81e017f1ffc3ae5079c622a72205a9825391cc17a1c9cbf3785a2efa7aa73568",
+        "deltaBytes": 814,
+        "upstreamFilesVerified": 6741
+      },
+      "api_smoke": {
+        "path": "build/api_smoke.wasm",
+        "bytes": 343982,
+        "sha256": "cc1cb9488840a58311f4c5c09371f05a67568d676632a0eb342318a134cca00b",
+        "deltaBytes": 880,
+        "upstreamFilesVerified": 6741
+      },
+      "ffi_smoke": {
+        "path": "build/ffi_smoke.wasm",
+        "bytes": 346786,
+        "sha256": "c67d90a9396a46a2c58798161664ee3c4484191d6252e552621c8b9cf53b4076",
+        "deltaBytes": 863,
+        "upstreamFilesVerified": 6741
+      },
+      "dispatch_smoke": {
+        "path": "build/dispatch_smoke.wasm",
+        "bytes": 347881,
+        "sha256": "e3e80f7af376026dc60679ed1f684c0443ae11e0303901fdeba7d202b321aee5",
+        "deltaBytes": 846,
+        "upstreamFilesVerified": 6741
+      },
+      "native_unwind": {
+        "path": "build/native_unwind.wasm",
+        "bytes": 346402,
+        "sha256": "1005970e67621e412aca96387927dae285e44bacf790349be01eded4642cd94c",
+        "deltaBytes": 864,
+        "upstreamFilesVerified": 6741
+      },
+      "typed_exports": {
+        "path": "build/typed_exports.wasm",
+        "bytes": 344432,
+        "sha256": "b9c771ed3ceaf70c9b657b2975acd165651c3bb9466cec163926900136cfcd42",
+        "deltaBytes": 823,
+        "upstreamFilesVerified": 6741
+      }
+    },
+    "native-errors": {
+      "counter": {
+        "path": "build/native-errors/counter.wasm",
+        "bytes": 212711,
+        "sha256": "d9f645f0f460d492b8c2fe2e34a4fca030e3c235de3064a873099e5bfda87a76",
+        "deltaBytes": 851,
+        "upstreamFilesVerified": 6743
+      },
+      "hi_level": {
+        "path": "build/native-errors/hi_level.wasm",
+        "bytes": 211802,
+        "sha256": "40a029d3573a4e5892e14335c1327e6f9a8c00b730ef5241b19f85b52ddae423",
+        "deltaBytes": 815,
+        "upstreamFilesVerified": 6743
+      },
+      "api_smoke": {
+        "path": "build/native-errors/api_smoke.wasm",
+        "bytes": 212682,
+        "sha256": "d27d7ee06606513995301ac327ac8ff60f26770e183292c5d08540dad8926d4e",
+        "deltaBytes": 874,
+        "upstreamFilesVerified": 6743
+      },
+      "ffi_smoke": {
+        "path": "build/native-errors/ffi_smoke.wasm",
+        "bytes": 215480,
+        "sha256": "297e18e48a4d5821f0976785161234e41c32b0b3212a7069d199c4aab464d93e",
+        "deltaBytes": 854,
+        "upstreamFilesVerified": 6743
+      },
+      "dispatch_smoke": {
+        "path": "build/native-errors/dispatch_smoke.wasm",
+        "bytes": 216578,
+        "sha256": "ced491b505f2ef8a8cfc637cca844d9d2586a745f64f5014eb5e589f73b471af",
+        "deltaBytes": 846,
+        "upstreamFilesVerified": 6743
+      },
+      "native_unwind": {
+        "path": "build/native-errors/native_unwind.wasm",
+        "bytes": 215199,
+        "sha256": "20807ed4123dc7f7a9b4fa3251d45425afeaabdfbccbba9770c6af183b9005fd",
+        "deltaBytes": 863,
+        "upstreamFilesVerified": 6743
+      },
+      "typed_exports": {
+        "path": "build/native-errors/typed_exports.wasm",
+        "bytes": 213123,
+        "sha256": "7bc65d02c65c012c503faf17830e86dac5bcf11762380b808ea3b9378df479e2",
+        "deltaBytes": 815,
+        "upstreamFilesVerified": 6743
+      }
+    }
+  },
+  "live": {
+    "network": "cspr-py-test-e37a3e3d8a60",
+    "protocolVersion": "2.2.0",
+    "networkStopped": true,
+    "ownedProcessIdsVerifiedStopped": [
+      "61992",
+      "61993",
+      "61994",
+      "61995",
+      "61996",
+      "61997",
+      "61998",
+      "61999"
+    ],
+    "transactions": 19,
+    "artifacts": {
+      "hi_level": {
+        "sha256": "81e017f1ffc3ae5079c622a72205a9825391cc17a1c9cbf3785a2efa7aa73568",
+        "cachePaths": [
+          ".cache/cspr-testing/build/ca8e04b54f9bc68e677ddecb6855dc6f09f15ccfb7fc7883081cdef56cb73af7/hi_level.wasm"
+        ]
+      },
+      "typed_exports": {
+        "sha256": "b9c771ed3ceaf70c9b657b2975acd165651c3bb9466cec163926900136cfcd42",
+        "cachePaths": [
+          ".cache/cspr-testing/build/ca8e04b54f9bc68e677ddecb6855dc6f09f15ccfb7fc7883081cdef56cb73af7/typed_exports.wasm"
+        ]
+      }
+    }
+  }
+}

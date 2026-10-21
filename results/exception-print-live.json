@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-20",
+  "behavior": {
+    "debug": "Uncaught Python exceptions print traceback, type and message after finally cleanup, before host revert.",
+    "release": "No casper_print import or diagnostic output.",
+    "caughtExceptions": "No automatic traceback.",
+    "successfulRet": "No error traceback.",
+    "formattingErrors": "Secondary Python formatting errors do not replace the original revert code.",
+    "bufferBytes": 256,
+    "longLines": "Split at UTF-8 boundaries.",
+    "tracebackFrames": "Current port reports source filenames and function names without line numbers."
+  },
+  "checks": {
+    "nativeTests": 238,
+    "focusedWasmTests": 14,
+    "wasmBackends": [
+      "asyncify",
+      "native-errors"
+    ],
+    "wasmVariants": [
+      "plain",
+      "Casper-metered"
+    ],
+    "liveTests": 4,
+    "exampleBuilds": 9,
+    "fullWasmTests": 66
+  },
+  "live": {
+    "network": "cspr-py-test-a3ab32d16a49",
+    "protocolVersion": "2.2.0",
+    "networkStopped": true,
+    "contractPrintLines": 176,
+    "contractPrintDropped": 0,
+    "cleanupErrors": [],
+    "nodes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "transactions": 9
+  },
+  "assetCompatibility": "Uses the existing local v0.4.0 capability-query wrapper; bundled node is unchanged. See print-fd-live.json.",
+  "failureExample": "exception-print-failure-example.txt (deliberate inner failure; the enclosing regression passes)",
+  "tracebackExample": "exception-print-traceback.txt",
+  "commands": {
+    "wasm": ".venv/bin/python -m unittest discover -s tests/wasm -p test_wasm_print.py -v",
+    "live": "PYTHONPATH=src CSPR_LIVE_TESTS=1 CSPR_PRINT_FD_TESTS=1 CSPR_DEVNET_BIN=/Users/michal/Dev/casper-devnet-launcher/target/debug/casper-devnet CSPR_DEVNET_CUSTOM_ASSET=cspr-py-printfd-v040-26f506d3 .venv/bin/python -m unittest discover -s tests/live -p test_print_fd.py -v",
+    "fullWasm": ".venv/bin/python -m unittest discover -s tests/wasm -p 'test_*.py' -v"
+  }
+}

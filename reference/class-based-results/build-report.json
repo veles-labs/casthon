@@ -1,0 +1,7 @@
+{
+  "micropython": "1.29.0",
+  "archiveSha256": "8072f6ad42c0e3bbfca88ed09bf8f1106ce207a39129af920f70081b8f2fe286",
+  "bytes": 129512,
+  "sha256": "116e5fc78be336f8c18d1f829234027e00261051b3c4400b4af4d273a4960a94",
+  "profile": "integer-only-terminal-exceptions"
+}

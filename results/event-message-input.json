@@ -1,0 +1,104 @@
+{
+  "created": "2026-10-19T14:20:21.735763+02:00",
+  "feature": "Event instances and optional encoder selection in runtime.emit_message",
+  "api": {
+    "default": "runtime.emit_message(topic, event)",
+    "explicit": "runtime.emit_message(topic, event, encoder=Json.to_message)",
+    "payload": "runtime.emit_message(topic, message_payload_or_serialized_bytes)"
+  },
+  "behavior": [
+    "Event input uses its polymorphic to_message default unless an explicit encoder is provided",
+    "Missing or ambiguous defaults raise TypeError before the host call",
+    "Explicit encoders accept an event and must return MessageString or MessageBytes",
+    "Encoding exceptions remain catchable and execute finally blocks before any host emission",
+    "encoder is rejected for already encoded payloads and serialized bytes",
+    "Generic overloads retain the concrete event type for encoder callables",
+    "CEP-18 native modes pass the event and their explicit JSON encoder to runtime.emit_message",
+    "No Contract.emit or ambient contract instance is introduced"
+  ],
+  "tests": {
+    "native": {
+      "passed": 226,
+      "subtests": 249,
+      "log": "/tmp/casthon-event-input-pytest.log"
+    },
+    "python311": {
+      "passed": 49,
+      "log": "/tmp/casthon-event-input-python311.log"
+    },
+    "wasmEventsAndCep18": {
+      "passed": 10,
+      "log": "/tmp/casthon-event-input-wasm.log",
+      "coverage": "Plain and metered event fixtures; CEP-18 behavior and upstream message vectors with the stock 500-slot stack limit"
+    },
+    "minifiedCep18": {
+      "passed": 8,
+      "log": "/tmp/casthon-event-input-min-tests.log"
+    },
+    "mypy": {
+      "sdkAndContracts": "passed (60 files)",
+      "typedUsage": "passed",
+      "expectedTypeErrors": 51,
+      "log": "/tmp/casthon-event-input-types.log"
+    }
+  },
+  "artifacts": {
+    "build/my_token.wasm": {
+      "bytes": 368886,
+      "sha256": "e879e339051b4a054fdc014021492203859570492b24e82b048815c27eaa1b44",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/my_token-build-report.json",
+      "meteredSha256": "38d1a8a031b94f792e93824bef784ce03b4c1f8aef2466a6d5d3433d030943a5"
+    },
+    "build/minified/my_token.wasm": {
+      "bytes": 363457,
+      "sha256": "f2ffe03e147787bfee6d56b96c9098aca46aa9d53d92ad6685903a62975d0b3a",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/minified/my_token-build-report.json",
+      "meteredSha256": "ec5f7e6c54b04008735e7e41f5b6324fd6b5e7b75438091b4c8b517bbec6df89"
+    }
+  },
+  "nativePortMakefileSha256": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae"
+}

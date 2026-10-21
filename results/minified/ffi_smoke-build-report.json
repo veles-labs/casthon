@@ -1,0 +1,227 @@
+{
+  "micropython": "1.29.0",
+  "archiveSha256": "8072f6ad42c0e3bbfca88ed09bf8f1106ce207a39129af920f70081b8f2fe286",
+  "bytes": 165638,
+  "sha256": "020b1fbf9748ceda4f87e2fdaae822f62b2029d35fffd440c49bf223a524b0af",
+  "profile": "procedural-softfloat-stackless-errors",
+  "exports": [
+    "ping",
+    "restricted",
+    "inspect_caller",
+    "emit_events",
+    "call"
+  ],
+  "upstreamFilesVerified": 6741,
+  "upstreamChanges": [
+    "py/bc.h",
+    "py/obj.h",
+    "py/objboundmeth.c",
+    "py/objclosure.c",
+    "py/objfun.c",
+    "py/objint.h",
+    "py/objint_mpz.c",
+    "py/runtime.c",
+    "py/runtime.h",
+    "py/vm.c"
+  ],
+  "patches": [
+    {
+      "file": "stackless-calls.patch",
+      "sha256": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941"
+    },
+    {
+      "file": "integer-errors.patch",
+      "sha256": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0"
+    }
+  ],
+  "asyncify": false,
+  "exceptionMapping": "outer-c-dispatcher",
+  "returnMapping": "explicit-cl-values",
+  "pythonFloatBits": 64,
+  "wasmFloatInstructions": false,
+  "softfloat": {
+    "revision": "080c31c72d5c3fd813584ea990e8a3aa10e902eb",
+    "archiveSha256": "187ad083b2147cc6489c07e4b23103e9055cea729b71f4d445db57f20be4a5f7"
+  },
+  "minification": {
+    "enabled": true,
+    "binaryen": "wasm-opt version 132",
+    "inputBytes": 168051,
+    "outputBytes": 165638,
+    "savedBytes": 2413,
+    "selected": "combined",
+    "interfacePreserved": true,
+    "candidates": [
+      {
+        "name": "converged",
+        "input": "contract.optimized.wasm",
+        "tool": "wasm-opt",
+        "flags": [
+          "-Oz",
+          "--converge",
+          "--remove-unused-module-elements",
+          "--reorder-functions",
+          "--reorder-locals",
+          "--reorder-globals",
+          "--reorder-types",
+          "--optimize-stack-ir",
+          "--strip-debug",
+          "--strip-producers",
+          "--strip-target-features",
+          "--strip-toolchain-annotations"
+        ],
+        "accepted": true,
+        "bytes": 166997,
+        "sha256": "1ac72244eca2ba891e1f1346be6574526ffee53668d490bcd29e9c0237eeabd0"
+      },
+      {
+        "name": "compact",
+        "input": "contract.optimized.wasm",
+        "tool": "wasm-opt",
+        "flags": [
+          "--gufa-optimizing",
+          "--duplicate-function-elimination",
+          "--merge-similar-functions",
+          "--dae-optimizing",
+          "--code-folding",
+          "--coalesce-locals-learning",
+          "--simplify-globals-optimizing",
+          "--memory-packing",
+          "-Oz",
+          "--converge",
+          "--remove-unused-module-elements",
+          "--reorder-functions",
+          "--reorder-locals",
+          "--reorder-globals",
+          "--reorder-types",
+          "--optimize-stack-ir",
+          "--strip-debug",
+          "--strip-producers",
+          "--strip-target-features",
+          "--strip-toolchain-annotations"
+        ],
+        "accepted": true,
+        "bytes": 167013,
+        "sha256": "fd902f9059da6da35bd57aa7852d48c05c7edcdfbff451f74368f75bb2050796"
+      },
+      {
+        "name": "flattened",
+        "input": "contract.optimized.wasm",
+        "tool": "wasm-opt",
+        "flags": [
+          "--flatten",
+          "--rereloop",
+          "--precompute-propagate",
+          "--code-folding",
+          "--merge-similar-functions",
+          "--dae-optimizing",
+          "-Oz",
+          "--converge",
+          "--remove-unused-module-elements",
+          "--reorder-functions",
+          "--reorder-locals",
+          "--reorder-globals",
+          "--reorder-types",
+          "--optimize-stack-ir",
+          "--strip-debug",
+          "--strip-producers",
+          "--strip-target-features",
+          "--strip-toolchain-annotations"
+        ],
+        "accepted": true,
+        "bytes": 165974,
+        "sha256": "4e926cbc0374b1e56b19821392484ced694792deaaeaa147e03670de0d6f1873"
+      },
+      {
+        "name": "combined",
+        "input": "flattened.wasm",
+        "tool": "wasm-opt",
+        "flags": [
+          "--gufa-optimizing",
+          "--duplicate-function-elimination",
+          "--merge-similar-functions",
+          "--dae-optimizing",
+          "--code-folding",
+          "--coalesce-locals-learning",
+          "--simplify-globals-optimizing",
+          "--memory-packing",
+          "-Oz",
+          "--converge",
+          "--remove-unused-module-elements",
+          "--reorder-functions",
+          "--reorder-locals",
+          "--reorder-globals",
+          "--reorder-types",
+          "--optimize-stack-ir",
+          "--strip-debug",
+          "--strip-producers",
+          "--strip-target-features",
+          "--strip-toolchain-annotations"
+        ],
+        "accepted": true,
+        "bytes": 165638,
+        "sha256": "020b1fbf9748ceda4f87e2fdaae822f62b2029d35fffd440c49bf223a524b0af"
+      },
+      {
+        "name": "constructors",
+        "input": "contract.optimized.wasm",
+        "tool": "wasm-ctor-eval",
+        "flags": [
+          "--ctors=_initialize",
+          "--kept-exports=_initialize"
+        ],
+        "accepted": true,
+        "bytes": 169359,
+        "sha256": "7c7ad3d32412c01f046975f7be3e008225230d3d194a55ba780d893e1cef7d4d"
+      },
+      {
+        "name": "constructors-compact",
+        "input": "constructors.wasm",
+        "tool": "wasm-opt",
+        "flags": [
+          "--flatten",
+          "--rereloop",
+          "--precompute-propagate",
+          "--code-folding",
+          "--merge-similar-functions",
+          "--dae-optimizing",
+          "-Oz",
+          "--converge",
+          "--gufa-optimizing",
+          "--duplicate-function-elimination",
+          "--merge-similar-functions",
+          "--dae-optimizing",
+          "--code-folding",
+          "--coalesce-locals-learning",
+          "--simplify-globals-optimizing",
+          "--memory-packing",
+          "-Oz",
+          "--converge",
+          "--remove-unused-module-elements",
+          "--reorder-functions",
+          "--reorder-locals",
+          "--reorder-globals",
+          "--reorder-types",
+          "--optimize-stack-ir",
+          "--strip-debug",
+          "--strip-producers",
+          "--strip-target-features",
+          "--strip-toolchain-annotations"
+        ],
+        "accepted": true,
+        "bytes": 166519,
+        "sha256": "243285fba019162ee231127d18ad5ea5167b030e6ea95f91e278b39d69be81c8"
+      }
+    ],
+    "pythonSourceLines": false,
+    "pythonAssertions": true,
+    "excluded": [
+      "ABI name mangling",
+      "fast math",
+      "trap assumptions",
+      "assert removal",
+      "outlining (creates non-MVP multivalue in Binaryen 132)",
+      "gzip/Brotli (Casper deploys raw Wasm)"
+    ]
+  }
+}

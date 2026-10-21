@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-16",
+  "syntax": "@export_contract\nclass Counter(Pausable): ...",
+  "existingExplicitSelection": "export_contract(ImportedClass)",
+  "scope": "Selection applies only in the root build module; importing a decorated class does not re-export its entrypoints.",
+  "lowering": "The identity class decorator is erased from frozen Python.",
+  "validation": {
+    "nativeTests": 160,
+    "counterAndSessionWasmTests": 6,
+    "plainAndCasperMetered": true,
+    "stockStackSlots": 500,
+    "typecheckedSourceFiles": 51,
+    "rejectedTypeMistakes": 28,
+    "liveTestsRerun": false,
+    "previousLiveValidation": "results/constructor-initialization.json"
+  },
+  "artifacts": {
+    "counter": {
+      "bytes": 348369,
+      "sha256": "5bd97ae69246472ff7c7047b518fb4d095a106d90849103dc3c9ab7ae83ad1d9",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "functionExports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments",
+        "_initialize"
+      ]
+    },
+    "counter_session": {
+      "bytes": 348021,
+      "sha256": "8918b4fb1c2f1bc9431718311572d86c18b11a87c64dcacc6dfa92efc270f940",
+      "exports": [
+        "call"
+      ],
+      "functionExports": [
+        "call",
+        "_initialize"
+      ]
+    }
+  }
+}

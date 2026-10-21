@@ -1,0 +1,173 @@
+{
+  "pythonTests": 86,
+  "wasmTestsPerBackend": 23,
+  "positiveTypeChecks": true,
+  "rejectedTypeMistakes": 13,
+  "devnetValidationForThisRevision": false,
+  "allocationBindsNamedKeys": false,
+  "dictionaryItemKeyCompatibilityLimitBytes": 64,
+  "preservedMicropythonPatchSha256": {
+    "stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+  },
+  "artifacts": {
+    "asyncify": {
+      "counter": {
+        "path": "build/counter.wasm",
+        "bytes": 341614,
+        "sha256": "f47935bf7731e9baf61f588ada5f82f1305a536cdaed502d4941b376c4032ec5",
+        "exports": [
+          "increment",
+          "increment_by",
+          "add_fractional",
+          "get",
+          "set_mode",
+          "get_mode",
+          "mode_name",
+          "add_big",
+          "get_big",
+          "fail_after_write",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "hi_level": {
+        "path": "build/hi_level.wasm",
+        "bytes": 340844,
+        "sha256": "f16651241bea36732f61deb2cefb861ba2331499503b0875e265fe7db174c4b8",
+        "exports": [
+          "increment",
+          "increment_by",
+          "get",
+          "get_increments",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "api_smoke": {
+        "path": "build/api_smoke.wasm",
+        "bytes": 341662,
+        "sha256": "2e8a3b4e2d9514eecef2d2cba9c3fab35cdc88a0e127923851c12ab180003e66",
+        "exports": [
+          "read_count",
+          "call",
+          "call_counter"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "ffi_smoke": {
+        "path": "build/ffi_smoke.wasm",
+        "bytes": 344450,
+        "sha256": "e8482c54ab33c5aecc2a70d161489009a1e82d44e7b406f5da3951a3572098d6",
+        "exports": [
+          "ping",
+          "restricted",
+          "inspect_caller",
+          "emit_events",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "dispatch_smoke": {
+        "path": "build/dispatch_smoke.wasm",
+        "bytes": 345590,
+        "sha256": "ac2368f1daf8aa65789f1801a940c866849d04589adcf40478dd0987b8720b50",
+        "exports": [
+          "value",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "native_unwind": {
+        "path": "build/native_unwind.wasm",
+        "bytes": 344107,
+        "sha256": "fbfe7868242344574c9b11cb49d2e82b3dbc1bf05dc634dbb129c0fe8cbef5aa",
+        "exports": [
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      }
+    },
+    "native-errors": {
+      "counter": {
+        "path": "build/native-errors/counter.wasm",
+        "bytes": 210315,
+        "sha256": "d53cd338fa24d5ab28460b7f1579f8aaf883c539128c1e90f6924716d7c2d8d4",
+        "exports": [
+          "increment",
+          "increment_by",
+          "add_fractional",
+          "get",
+          "set_mode",
+          "get_mode",
+          "mode_name",
+          "add_big",
+          "get_big",
+          "fail_after_write",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "hi_level": {
+        "path": "build/native-errors/hi_level.wasm",
+        "bytes": 209546,
+        "sha256": "f05c49583ae731327b71d8368a682d102e5a938fbf61f41847215532262deb86",
+        "exports": [
+          "increment",
+          "increment_by",
+          "get",
+          "get_increments",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "api_smoke": {
+        "path": "build/native-errors/api_smoke.wasm",
+        "bytes": 210367,
+        "sha256": "21bfe9b9caf28e96a7cd542c18d64183c1cde6eb2390b4a8d90d4c570427b4e6",
+        "exports": [
+          "read_count",
+          "call",
+          "call_counter"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "ffi_smoke": {
+        "path": "build/native-errors/ffi_smoke.wasm",
+        "bytes": 213154,
+        "sha256": "c393b12ae5ccee14471e99cdf5cd96adec59b3ce28c45359d0853aff1a002e7c",
+        "exports": [
+          "ping",
+          "restricted",
+          "inspect_caller",
+          "emit_events",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "dispatch_smoke": {
+        "path": "build/native-errors/dispatch_smoke.wasm",
+        "bytes": 214308,
+        "sha256": "97f115d8441c752196f45583db3da4558b978f706703f4fca45860272ee40b94",
+        "exports": [
+          "value",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "native_unwind": {
+        "path": "build/native-errors/native_unwind.wasm",
+        "bytes": 212914,
+        "sha256": "8569783ba2c5ea60974c2e0b8795137459109f6dc62760d981ac408f12a1f377",
+        "exports": [
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      }
+    }
+  },
+  "directDictionaryCollectionAccess": true,
+  "dictionarySeedResolution": "current binding on each item operation",
+  "highLevelCounterKeyEncoding": "hex"
+}

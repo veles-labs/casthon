@@ -1,0 +1,135 @@
+{
+  "date": "2026-10-15T12:54:54.533029+00:00",
+  "runner": "Python unittest + Wasmtime 49.0.0",
+  "javascriptFilesUnderTests": 0,
+  "portedWasmTests": 29,
+  "suites": {
+    "native": {
+      "tests": 121,
+      "passed": true,
+      "log": ".cache/testing-native-python-port.log"
+    },
+    "asyncify": {
+      "tests": 29,
+      "passed": true,
+      "log": ".cache/testing-wasm-python-asyncify.log"
+    },
+    "native-errors": {
+      "tests": 29,
+      "passed": true,
+      "log": ".cache/testing-wasm-python-native.log"
+    }
+  },
+  "fixtureExpectationsPreserved": 1010,
+  "archivedExperimentChecks": {
+    "unwind/local-report.json": {
+      "checks": 24,
+      "passed": true,
+      "outcomePrintAndGasParity": true
+    },
+    "python-dispatch/local-report.json": {
+      "checks": 282,
+      "passed": true,
+      "outcomePrintAndGasParity": true
+    },
+    "interpreter-errors/local-report.json": {
+      "checks": 728,
+      "passed": true,
+      "outcomePrintAndGasParity": true
+    },
+    "cpython/local-stack2000-report.json": {
+      "checks": 310,
+      "passed": true,
+      "outcomePrintAndGasParity": true
+    },
+    "cpython/counter-local-report.json": {
+      "checks": 21,
+      "passed": true,
+      "cpythonGasParityChecks": 14,
+      "micropythonReference": "Re-measured against the current build/counter.metered.wasm artifact",
+      "micropythonReferenceSha256": "71d22b62d8a1733835fe015fbc9fb6840506fb146470a4d51c7a02378042e5cf"
+    }
+  },
+  "cpythonMinimumMatrixStackLimits": {
+    "cpython": 1139,
+    "cpython-computed": 1249
+  },
+  "artifactsUnchanged": {
+    "asyncify": {
+      "counter": {
+        "path": "build/counter.wasm",
+        "bytes": 343158,
+        "sha256": "f843142eb65d0241b3e1af1c04fb234d1a0fd109d5e819ff9fb419d4acd6612f"
+      },
+      "hi_level": {
+        "path": "build/hi_level.wasm",
+        "bytes": 342283,
+        "sha256": "897b6b1e2a74d63d5f2a46085c644e187099adb8194a5bd6243bfe04360cfdf4"
+      },
+      "api_smoke": {
+        "path": "build/api_smoke.wasm",
+        "bytes": 343102,
+        "sha256": "997d979073830684259018f54ae1fe2a642deef0387fba48a1dfcd26297fb3ec"
+      },
+      "ffi_smoke": {
+        "path": "build/ffi_smoke.wasm",
+        "bytes": 345923,
+        "sha256": "3731a01334cf1faa55190432905049912cf6a17b60a2c5b82f048ec5e20ec9b7"
+      },
+      "dispatch_smoke": {
+        "path": "build/dispatch_smoke.wasm",
+        "bytes": 347035,
+        "sha256": "a08fd46a77007700a81d1030bbe3f47db6e0b251c7972f64122ed8f1374ad5b3"
+      },
+      "native_unwind": {
+        "path": "build/native_unwind.wasm",
+        "bytes": 345538,
+        "sha256": "0ff8ea26e5e8933be8cc89bec907920e63aa2f639b6c486dcdb55e73ca46e402"
+      },
+      "typed_exports": {
+        "path": "build/typed_exports.wasm",
+        "bytes": 343609,
+        "sha256": "1602c885ae764317feff7bc7a33c5f6abb99d658d7d5ec639ceb9c3db896ffa0"
+      }
+    },
+    "native-errors": {
+      "counter": {
+        "path": "build/native-errors/counter.wasm",
+        "bytes": 211860,
+        "sha256": "41acee80732dc3edf712f7173a55f8f41c1071011c0c487da7c3deead90dc28f"
+      },
+      "hi_level": {
+        "path": "build/native-errors/hi_level.wasm",
+        "bytes": 210987,
+        "sha256": "165b2ee61f5bb7b2919671faa32d7c622b148c483a0e400aceed78a8f53fe0e8"
+      },
+      "api_smoke": {
+        "path": "build/native-errors/api_smoke.wasm",
+        "bytes": 211808,
+        "sha256": "d78950436981de204dafaa65c6b50e6a7e763338513fc2f73cbbb2e263816c03"
+      },
+      "ffi_smoke": {
+        "path": "build/native-errors/ffi_smoke.wasm",
+        "bytes": 214626,
+        "sha256": "93e3cf5e2b9975b1e9b1b6431f6b20b3df00cc248132b331eb12c8805d2a10e2"
+      },
+      "dispatch_smoke": {
+        "path": "build/native-errors/dispatch_smoke.wasm",
+        "bytes": 215732,
+        "sha256": "241533e00ed102412a3a8687aed0389a972560a38e560b8c28970d767e0434ff"
+      },
+      "native_unwind": {
+        "path": "build/native-errors/native_unwind.wasm",
+        "bytes": 214336,
+        "sha256": "40b4140a2439f3db90b8574727abdb71d8db3e81fa854fc3ccd4b50a89531e2f"
+      },
+      "typed_exports": {
+        "path": "build/native-errors/typed_exports.wasm",
+        "bytes": 212308,
+        "sha256": "a581b3cf1a0e0799f465bb0d7669a3841b1a9bbb2f490a63c7e268032caf6593"
+      }
+    }
+  },
+  "micropythonPatchesUnchanged": true,
+  "harnessSha256": "cb849f3688269d4093eb42b66d6172cdbf302a5ccc472380b47250114decc8e2"
+}

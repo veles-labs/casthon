@@ -1,0 +1,504 @@
+{
+  "date": "2026-10-15",
+  "pythonTests": 94,
+  "wasmTestsPerBackend": 29,
+  "plainAndMeteredWasm": true,
+  "positiveTypeChecks": true,
+  "rejectedTypeMistakes": 15,
+  "devnetValidationForThisRevision": false,
+  "interpreterChangesForThisFeature": false,
+  "invocationSignaturesIndependentOfEntryPoints": true,
+  "ordinaryPythonCalls": true,
+  "optionalWireEncoding": "Option<T>",
+  "defaults": "Only MissingArgument selects the original Python default",
+  "typedReturns": "Validate and encode after Python cleanup; explicit CLValues must match",
+  "preservedMicropythonPatchSha256": {
+    "stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+  },
+  "upstreamFfiSignaturesChecked": 58,
+  "casperStackLimit": 500,
+  "artifacts": {
+    "asyncify": {
+      "counter": {
+        "path": "build/counter.wasm",
+        "bytes": 343047,
+        "sha256": "0b5b8b7dacd20dc0fc1358736aa5a93860323f38da791059fc0706e888bc258c",
+        "exports": [
+          "increment",
+          "increment_by",
+          "add_fractional",
+          "get",
+          "set_mode",
+          "get_mode",
+          "mode_name",
+          "add_big",
+          "get_big",
+          "fail_after_write",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "hi_level": {
+        "path": "build/hi_level.wasm",
+        "bytes": 342169,
+        "sha256": "d0694dbb061d59188f9dddd4f6c01ba7a9648cf0e347bb768ea799a62c5b11a1",
+        "exports": [
+          "increment",
+          "increment_by",
+          "get",
+          "get_increments",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741,
+        "signatures": {
+          "increment": {
+            "args": [],
+            "returns": "Unit"
+          },
+          "increment_by": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "U32",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Unit"
+          },
+          "get": {
+            "args": [],
+            "returns": "U32"
+          },
+          "get_increments": {
+            "args": [
+              {
+                "name": "owner",
+                "type": "Key",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "call": {
+            "args": [],
+            "returns": "Unit"
+          }
+        }
+      },
+      "api_smoke": {
+        "path": "build/api_smoke.wasm",
+        "bytes": 343001,
+        "sha256": "2af22ca9e7bb5f88013f88bf073dc46102ec50cb7161865e0969ae6581f251be",
+        "exports": [
+          "read_count",
+          "call",
+          "call_counter"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "ffi_smoke": {
+        "path": "build/ffi_smoke.wasm",
+        "bytes": 345806,
+        "sha256": "1afde44f8c2018deb9e2c8239a754887deef1f6e8255ff8dfb1d6a5ab6c627df",
+        "exports": [
+          "ping",
+          "restricted",
+          "inspect_caller",
+          "emit_events",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "dispatch_smoke": {
+        "path": "build/dispatch_smoke.wasm",
+        "bytes": 346902,
+        "sha256": "962cee7b4c16c5eeca415bbfc4bc67a54f79eead51749c97806822f8f5d9ed45",
+        "exports": [
+          "value",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "native_unwind": {
+        "path": "build/native_unwind.wasm",
+        "bytes": 345419,
+        "sha256": "e2243f8090ef9cd555f6e54109fc1003a057dc7e645cc13c7e70e1302cbf2b7b",
+        "exports": [
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "typed_exports": {
+        "path": "build/typed_exports.wasm",
+        "bytes": 343491,
+        "sha256": "90086a27eab7c8c545f1671b478c14bd2b9e197523129912ea2d2505855dc9ec",
+        "exports": [
+          "calculate",
+          "nullable",
+          "defaults",
+          "owner",
+          "internal",
+          "checked_return",
+          "key_return",
+          "early_ret",
+          "failure",
+          "unit",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741,
+        "signatures": {
+          "calculate": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "U32",
+                "hasDefault": false
+              },
+              {
+                "name": "label",
+                "type": "String",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "nullable": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "Option<U32>",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Option<U32>"
+          },
+          "defaults": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "Option<U32>",
+                "hasDefault": true
+              },
+              {
+                "name": "label",
+                "type": "String",
+                "hasDefault": true
+              }
+            ],
+            "returns": "String"
+          },
+          "owner": {
+            "args": [
+              {
+                "name": "value",
+                "type": "Option<Key>",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Option<Key>"
+          },
+          "internal": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "U32",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "checked_return": {
+            "args": [
+              {
+                "name": "operation",
+                "type": "String",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "key_return": {
+            "args": [
+              {
+                "name": "valid",
+                "type": "Bool",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Key"
+          },
+          "early_ret": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "U32",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "failure": {
+            "args": [
+              {
+                "name": "code",
+                "type": "U32",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Unit"
+          },
+          "unit": {
+            "args": [],
+            "returns": "Unit"
+          },
+          "call": {
+            "args": [],
+            "returns": "Unit"
+          }
+        }
+      }
+    },
+    "native-errors": {
+      "counter": {
+        "path": "build/native-errors/counter.wasm",
+        "bytes": 211751,
+        "sha256": "1f80375fd92c64a91dabc178f0420a74a90b4db53e0c39d425175006208ae9e9",
+        "exports": [
+          "increment",
+          "increment_by",
+          "add_fractional",
+          "get",
+          "set_mode",
+          "get_mode",
+          "mode_name",
+          "add_big",
+          "get_big",
+          "fail_after_write",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "hi_level": {
+        "path": "build/native-errors/hi_level.wasm",
+        "bytes": 210871,
+        "sha256": "4b5b894ab6e535ddd1954a8cb3d004df3bd414d2bac3eb2c24ef0a738c28d35f",
+        "exports": [
+          "increment",
+          "increment_by",
+          "get",
+          "get_increments",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743,
+        "signatures": {
+          "increment": {
+            "args": [],
+            "returns": "Unit"
+          },
+          "increment_by": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "U32",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Unit"
+          },
+          "get": {
+            "args": [],
+            "returns": "U32"
+          },
+          "get_increments": {
+            "args": [
+              {
+                "name": "owner",
+                "type": "Key",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "call": {
+            "args": [],
+            "returns": "Unit"
+          }
+        }
+      },
+      "api_smoke": {
+        "path": "build/native-errors/api_smoke.wasm",
+        "bytes": 211705,
+        "sha256": "9ce1cb2c1d2815a1f7700107f19756ed0d62ee8eef69cd1d3dec3b57bcd4e268",
+        "exports": [
+          "read_count",
+          "call",
+          "call_counter"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "ffi_smoke": {
+        "path": "build/native-errors/ffi_smoke.wasm",
+        "bytes": 214514,
+        "sha256": "c4ec3f27152846bd292791896f01534ca2921b0f209abe86853c850fd6e8dfc8",
+        "exports": [
+          "ping",
+          "restricted",
+          "inspect_caller",
+          "emit_events",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "dispatch_smoke": {
+        "path": "build/native-errors/dispatch_smoke.wasm",
+        "bytes": 215616,
+        "sha256": "14a3c369db4f51bf73961e34358cfb48eb96a36d97b3ccd583f74d83034d7e13",
+        "exports": [
+          "value",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "native_unwind": {
+        "path": "build/native-errors/native_unwind.wasm",
+        "bytes": 214220,
+        "sha256": "84827a6e733a430cd09b6afb726dc010cae5ceedea309ce829328b124807678c",
+        "exports": [
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "typed_exports": {
+        "path": "build/native-errors/typed_exports.wasm",
+        "bytes": 212193,
+        "sha256": "0599132c790eaed4cb09ffca83dd5b9c85a4f8209c9989b8226b1fd2d9b001d1",
+        "exports": [
+          "calculate",
+          "nullable",
+          "defaults",
+          "owner",
+          "internal",
+          "checked_return",
+          "key_return",
+          "early_ret",
+          "failure",
+          "unit",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743,
+        "signatures": {
+          "calculate": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "U32",
+                "hasDefault": false
+              },
+              {
+                "name": "label",
+                "type": "String",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "nullable": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "Option<U32>",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Option<U32>"
+          },
+          "defaults": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "Option<U32>",
+                "hasDefault": true
+              },
+              {
+                "name": "label",
+                "type": "String",
+                "hasDefault": true
+              }
+            ],
+            "returns": "String"
+          },
+          "owner": {
+            "args": [
+              {
+                "name": "value",
+                "type": "Option<Key>",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Option<Key>"
+          },
+          "internal": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "U32",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "checked_return": {
+            "args": [
+              {
+                "name": "operation",
+                "type": "String",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "key_return": {
+            "args": [
+              {
+                "name": "valid",
+                "type": "Bool",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Key"
+          },
+          "early_ret": {
+            "args": [
+              {
+                "name": "amount",
+                "type": "U32",
+                "hasDefault": false
+              }
+            ],
+            "returns": "U32"
+          },
+          "failure": {
+            "args": [
+              {
+                "name": "code",
+                "type": "U32",
+                "hasDefault": false
+              }
+            ],
+            "returns": "Unit"
+          },
+          "unit": {
+            "args": [],
+            "returns": "Unit"
+          },
+          "call": {
+            "args": [],
+            "returns": "Unit"
+          }
+        }
+      }
+    }
+  }
+}

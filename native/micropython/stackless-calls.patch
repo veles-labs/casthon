@@ -1,0 +1,280 @@
+--- a/py/bc.h
++++ b/py/bc.h
+@@ -244,6 +244,10 @@
+     mp_obj_dict_t *old_globals;
+     #if MICROPY_STACKLESS
+     struct _mp_code_state_t *prev;
++    #if MICROPY_ENABLE_PYSTACK
++    // Free flattened call arguments together with the callee frame.
++    void *stackless_alloc_start;
++    #endif
+     #endif
+     #if MICROPY_PY_SYS_SETTRACE
+     struct _mp_code_state_t *prev_state;
+@@ -280,6 +284,8 @@
+ #endif
+     mp_obj_t inject_exc);
+ mp_code_state_t *mp_obj_fun_bc_prepare_codestate(mp_obj_t func, size_t n_args, size_t n_kw, const mp_obj_t *args);
++bool mp_obj_fun_is_stackless(mp_obj_t function);
++mp_code_state_t *mp_obj_fun_prepare_stackless(mp_obj_t function, size_t n_args, size_t n_kw, const mp_obj_t *args);
+ void mp_setup_code_state(mp_code_state_t *code_state, size_t n_args, size_t n_kw, const mp_obj_t *args);
+ void mp_setup_code_state_native(mp_code_state_native_t *code_state, size_t n_args, size_t n_kw, const mp_obj_t *args);
+ void mp_bytecode_print(const mp_print_t *print, const struct _mp_raw_code_t *rc, size_t fun_data_len, const mp_module_constants_t *cm);
+--- a/py/obj.h
++++ b/py/obj.h
+@@ -1054,6 +1054,10 @@
+ mp_obj_t mp_obj_new_set(size_t n_args, mp_obj_t *items);
+ mp_obj_t mp_obj_new_slice(mp_obj_t start, mp_obj_t stop, mp_obj_t step);
+ mp_obj_t mp_obj_new_bound_meth(mp_obj_t meth, mp_obj_t self);
++#if MICROPY_STACKLESS
++bool mp_obj_bound_meth_unpack(mp_obj_t object, mp_obj_t *function, mp_obj_t *self);
++bool mp_obj_closure_unpack(mp_obj_t object, mp_obj_t *function, size_t *count, const mp_obj_t **closed);
++#endif
+ mp_obj_t mp_obj_new_getitem_iter(mp_obj_t *args, mp_obj_iter_buf_t *iter_buf);
+ mp_obj_t mp_obj_new_module(qstr module_name);
+ mp_obj_t mp_obj_new_memoryview(byte typecode, size_t nitems, void *items);
+--- a/py/objboundmeth.c
++++ b/py/objboundmeth.c
+@@ -150,3 +150,15 @@
+     o->self = self;
+     return MP_OBJ_FROM_PTR(o);
+ }
++
++#if MICROPY_STACKLESS
++bool mp_obj_bound_meth_unpack(mp_obj_t object, mp_obj_t *function, mp_obj_t *self) {
++    if (!mp_obj_is_type(object, &mp_type_bound_meth)) {
++        return false;
++    }
++    const mp_obj_bound_meth_t *method = MP_OBJ_TO_PTR(object);
++    *function = method->meth;
++    *self = method->self;
++    return true;
++}
++#endif
+--- a/py/objclosure.c
++++ b/py/objclosure.c
+@@ -111,3 +111,16 @@
+     memcpy(o->closed, closed, n_closed_over * sizeof(mp_obj_t));
+     return MP_OBJ_FROM_PTR(o);
+ }
++
++#if MICROPY_STACKLESS
++bool mp_obj_closure_unpack(mp_obj_t object, mp_obj_t *function, size_t *count, const mp_obj_t **closed) {
++    if (!mp_obj_is_type(object, &mp_type_closure)) {
++        return false;
++    }
++    const mp_obj_closure_t *closure = MP_OBJ_TO_PTR(object);
++    *function = closure->fun;
++    *count = closure->n_closed;
++    *closed = closure->closed;
++    return true;
++}
++#endif
+--- a/py/objfun.c
++++ b/py/objfun.c
+@@ -595,3 +595,65 @@
+     );
+ 
+ #endif // MICROPY_EMIT_INLINE_ASM
++
++#if MICROPY_STACKLESS
++// Follow wrappers without invoking their recursive C -> VM call paths.
++bool mp_obj_fun_is_stackless(mp_obj_t function) {
++    for (;;) {
++        if (mp_obj_is_type(function, &mp_type_fun_bc)) {
++            return true;
++        }
++        mp_obj_t self;
++        size_t count;
++        const mp_obj_t *closed;
++        if (mp_obj_bound_meth_unpack(function, &function, &self)
++            || mp_obj_closure_unpack(function, &function, &count, &closed)) {
++            continue;
++        }
++        return false;
++    }
++}
++
++mp_code_state_t *mp_obj_fun_prepare_stackless(mp_obj_t function, size_t n_args, size_t n_kw, const mp_obj_t *args) {
++    if (mp_obj_is_type(function, &mp_type_fun_bc)) {
++        return mp_obj_fun_bc_prepare_codestate(function, n_args, n_kw, args);
++    }
++    mp_obj_t target = function;
++    size_t prefix = 0;
++    for (;;) {
++        mp_obj_t self;
++        size_t count;
++        const mp_obj_t *closed;
++        if (mp_obj_bound_meth_unpack(target, &target, &self)) {
++            ++prefix;
++        } else if (mp_obj_closure_unpack(target, &target, &count, &closed)) {
++            prefix += count;
++        } else {
++            break;
++        }
++    }
++    assert(mp_obj_is_type(target, &mp_type_fun_bc));
++    size_t total = prefix + n_args + 2 * n_kw;
++    mp_obj_t small_args[8];
++    mp_obj_t *expanded = total <= MP_ARRAY_SIZE(small_args) ? small_args : m_new(mp_obj_t, total);
++    memcpy(expanded + prefix, args, (n_args + 2 * n_kw) * sizeof(mp_obj_t));
++    // Inner wrappers prepend their arguments before outer wrappers' arguments.
++    size_t offset = prefix;
++    while (function != target) {
++        mp_obj_t self;
++        size_t count;
++        const mp_obj_t *closed;
++        if (mp_obj_bound_meth_unpack(function, &function, &self)) {
++            expanded[--offset] = self;
++        } else if (mp_obj_closure_unpack(function, &function, &count, &closed)) {
++            offset -= count;
++            memcpy(expanded + offset, closed, count * sizeof(mp_obj_t));
++        }
++    }
++    mp_code_state_t *state = mp_obj_fun_bc_prepare_codestate(target, n_args + prefix, n_kw, expanded);
++    if (expanded != small_args) {
++        m_del(mp_obj_t, expanded, total);
++    }
++    return state;
++}
++#endif
+--- a/py/vm.c
++++ b/py/vm.c
+@@ -958,11 +958,14 @@
+                     // (unum >> 8) & 0xff == n_keyword
+                     sp -= (unum & 0xff) + ((unum >> 7) & 0x1fe);
+                     #if MICROPY_STACKLESS
+-                    if (mp_obj_get_type(*sp) == &mp_type_fun_bc) {
++                    if (mp_obj_fun_is_stackless(*sp)) {
++                        #if MICROPY_ENABLE_PYSTACK
++                        void *allocation_start = MP_STATE_THREAD(pystack_cur);
++                        #endif
+                         code_state->ip = ip;
+                         code_state->sp = sp;
+                         code_state->exc_sp_idx = MP_CODE_STATE_EXC_SP_IDX_FROM_PTR(exc_stack, exc_sp);
+-                        mp_code_state_t *new_state = mp_obj_fun_bc_prepare_codestate(*sp, unum & 0xff, (unum >> 8) & 0xff, sp + 1);
++                        mp_code_state_t *new_state = mp_obj_fun_prepare_stackless(*sp, unum & 0xff, (unum >> 8) & 0xff, sp + 1);
+                         #if !MICROPY_ENABLE_PYSTACK
+                         if (new_state == NULL) {
+                             // Couldn't allocate codestate on heap: in the strict case raise
+@@ -975,6 +978,9 @@
+                         #endif
+                         {
+                             new_state->prev = code_state;
++                            #if MICROPY_ENABLE_PYSTACK
++                            new_state->stackless_alloc_start = allocation_start;
++                            #endif
+                             code_state = new_state;
+                             nlr_pop();
+                             goto run_code_state;
+@@ -995,7 +1001,10 @@
+                     // fun arg0 arg1 ... kw0 val0 kw1 val1 ... bitmap <- TOS
+                     sp -= (unum & 0xff) + ((unum >> 7) & 0x1fe) + 1;
+                     #if MICROPY_STACKLESS
+-                    if (mp_obj_get_type(*sp) == &mp_type_fun_bc) {
++                    if (mp_obj_fun_is_stackless(*sp)) {
++                        #if MICROPY_ENABLE_PYSTACK
++                        void *allocation_start = MP_STATE_THREAD(pystack_cur);
++                        #endif
+                         code_state->ip = ip;
+                         code_state->sp = sp;
+                         code_state->exc_sp_idx = MP_CODE_STATE_EXC_SP_IDX_FROM_PTR(exc_stack, exc_sp);
+@@ -1003,7 +1012,7 @@
+                         mp_call_args_t out_args;
+                         mp_call_prepare_args_n_kw_var(false, unum, sp, &out_args);
+ 
+-                        mp_code_state_t *new_state = mp_obj_fun_bc_prepare_codestate(out_args.fun,
++                        mp_code_state_t *new_state = mp_obj_fun_prepare_stackless(out_args.fun,
+                             out_args.n_args, out_args.n_kw, out_args.args);
+                         #if !MICROPY_ENABLE_PYSTACK
+                         // Freeing args at this point does not follow a LIFO order so only do it if
+@@ -1021,6 +1030,9 @@
+                         #endif
+                         {
+                             new_state->prev = code_state;
++                            #if MICROPY_ENABLE_PYSTACK
++                            new_state->stackless_alloc_start = allocation_start;
++                            #endif
+                             code_state = new_state;
+                             nlr_pop();
+                             goto run_code_state;
+@@ -1039,7 +1051,10 @@
+                     // (unum >> 8) & 0xff == n_keyword
+                     sp -= (unum & 0xff) + ((unum >> 7) & 0x1fe) + 1;
+                     #if MICROPY_STACKLESS
+-                    if (mp_obj_get_type(*sp) == &mp_type_fun_bc) {
++                    if (mp_obj_fun_is_stackless(*sp)) {
++                        #if MICROPY_ENABLE_PYSTACK
++                        void *allocation_start = MP_STATE_THREAD(pystack_cur);
++                        #endif
+                         code_state->ip = ip;
+                         code_state->sp = sp;
+                         code_state->exc_sp_idx = MP_CODE_STATE_EXC_SP_IDX_FROM_PTR(exc_stack, exc_sp);
+@@ -1048,7 +1063,7 @@
+                         size_t n_kw = (unum >> 8) & 0xff;
+                         int adjust = (sp[1] == MP_OBJ_NULL) ? 0 : 1;
+ 
+-                        mp_code_state_t *new_state = mp_obj_fun_bc_prepare_codestate(*sp, n_args + adjust, n_kw, sp + 2 - adjust);
++                        mp_code_state_t *new_state = mp_obj_fun_prepare_stackless(*sp, n_args + adjust, n_kw, sp + 2 - adjust);
+                         #if !MICROPY_ENABLE_PYSTACK
+                         if (new_state == NULL) {
+                             // Couldn't allocate codestate on heap: in the strict case raise
+@@ -1060,6 +1075,9 @@
+                         #endif
+                         {
+                             new_state->prev = code_state;
++                            #if MICROPY_ENABLE_PYSTACK
++                            new_state->stackless_alloc_start = allocation_start;
++                            #endif
+                             code_state = new_state;
+                             nlr_pop();
+                             goto run_code_state;
+@@ -1080,7 +1098,10 @@
+                     // fun self arg0 arg1 ... kw0 val0 kw1 val1 ... bitmap <- TOS
+                     sp -= (unum & 0xff) + ((unum >> 7) & 0x1fe) + 2;
+                     #if MICROPY_STACKLESS
+-                    if (mp_obj_get_type(*sp) == &mp_type_fun_bc) {
++                    if (mp_obj_fun_is_stackless(*sp)) {
++                        #if MICROPY_ENABLE_PYSTACK
++                        void *allocation_start = MP_STATE_THREAD(pystack_cur);
++                        #endif
+                         code_state->ip = ip;
+                         code_state->sp = sp;
+                         code_state->exc_sp_idx = MP_CODE_STATE_EXC_SP_IDX_FROM_PTR(exc_stack, exc_sp);
+@@ -1088,7 +1109,7 @@
+                         mp_call_args_t out_args;
+                         mp_call_prepare_args_n_kw_var(true, unum, sp, &out_args);
+ 
+-                        mp_code_state_t *new_state = mp_obj_fun_bc_prepare_codestate(out_args.fun,
++                        mp_code_state_t *new_state = mp_obj_fun_prepare_stackless(out_args.fun,
+                             out_args.n_args, out_args.n_kw, out_args.args);
+                         #if !MICROPY_ENABLE_PYSTACK
+                         // Freeing args at this point does not follow a LIFO order so only do it if
+@@ -1106,6 +1127,9 @@
+                         #endif
+                         {
+                             new_state->prev = code_state;
++                            #if MICROPY_ENABLE_PYSTACK
++                            new_state->stackless_alloc_start = allocation_start;
++                            #endif
+                             code_state = new_state;
+                             nlr_pop();
+                             goto run_code_state;
+@@ -1164,7 +1188,7 @@
+                         // (The latter is implicitly freed when using pystack due to its LIFO nature.)
+                         // The sizeof in the following statement does not include the size of the variable
+                         // part of the struct.  This arg is anyway not used if pystack is enabled.
+-                        mp_nonlocal_free(code_state, sizeof(mp_code_state_t));
++                        mp_nonlocal_free(code_state->stackless_alloc_start, sizeof(mp_code_state_t));
+                         #endif
+                         code_state = new_code_state;
+                         *code_state->sp = res;
+@@ -1493,7 +1517,7 @@
+                 // (The latter is implicitly freed when using pystack due to its LIFO nature.)
+                 // The sizeof in the following statement does not include the size of the variable
+                 // part of the struct.  This arg is anyway not used if pystack is enabled.
+-                mp_nonlocal_free(code_state, sizeof(mp_code_state_t));
++                mp_nonlocal_free(code_state->stackless_alloc_start, sizeof(mp_code_state_t));
+                 #endif
+                 code_state = new_code_state;
+                 size_t n_state = code_state->n_state;

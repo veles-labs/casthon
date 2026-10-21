@@ -1,0 +1,13 @@
+[package]
+name = "wasm-softfloat"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+anyhow = "1.0.104"
+casper-wasm = "1.0.0"
+casper-wasm-utils = "4.0.0"
+wasm-encoder = { version = "0.261.0", features = ["wasmparser"] }
+wasmparser = "0.261.0"
+

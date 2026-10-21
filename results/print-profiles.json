@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-20",
+  "profiles": {
+    "default": "debug",
+    "debug": "Built-in stdout serializes each UTF-8 chunk for casper_print; outer C diagnostics are enabled.",
+    "release": "Compile-time no-op stdout sink; C diagnostics and casper_print declaration/import are absent.",
+    "flags": [
+      "--release",
+      "--profile release",
+      "--profile debug"
+    ],
+    "semantics": "Print arguments and string conversions still execute. Return, revert, exception codes, finally and rollback remain unchanged.",
+    "buffers": "Debug stdout frees each temporary Casper string buffer; release stdout allocates no buffer.",
+    "cache": "Profiles have separate artifact directories and cache keys for both runtime backends.",
+    "testingApi": "build_contract(source, profile=\"release\"); LiveNetworkTest.profile = \"release\""
+  },
+  "validation": {
+    "nativeTests": 234,
+    "nativePythonVersions": [
+      "3.11",
+      "3.14"
+    ],
+    "wasmTests": 58,
+    "profileWasmTests": 6,
+    "plainAndCasperMetered": true,
+    "stockStackSlots": 500,
+    "backends": [
+      "asyncify",
+      "native-errors"
+    ],
+    "cliTests": 12,
+    "typecheckedSourceFiles": 60,
+    "rejectedTypeMistakes": 51,
+    "releaseCounterTests": {
+      "unminified": 3,
+      "minified": 3
+    },
+    "upstreamMicropythonChanged": false,
+    "preservedPatchesChanged": false,
+    "commands": [
+      "cargo test --locked",
+      "cargo build --release --locked",
+      "make build",
+      "make test-native",
+      "make typecheck",
+      "make test-wasm",
+      "PYTHONPATH=src .cache/optional-arg-py311/bin/python -m unittest discover -s tests -p test_*.py -v",
+      "target/release/casthon --python .venv/bin/python build counter --release --json",
+      ".venv/bin/python scripts/build.py counter --release --minify",
+      "CSPR_BUILD_DIR=build/release .venv/bin/python -m unittest discover -s tests/wasm -p test_wasm_counter.py -v",
+      "CSPR_BUILD_DIR=build/release/minified .venv/bin/python -m unittest discover -s tests/wasm -p test_wasm_counter.py -v"
+    ]
+  },
+  "counter": {
+    "debug": {
+      "wasm": "build/counter.wasm",
+      "bytes": 359340,
+      "sha256": "ccf15b0ae088cbe7b7ada15ae8b52d17432bd041795864a467a5d5ea887612fc",
+      "hostImports": 58,
+      "casperPrintImported": true,
+      "buildProfile": "debug",
+      "upstreamChanges": []
+    },
+    "release": {
+      "wasm": "build/release/counter.wasm",
+      "bytes": 358202,
+      "sha256": "195946154fbdfa193e5cd7a468b21242e49f0029564f323fba83291316d67226",
+      "hostImports": 57,
+      "casperPrintImported": false,
+      "buildProfile": "release",
+      "upstreamChanges": []
+    },
+    "releaseMinified": {
+      "wasm": "build/release/minified/counter.wasm",
+      "bytes": 353180,
+      "sha256": "eace62dab8058118d04bffc2343d55a5a47f01a1561adc5fd84cb2071068a05b",
+      "hostImports": 57,
+      "casperPrintImported": false,
+      "buildProfile": "release",
+      "upstreamChanges": []
+    }
+  },
+  "releaseSavedBytes": 1138
+}

@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-20",
+  "change": "CEP-18 methods and the installer receive typed Python parameters; named argument loading stays in the shared dispatcher.",
+  "semantics": {
+    "requiredDynamicArguments": "Annotated[T, Argument(abi=False)] requires an invocation argument while omitting it from generated registration metadata.",
+    "optionalArguments": "OptionalArg[T] distinguishes absent arguments from supplied values; defaults and MISSING retain their existing behavior.",
+    "decodingErrors": "Argument(error=SomeError) remaps ABIError while preserving MissingArgument and host ApiError exceptions.",
+    "guards": "entry_point(before=...) runs the named instance guard once, before boundary decoding, and also on ordinary local calls.",
+    "init": "Required package_hash and contract_hash remain absent from the upstream parameterless ABI. AlreadyInitialized precedes argument loading.",
+    "changeSecurity": "Optional admin_list, minter_list and none_list are injected. Mint/burn and authorization guards precede decoding; malformed lists retain User 60011, 60012 and 60013.",
+    "installer": "All eight inputs are declared in the signature. Supplied arguments validate before the install/upgrade branch, including creation-only inputs on upgrades.",
+    "localCalls": "Ordinary Python arguments and catchable exceptions; no named argument loading or boundary decoding."
+  },
+  "compatibility": {
+    "storedEntrypoints": 16,
+    "storedAbiMatchesRustFixture": true,
+    "manualArgumentReadsInCep18OrInstaller": 0,
+    "upstreamMicropythonChanges": [],
+    "nativePatchesChanged": false
+  },
+  "validation": {
+    "nativeTests": 234,
+    "nativePythonVersions": ["3.11", "3.14"],
+    "wasmTests": 52,
+    "cep18WasmTests": 9,
+    "plainAndCasperMetered": true,
+    "stockStackSlots": 500,
+    "typecheckedSourceFiles": 60,
+    "rejectedTypeMistakes": 51,
+    "liveTests": 4,
+    "liveTransactions": 44,
+    "expectedLiveFailures": 11,
+    "liveProtocol": "2.2.0",
+    "liveNetwork": "cspr-py-test-4eb74a1f52f4",
+    "liveNetworkStopped": true,
+    "cleanupErrors": [],
+    "bootstrapProbes": "Initial subprocess build failure; standalone rebuild and complete 52-test rerun passed.",
+    "commands": [
+      "make build",
+      "make test-native",
+      "make typecheck",
+      "make test-wasm",
+      "PYTHONPATH=src .cache/optional-arg-py311/bin/python -m unittest discover -s tests -p test_*.py -v",
+      "PYTHONPATH=src CSPR_LIVE_TESTS=1 .venv/bin/python -m unittest discover -s tests/live -p test_cep18.py -v"
+    ]
+  },
+  "artifact": {
+    "wasm": "build/my_token.wasm",
+    "bytes": 371023,
+    "sha256": "e23702cb058a7d9ff72c8f8475a7d736f07afbfd94b8b53b2a327f3868720a99",
+    "runtime": "upstream MicroPython 1.29.0 with Asyncify, SoftFloat and emmalloc-gc0"
+  }
+}

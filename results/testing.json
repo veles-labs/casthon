@@ -1,0 +1,353 @@
+{
+  "date": "2026-10-15",
+  "pythonTests": 121,
+  "wasmTestsPerBackend": 29,
+  "liveTests": 4,
+  "liveTransactions": 19,
+  "positiveTypeChecks": true,
+  "rejectedTypeMistakes": 15,
+  "pythonWheelSmoke": true,
+  "testingModulesFrozen": false,
+  "interpreterChangesForThisFeature": false,
+  "preservedMicropythonPatchSha256": {
+    "stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+  },
+  "artifacts": {
+    "asyncify": {
+      "counter": {
+        "path": "build/counter.wasm",
+        "bytes": 343158,
+        "sha256": "f843142eb65d0241b3e1af1c04fb234d1a0fd109d5e819ff9fb419d4acd6612f",
+        "exports": [
+          "increment",
+          "increment_by",
+          "add_fractional",
+          "get",
+          "set_mode",
+          "get_mode",
+          "mode_name",
+          "add_big",
+          "get_big",
+          "fail_after_write",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "hi_level": {
+        "path": "build/hi_level.wasm",
+        "bytes": 342283,
+        "sha256": "897b6b1e2a74d63d5f2a46085c644e187099adb8194a5bd6243bfe04360cfdf4",
+        "exports": [
+          "increment",
+          "increment_by",
+          "get",
+          "get_increments",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "api_smoke": {
+        "path": "build/api_smoke.wasm",
+        "bytes": 343102,
+        "sha256": "997d979073830684259018f54ae1fe2a642deef0387fba48a1dfcd26297fb3ec",
+        "exports": [
+          "read_count",
+          "call",
+          "call_counter"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "ffi_smoke": {
+        "path": "build/ffi_smoke.wasm",
+        "bytes": 345923,
+        "sha256": "3731a01334cf1faa55190432905049912cf6a17b60a2c5b82f048ec5e20ec9b7",
+        "exports": [
+          "ping",
+          "restricted",
+          "inspect_caller",
+          "emit_events",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "dispatch_smoke": {
+        "path": "build/dispatch_smoke.wasm",
+        "bytes": 347035,
+        "sha256": "a08fd46a77007700a81d1030bbe3f47db6e0b251c7972f64122ed8f1374ad5b3",
+        "exports": [
+          "value",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "native_unwind": {
+        "path": "build/native_unwind.wasm",
+        "bytes": 345538,
+        "sha256": "0ff8ea26e5e8933be8cc89bec907920e63aa2f639b6c486dcdb55e73ca46e402",
+        "exports": [
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      },
+      "typed_exports": {
+        "path": "build/typed_exports.wasm",
+        "bytes": 343609,
+        "sha256": "1602c885ae764317feff7bc7a33c5f6abb99d658d7d5ec639ceb9c3db896ffa0",
+        "exports": [
+          "calculate",
+          "nullable",
+          "defaults",
+          "owner",
+          "internal",
+          "checked_return",
+          "key_return",
+          "early_ret",
+          "failure",
+          "unit",
+          "call"
+        ],
+        "upstreamFilesVerified": 6741
+      }
+    },
+    "native-errors": {
+      "counter": {
+        "path": "build/native-errors/counter.wasm",
+        "bytes": 211860,
+        "sha256": "41acee80732dc3edf712f7173a55f8f41c1071011c0c487da7c3deead90dc28f",
+        "exports": [
+          "increment",
+          "increment_by",
+          "add_fractional",
+          "get",
+          "set_mode",
+          "get_mode",
+          "mode_name",
+          "add_big",
+          "get_big",
+          "fail_after_write",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "hi_level": {
+        "path": "build/native-errors/hi_level.wasm",
+        "bytes": 210987,
+        "sha256": "165b2ee61f5bb7b2919671faa32d7c622b148c483a0e400aceed78a8f53fe0e8",
+        "exports": [
+          "increment",
+          "increment_by",
+          "get",
+          "get_increments",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "api_smoke": {
+        "path": "build/native-errors/api_smoke.wasm",
+        "bytes": 211808,
+        "sha256": "d78950436981de204dafaa65c6b50e6a7e763338513fc2f73cbbb2e263816c03",
+        "exports": [
+          "read_count",
+          "call",
+          "call_counter"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "ffi_smoke": {
+        "path": "build/native-errors/ffi_smoke.wasm",
+        "bytes": 214626,
+        "sha256": "93e3cf5e2b9975b1e9b1b6431f6b20b3df00cc248132b331eb12c8805d2a10e2",
+        "exports": [
+          "ping",
+          "restricted",
+          "inspect_caller",
+          "emit_events",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "dispatch_smoke": {
+        "path": "build/native-errors/dispatch_smoke.wasm",
+        "bytes": 215732,
+        "sha256": "241533e00ed102412a3a8687aed0389a972560a38e560b8c28970d767e0434ff",
+        "exports": [
+          "value",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "native_unwind": {
+        "path": "build/native-errors/native_unwind.wasm",
+        "bytes": 214336,
+        "sha256": "40b4140a2439f3db90b8574727abdb71d8db3e81fa854fc3ccd4b50a89531e2f",
+        "exports": [
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      },
+      "typed_exports": {
+        "path": "build/native-errors/typed_exports.wasm",
+        "bytes": 212308,
+        "sha256": "a581b3cf1a0e0799f465bb0d7669a3841b1a9bbb2f490a63c7e268032caf6593",
+        "exports": [
+          "calculate",
+          "nullable",
+          "defaults",
+          "owner",
+          "internal",
+          "checked_return",
+          "key_return",
+          "early_ret",
+          "failure",
+          "unit",
+          "call"
+        ],
+        "upstreamFilesVerified": 6743
+      }
+    }
+  },
+  "live": {
+    "network": "cspr-py-test-18cba0bbeb75",
+    "protocolVersion": "2.2.0",
+    "networkStopped": true,
+    "ownedProcessIdsVerifiedStopped": [
+      "20260",
+      "20261",
+      "20262",
+      "20264",
+      "20265",
+      "20266",
+      "20267",
+      "20268"
+    ],
+    "networkFilesRetained": true,
+    "artifacts": {
+      "hi_level": {
+        "sha256": "897b6b1e2a74d63d5f2a46085c644e187099adb8194a5bd6243bfe04360cfdf4",
+        "path": ".cache/cspr-testing/build/f7b30516224b89e196597a2f7bdc0e36eaba936158faa8215def3e5c4d387667/hi_level.wasm"
+      },
+      "typed_exports": {
+        "sha256": "1602c885ae764317feff7bc7a33c5f6abb99d658d7d5ec639ceb9c3db896ffa0",
+        "path": ".cache/cspr-testing/build/f7b30516224b89e196597a2f7bdc0e36eaba936158faa8215def3e5c4d387667/typed_exports.wasm"
+      }
+    },
+    "transactions": [
+      {
+        "hash": "34ba78d41e7c34cbf097aff06e48f1087f7768a1a445bc87422cf4191759c14c",
+        "error": null,
+        "consumed": "100000000",
+        "cost": "100000000"
+      },
+      {
+        "hash": "08b8f6e96e36ed8688af42ead8c37a473a9eaba43ebb16165cba33e23456ceb1",
+        "error": null,
+        "consumed": "574898178345",
+        "cost": "800000000000"
+      },
+      {
+        "hash": "4ba3f2d5b300db33eefe8addc49e300896b6305de20c9ced48a09cc692567bb5",
+        "error": null,
+        "consumed": "13272145153",
+        "cost": "100000000000"
+      },
+      {
+        "hash": "cee99facddcb03138d7049f868a04e1d986dc75b0fc52aee3a92a7a43687775d",
+        "error": "ApiError::InvalidArgument [3]",
+        "consumed": "11550997105",
+        "cost": "100000000000"
+      },
+      {
+        "hash": "d0a50422cfa9f7bfb3f1f9bc4f7468ba50f393b2ca1d62ef8edce7153fe03c96",
+        "error": "ApiError::MissingArgument [2]",
+        "consumed": "10960374140",
+        "cost": "100000000000"
+      },
+      {
+        "hash": "3dfaab365550d97c18a57cfdb85454a0a16e1308e9a67e21883793324cd7a919",
+        "error": null,
+        "consumed": "100000000",
+        "cost": "100000000"
+      },
+      {
+        "hash": "722d56ebea76d0b60b31ab1f5424a00cab56fc0d96ae8ccd378d3741bc493f1c",
+        "error": null,
+        "consumed": "574898178345",
+        "cost": "800000000000"
+      },
+      {
+        "hash": "d6f6477554cfdf941a86ef443942f0e2b515308a8e036d77b1dbcef0fd66d6e5",
+        "error": null,
+        "consumed": "13269310418",
+        "cost": "100000000000"
+      },
+      {
+        "hash": "b6cdde3459510d63e2de2607d9a25190fdb67a03598c82e290cca39210c4ea25",
+        "error": null,
+        "consumed": "11721199115",
+        "cost": "800000000000"
+      },
+      {
+        "hash": "ef5c0f66aeb0a06aeac5919961aa82b99791a28d2852058bc2a5a7e97f0125f3",
+        "error": null,
+        "consumed": "100000000",
+        "cost": "100000000"
+      },
+      {
+        "hash": "8fd9ee831d45b5204c8916cf940ba35729bd61d150ad038a554f17c89615b44e",
+        "error": null,
+        "consumed": "574898178345",
+        "cost": "800000000000"
+      },
+      {
+        "hash": "9fe7bd0f3410318805e83866ddc0036ced81af1b11cfc50715b2401eabe1710c",
+        "error": null,
+        "consumed": "100000000",
+        "cost": "100000000"
+      },
+      {
+        "hash": "bf41e97f92c1902c84284ddaa5612e1cd1ab4123e7fcfc36f8d8c642eee54c6a",
+        "error": null,
+        "consumed": "100000000",
+        "cost": "100000000"
+      },
+      {
+        "hash": "1b042750201d2b7d6a90284436374703ecad2126d70ed8cf71008dedc8b794e3",
+        "error": null,
+        "consumed": "100000000",
+        "cost": "100000000"
+      },
+      {
+        "hash": "89308696f7f068f3fc1270f626f3872d6452b80c8213525a91c9a788a7da76ae",
+        "error": null,
+        "consumed": "575446180264",
+        "cost": "800000000000"
+      },
+      {
+        "hash": "3c0832d64b6c1118a47ae689efe4c0f8d079a423e3d9cb4f2181e3ab423b325a",
+        "error": null,
+        "consumed": "11249538200",
+        "cost": "100000000000"
+      },
+      {
+        "hash": "8551717be655fb6c569c150cd1e060e5307c9343b6d5cc3a15cf41c584c36f64",
+        "error": null,
+        "consumed": "11339456145",
+        "cost": "100000000000"
+      },
+      {
+        "hash": "7790cb2c357a1eff6bd756f4d34f8824998d442d122789b8cfce1b67a4024a3b",
+        "error": null,
+        "consumed": "11339522850",
+        "cost": "100000000000"
+      },
+      {
+        "hash": "e28cc67d6b2a60c0e66f9a9755ba67f251e5ba6ae271906ebc437b252efa4ffa",
+        "error": "ApiError::MissingArgument [2]",
+        "consumed": "10871771135",
+        "cost": "100000000000"
+      }
+    ]
+  }
+}

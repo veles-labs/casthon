@@ -1,0 +1,398 @@
+{
+  "created": "2026-10-19T14:00:21.936300+02:00",
+  "feature": "Event encoder mixins and explicit delivery without Contract.emit",
+  "api": {
+    "record": "class Mint(Event, Bytesrepr): ...",
+    "defaultEncoder": "event.to_message()",
+    "explicitEncoder": "Json.to_message(event)",
+    "nativeDelivery": "runtime.emit_message(topic, event.to_message())",
+    "cesDelivery": "ces.emit(event, events=Contract.event_types())",
+    "cesInstallation": "ces.initial_named_keys(events) / ces.initialize(events)",
+    "customEncoder": "class Custom(MessageEncoder): ..."
+  },
+  "behavior": [
+    "One encoder supplies the default; zero or multiple encoders raise TypeError",
+    "Records can override to_message to define a default",
+    "All encoder mixins return MessageString | MessageBytes for compatible typing",
+    "Bytesrepr encodes ordered fields without the CES event-name envelope",
+    "Json returns text; JsonBytes returns UTF-8 JSON in a binary carrier",
+    "Event has no to_bytes or to_json methods and imposes no decoder",
+    "CES framing and state are owned by cspr.ces; Contract has no emit API",
+    "JSON field validation does not produce a binary field payload",
+    "The freezer binds constructors and encoder choices without executing source",
+    "Inheritance with incompatible MicroPython lookup is rejected",
+    "All nine upstream CEP-18 CES payloads, schemas and native messages remain compatible"
+  ],
+  "tests": {
+    "native": {
+      "passed": 222,
+      "log": "/tmp/casthon-encoders-pytest.log",
+      "subtests": 240
+    },
+    "wasm": {
+      "passed": 51,
+      "log": "/tmp/casthon-encoders-wasm-all.log"
+    },
+    "minified": {
+      "passed": 11,
+      "log": "/tmp/casthon-encoders-min-tests.log"
+    },
+    "nativeErrors": {
+      "passed": 3,
+      "log": "/tmp/casthon-encoders-native-tests.log"
+    },
+    "python311": {
+      "passed": 45,
+      "log": "/tmp/casthon-encoders-python311.log"
+    },
+    "rust": {
+      "passed": 11,
+      "log": "/tmp/casthon-encoders-rust.log"
+    },
+    "liveCep18": {
+      "passed": 4,
+      "log": "/tmp/casthon-encoders-live.log",
+      "network": "cspr-py-test-a6a6d9a2e498",
+      "protocolVersion": "2.2.0",
+      "networkStopped": true,
+      "cleanupErrors": [],
+      "transactions": 39
+    },
+    "mypy": {
+      "sdkAndContracts": "passed",
+      "typedUsage": "passed",
+      "expectedTypeErrors": 48
+    }
+  },
+  "artifacts": {
+    "build/basic.wasm": {
+      "bytes": 356051,
+      "sha256": "57176977dde99ea48b037c5d0960c82417f2897f1780860c5b6ee842145b7bce",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/basic-build-report.json",
+      "meteredSha256": "975e5bc615ed992e766568cced97dd48921b21d35140458dbb6eca266c8486e8"
+    },
+    "build/counter.wasm": {
+      "bytes": 357615,
+      "sha256": "c5968f87d37b9a05b759a3946e37e070d8be074d009111258630b9b896820133",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/counter-build-report.json",
+      "meteredSha256": "3294da040e32c67a49b957bf3c242cc6342425d0d4f1473fd2b827212c89f59c"
+    },
+    "build/counter_session.wasm": {
+      "bytes": 357235,
+      "sha256": "afcd3f427998d3dc4ca8885d281193a067e80042673e9704242017356f25991f",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/counter_session-build-report.json",
+      "meteredSha256": "a918b20c21da1d378e3346ab29c6ee8a65415d7e6ea61d4757a3beb7fe5e85ad"
+    },
+    "build/my_token.wasm": {
+      "bytes": 368510,
+      "sha256": "2c1bfc6e6929b23a763130bde1ce6809b39f6ec48af0e1ce9ed820aed9b4ce3f",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/my_token-build-report.json",
+      "meteredSha256": "c3eb07c8b83d58e386bf2d06d29f3c52fb35d6552cacb6d9810c3914d912b8ae"
+    },
+    "build/api_smoke.wasm": {
+      "bytes": 355836,
+      "sha256": "140aeb6f703dcb3da98a4325f020d93325805fcc42cd5dd366e0be002cefafdb",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "read_count",
+        "call",
+        "call_counter"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/api_smoke-build-report.json",
+      "meteredSha256": "9b8f62aad9e45d6d6e13b1bb563e7e6e4d1ed539770b70769d592bd678165ec0"
+    },
+    "build/ffi_smoke.wasm": {
+      "bytes": 358751,
+      "sha256": "ace5ed00b5041fa21de9ec834be48837face330da7e09a1f413fc3bd1782a44c",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/ffi_smoke-build-report.json",
+      "meteredSha256": "236955ac72965b5d90916f07bccf8bf2359d83a2b16d000dbbece1f5cd069d4c"
+    },
+    "build/dispatch_smoke.wasm": {
+      "bytes": 359877,
+      "sha256": "4bad64e80d85c7f2205576980ee5c666cd8a7ab706d65cd34bfd365659867f95",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "value",
+        "call"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/dispatch_smoke-build-report.json",
+      "meteredSha256": "a34119e3f589fd71dbe442ea330c770e19a22f21365b75ee1d3ed87860da42b0"
+    },
+    "build/native_unwind.wasm": {
+      "bytes": 358201,
+      "sha256": "4b97cac4ba1b2f8270ba2d76242bb581778ffffe346ca1b701b22f2a1bad8dac",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/native_unwind-build-report.json",
+      "meteredSha256": "ceea01245fb13529e6baf8bf3bed7ce272d574d8e6ba5b2387fae1acee573b2b"
+    },
+    "build/typed_exports.wasm": {
+      "bytes": 357220,
+      "sha256": "4bac465786b52361614c011e5018edb28752e52807e681102ebd51688cbed894",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "presence",
+        "presence_default",
+        "presence_number",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/typed_exports-build-report.json",
+      "meteredSha256": "f2d3f4f79d6ebfab7ff060888dee31108862485cc844581f0194a1d7e4cd7e40"
+    },
+    "build/minified/counter.wasm": {
+      "bytes": 352655,
+      "sha256": "08be0c524904edb2f99208c5a713f02c0c2cde4857dbd8f9bef3dfef5f5b8c4a",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/minified/counter-build-report.json",
+      "meteredSha256": "b275119e99ce40598db872c44a786288555963b10dd363329aa56d428d9a2b8e"
+    },
+    "build/minified/my_token.wasm": {
+      "bytes": 363083,
+      "sha256": "d50a48241e82506058e4fca0c7420cb472796e416d82c512145b561eee215759",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/minified/my_token-build-report.json",
+      "meteredSha256": "cfbe2cd51a262d32b7731241c14f86f1b702aecf6e241ebc1a6ed956cfe2e80b"
+    },
+    "build/native-errors/counter.wasm": {
+      "bytes": 230075,
+      "sha256": "c0d6611bb1cc08d5015de1ce1d39ee4427d60e88271850ce0c46c111554496f6",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-native-errors",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "upstreamFilesVerified": 6743,
+      "upstreamChanges": [
+        "py/argcheck.c",
+        "py/bc.c",
+        "py/bc.h",
+        "py/binary.c",
+        "py/builtinimport.c",
+        "py/emitglue.c",
+        "py/gc.c",
+        "py/malloc.c",
+        "py/map.c",
+        "py/misc.h",
+        "py/modbuiltins.c",
+        "py/modgc.c",
+        "py/modstruct.c",
+        "py/modsys.c",
+        "py/mpprint.c",
+        "py/mpstate.h",
+        "py/mpz.c",
+        "py/nativeerror.c",
+        "py/nativeerror.h",
+        "py/nlrsetjmp.c",
+        "py/obj.c",
+        "py/obj.h",
+        "py/objarray.c",
+        "py/objattrtuple.c",
+        "py/objbool.c",
+        "py/objboundmeth.c",
+        "py/objcell.c",
+        "py/objclosure.c",
+        "py/objdict.c",
+        "py/objenumerate.c",
+        "py/objexcept.c",
+        "py/objfilter.c",
+        "py/objfloat.c",
+        "py/objfun.c",
+        "py/objgenerator.c",
+        "py/objgetitemiter.c",
+        "py/objint.c",
+        "py/objint.h",
+        "py/objint_impl.h",
+        "py/objint_mpz.c",
+        "py/objlist.c",
+        "py/objlist.h",
+        "py/objmap.c",
+        "py/objmodule.c",
+        "py/objnamedtuple.c",
+        "py/objnone.c",
+        "py/objobject.c",
+        "py/objpolyiter.c",
+        "py/objproperty.c",
+        "py/objrange.c",
+        "py/objreversed.c",
+        "py/objset.c",
+        "py/objsingleton.c",
+        "py/objslice.c",
+        "py/objstr.c",
+        "py/objstrunicode.c",
+        "py/objtuple.c",
+        "py/objtype.c",
+        "py/objzip.c",
+        "py/opmethods.c",
+        "py/pairheap.c",
+        "py/pairheap.h",
+        "py/parsenum.c",
+        "py/py.mk",
+        "py/pystack.c",
+        "py/pystack.h",
+        "py/qstr.c",
+        "py/reader.c",
+        "py/runtime.c",
+        "py/runtime.h",
+        "py/runtime_utils.c",
+        "py/scheduler.c",
+        "py/sequence.c",
+        "py/stream.c",
+        "py/vm.c",
+        "py/vstr.c"
+      ],
+      "report": "build/native-errors/counter-build-report.json",
+      "meteredSha256": "bb60ac5d036418a3174ac1153170e33edd531ee67945b4bb49a6eb866cda2c03"
+    }
+  },
+  "preserved": {
+    "defaultRuntime": "pristine MicroPython 1.29.0 with Asyncify",
+    "stackLimit": 500,
+    "heap": "fixed 4 MiB emmalloc-gc0",
+    "initializeExportAbsentInArtifacts": 27,
+    "nativePortMakefileSha256": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae"
+  }
+}

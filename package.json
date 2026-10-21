@@ -1,0 +1,6 @@
+{
+  "name": "cspr-py-wasm-tests",
+  "private": true,
+  "type": "module",
+  "devDependencies": { "@noble/hashes": "2.4.0" }
+}

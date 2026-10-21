@@ -1,0 +1,67 @@
+F
+======================================================================
+FAIL: test_failure (test_print_fd.TestPrintFD.test_failed_live_test_displays_print_output.<locals>.DeliberateFailure.test_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/michal/Dev/cspr-py/tests/live/test_print_fd.py", line 44, in test_failure
+    self.fail("deliberate failure to verify captured diagnostics")
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: deliberate failure to verify captured diagnostics
+Captured Casper prints (node stream; no transaction attribution):
+[22 earlier lines omitted]
+node-4: 
+node-4: 
+node-4: C_DISPATCH_API:User
+node-4: 
+node-4: Traceback (most recent call last):
+node-4: 
+node-4:   File "_cspr_dispatcher.py", in dispatch
+node-4: 
+node-4:   File "cspr/_dispatch.py", in invoke
+node-4: 
+node-4:   File "contract.py", in call
+node-4: 
+node-4: User: 77
+node-4: 
+node-2: test_print_fd.TestPrintFD.test_failed_live_test_displays_print_output: before | Zażółć 🐍
+node-2: 
+node-2: 
+node-2: test_print_fd.TestPrintFD.test_failed_live_test_displays_print_output: finally
+node-2: 
+node-2: 
+node-2: C_DISPATCH_API:User
+node-2: 
+node-2: Traceback (most recent call last):
+node-2: 
+node-2:   File "_cspr_dispatcher.py", in dispatch
+node-2: 
+node-2:   File "cspr/_dispatch.py", in invoke
+node-2: 
+node-2:   File "contract.py", in call
+node-2: 
+node-2: User: 77
+node-2: 
+node-1: test_print_fd.TestPrintFD.test_failed_live_test_displays_print_output: before | Zażółć 🐍
+node-1: 
+node-1: 
+node-1: test_print_fd.TestPrintFD.test_failed_live_test_displays_print_output: finally
+node-1: 
+node-1: 
+node-1: C_DISPATCH_API:User
+node-1: 
+node-1: Traceback (most recent call last):
+node-1: 
+node-1:   File "_cspr_dispatcher.py", in dispatch
+node-1: 
+node-1:   File "cspr/_dispatch.py", in invoke
+node-1: 
+node-1:   File "contract.py", in call
+node-1: 
+node-1: User: 77
+node-1: 
+Capture file: /Users/michal/Dev/cspr-py/.cache/cspr-testing/live/test_print_fd.TestPrintFD/contract-prints.jsonl
+
+----------------------------------------------------------------------
+Ran 1 test in 4.433s
+
+FAILED (failures=1)

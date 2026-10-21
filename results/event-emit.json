@@ -1,0 +1,109 @@
+{
+  "created": "2026-10-20T16:46:13.746686+02:00",
+  "feature": "Event-facing emit function with explicit topic and encoder options",
+  "api": {
+    "import": "from cspr import emit",
+    "default": "emit(event)",
+    "explicitEncoder": "emit(event, encoder=Json.to_message)",
+    "explicitTopic": "emit(event, topic=\"audit\")",
+    "lowLevel": "runtime.emit_message(topic, message_payload_or_serialized_bytes)"
+  },
+  "behavior": [
+    "emit accepts only Event instances and selects the event default unless an encoder is supplied",
+    "The default topic is events; custom topics must already be registered with Casper",
+    "Missing or ambiguous defaults and invalid encoder results fail before host emission",
+    "Encoder callables retain the concrete event type and return MessageString or MessageBytes",
+    "Encoding exceptions remain catchable and execute finally blocks",
+    "CEP-18 and event contract examples use emit with event instances",
+    "CEP-18 mode policy remains in its module-level emit function",
+    "Low-level runtime.emit_message accepts only MessagePayload or serialized bytes",
+    "Raw payload calls remain covered by low-level FFI probes and API tests",
+    "The independent Wasm host fixture decodes registered message topics without hardcoded names",
+    "No Contract.emit or ambient contract instance is introduced"
+  ],
+  "tests": {
+    "native": {
+      "passed": 240,
+      "subtests": 257,
+      "log": "/tmp/casthon-emit-pytest.log"
+    },
+    "python311": {
+      "passed": 53,
+      "log": "/tmp/casthon-emit-python311.log"
+    },
+    "wasmEventsAndCep18": {
+      "passed": 11,
+      "log": "/tmp/casthon-emit-wasm.log",
+      "coverage": "Plain and metered event fixtures and CEP-18 behavior, with the stock 500-slot stack limit"
+    },
+    "minifiedCep18": {
+      "passed": 9,
+      "log": "/tmp/casthon-emit-min-tests.log"
+    },
+    "mypy": {
+      "sdkAndContracts": "passed (61 files)",
+      "typedUsage": "passed",
+      "expectedTypeErrors": 52,
+      "log": "/tmp/casthon-emit-types.log"
+    }
+  },
+  "artifacts": {
+    "build/my_token.wasm": {
+      "bytes": 370205,
+      "sha256": "aa309ebf6a7a7f869a4308cf333dee9ef925e47403a0537e35032311bba804a3",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/my_token-build-report.json",
+      "meteredSha256": "57bf3b68c2166f86282f74d8f69052fcd13082c55d71142d01ad0e04ae1d2680"
+    },
+    "build/minified/my_token.wasm": {
+      "bytes": 364713,
+      "sha256": "16549b56bcfd2273551a4cbcd616a3f42fe8d44fa9ba49bbe6cc9909c56e6fca",
+      "profile": "procedural-softfloat-asyncify",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "report": "build/minified/my_token-build-report.json",
+      "meteredSha256": "234a958625f4d74dc1dad3dcfbf08ecb39c08302c3a849595c6f7ee6d273d6f8"
+    }
+  },
+  "nativePortMakefileSha256": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae"
+}

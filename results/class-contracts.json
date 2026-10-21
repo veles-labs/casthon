@@ -1,0 +1,552 @@
+{
+  "date": "2026-10-16",
+  "runtime": "asyncify",
+  "heap": "emmalloc-gc0",
+  "upstreamMicroPythonChanges": [],
+  "inheritance": [
+    "Counter(Pausable)",
+    "Pausable(Ownable)",
+    "Ownable(Contract)"
+  ],
+  "state": [
+    {
+      "attribute": "owner",
+      "namedKey": "owner",
+      "kind": "URef",
+      "valueType": "Key"
+    },
+    {
+      "attribute": "paused",
+      "namedKey": "paused",
+      "kind": "URef",
+      "valueType": "Bool"
+    },
+    {
+      "attribute": "count",
+      "namedKey": "count",
+      "kind": "URef",
+      "valueType": "U32"
+    },
+    {
+      "attribute": "increments",
+      "namedKey": "increments",
+      "kind": "Dictionary",
+      "keyType": "AccountHash",
+      "valueType": "U32",
+      "keyTransform": "bytes(account)[1:].hex()"
+    }
+  ],
+  "storedEntryPoints": [
+    {
+      "name": "get_owner",
+      "args": {},
+      "returns": "Key"
+    },
+    {
+      "name": "transfer_ownership",
+      "args": {
+        "new_owner": "Key"
+      },
+      "returns": "Unit"
+    },
+    {
+      "name": "pause",
+      "args": {},
+      "returns": "Unit"
+    },
+    {
+      "name": "unpause",
+      "args": {},
+      "returns": "Unit"
+    },
+    {
+      "name": "is_paused",
+      "args": {},
+      "returns": "Bool"
+    },
+    {
+      "name": "increment",
+      "args": {},
+      "returns": "Unit"
+    },
+    {
+      "name": "increment_by",
+      "args": {
+        "amount": "U32"
+      },
+      "returns": "Unit"
+    },
+    {
+      "name": "get",
+      "args": {},
+      "returns": "U32"
+    },
+    {
+      "name": "get_increments",
+      "args": {
+        "owner": "Key"
+      },
+      "returns": "U32"
+    }
+  ],
+  "rootSelection": "export_contract(Counter)",
+  "installation": "Explicit top-level @export call; Counter.initial_named_keys(count=initial), explicit package creation, Counter.add_contract_version(package, initial_keys).",
+  "defaults": {
+    "owner": "transaction caller",
+    "paused": false,
+    "count": 0,
+    "increments": {}
+  },
+  "errorCodes": {
+    "NotOwner": 65636,
+    "Paused": 65637
+  },
+  "validation": {
+    "nativeTests": 155,
+    "wasmTests": 33,
+    "liveTests": 6,
+    "typecheckedSourceFiles": 51,
+    "rejectedTypeMistakes": 25,
+    "stockStackSlots": 500,
+    "ffiSignaturesPerArtifact": 58,
+    "bootstrapAndContractImportProbeCases": 11
+  },
+  "limitations": [
+    "Inheritance layouts with differing CPython C3 and MicroPython depth-first attribute/super resolution are rejected at build time. General cooperative C3 diamonds are not implemented.",
+    "Imported Python modules retain bodies and ordinary import-time execution; ABI-only extraction is not implemented.",
+    "Preserved native-errors patches are unchanged; this revision was validated against the default Asyncify backend."
+  ],
+  "artifacts": {
+    "basic": {
+      "bytes": 346670,
+      "sha256": "c7cc55fae1bca112f151a0217e68a4ed53e8342979545afbf1fb098094b81bef",
+      "exports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call"
+      ],
+      "functionExports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call",
+        "_initialize"
+      ]
+    },
+    "counter": {
+      "bytes": 348187,
+      "sha256": "c0558f8d4876ad80ac85b2ba67a8f4f5680599a2f99006090bb5fcf30c07c265",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "functionExports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments",
+        "_initialize"
+      ]
+    },
+    "counter_session": {
+      "bytes": 347844,
+      "sha256": "b27f041fafd26ebf9703c8599bd0fd51215704a6979aaa41bdaa9abd8b4717f1",
+      "exports": [
+        "call"
+      ],
+      "functionExports": [
+        "call",
+        "_initialize"
+      ]
+    },
+    "api_smoke": {
+      "bytes": 346498,
+      "sha256": "906e403718ef4a57025b5055bbbb52d8921128edd7cc0a30e8ac2e249d4522bc",
+      "exports": [
+        "read_count",
+        "call",
+        "call_counter"
+      ],
+      "functionExports": [
+        "read_count",
+        "call",
+        "call_counter",
+        "_initialize"
+      ]
+    },
+    "ffi_smoke": {
+      "bytes": 349382,
+      "sha256": "dc8528cb3bf1ba34b520927c98db1fdfd7ea64f3cfd0a7cfcc1994f4903027c4",
+      "exports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call"
+      ],
+      "functionExports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call",
+        "_initialize"
+      ]
+    },
+    "dispatch_smoke": {
+      "bytes": 350420,
+      "sha256": "6497e0a3f31103a6ee53315c7c62e69bcea1b54025f4f51f1ed1c562328d5999",
+      "exports": [
+        "value",
+        "call"
+      ],
+      "functionExports": [
+        "value",
+        "call",
+        "_initialize"
+      ]
+    },
+    "native_unwind": {
+      "bytes": 348901,
+      "sha256": "62df3654d1e801af7cb7b42f121693f783b7f1367de48bcbb4525b5eea36dbe9",
+      "exports": [
+        "call"
+      ],
+      "functionExports": [
+        "call",
+        "_initialize"
+      ]
+    },
+    "typed_exports": {
+      "bytes": 347152,
+      "sha256": "d4a139a675f9e2d8ac4bd4212d5acf516b1ea1d6ae214e7f03df9a8ea715cd42",
+      "exports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call"
+      ],
+      "functionExports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call",
+        "_initialize"
+      ]
+    }
+  },
+  "sizeChangeFromProceduralCounter": {
+    "counterBytes": 7309,
+    "counterSessionBytes": 6752
+  },
+  "live": {
+    "protocolVersion": "2.2.0",
+    "network": "cspr-py-test-1fafee47e7fa",
+    "transactionCount": 35,
+    "successCount": 28,
+    "errors": {
+      "ApiError::InvalidArgument [3]": 1,
+      "ApiError::MissingArgument [2]": 2,
+      "User error: 100": 2,
+      "User error: 101": 1,
+      "User error: 1": 1
+    },
+    "networkStopped": true,
+    "cleanupErrors": [],
+    "transactions": [
+      {
+        "hash": "7dfe9e8e359a7cdc87d6725e55643454253d56132e13713deb5c9be3f9fcaf9c",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "7163299fb400a5d9f0c8e2c6ed2619b685fbd0965834aebfb896cb90ded11abb",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 585632175370
+      },
+      {
+        "hash": "95d50a8e91be1d525acd42e6b145822634a926e0834411be95e64798ef5ee375",
+        "entryPoint": {
+          "Custom": "increment_by"
+        },
+        "error": null,
+        "gas": 15514758838
+      },
+      {
+        "hash": "c9e0e0811f7c92849d2d26b462eed21053d0cf3a0b6aa870050afbf089e316b6",
+        "entryPoint": {
+          "Custom": "increment"
+        },
+        "error": "ApiError::InvalidArgument [3]",
+        "gas": 13610514910
+      },
+      {
+        "hash": "ee65e312f70384c6e0eb28ba09262db5fa9c77458ae405ecd53a08fd507b21af",
+        "entryPoint": {
+          "Custom": "increment_by"
+        },
+        "error": "ApiError::MissingArgument [2]",
+        "gas": 12422710265
+      },
+      {
+        "hash": "2948207a4fa954a5c711455712540c6fd68926f6a4023fb9cf14336393c3759c",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "f0213bd1265370c4dd152d050f2ff1e9ca133480136e5e1468fd102493cd272e",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 585632175370
+      },
+      {
+        "hash": "9c5ca2d8487e99508ded8cbefc586d9f1f6f26084aaaae460b39239f55c6c984",
+        "entryPoint": {
+          "Custom": "increment_by"
+        },
+        "error": null,
+        "gas": 15512340683
+      },
+      {
+        "hash": "ca183e2faa1436aab3b8d09db55c14aa94251b0153fb79c219320a7e497b6593",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 13274290280
+      },
+      {
+        "hash": "2bdd46a063295632db5d6e439107361da36fb08a3ce593565283d461962c0d32",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "49422dc8c82555f7fc692d1c799a27d7962e22f2224994da7cc7ecd11cc33865",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "665b7c0838410fe43d6b0a283120104b0a1ad63644e0ef8affd4f0b22c2255b7",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 585632175370
+      },
+      {
+        "hash": "fe7a90b6e6916027de386865d9d23dfba49a0260e96105698154397ab5e288ab",
+        "entryPoint": {
+          "Custom": "pause"
+        },
+        "error": "User error: 100",
+        "gas": 13063672225
+      },
+      {
+        "hash": "b6cb6262e354cf581b196442de6b936a10dd70f6986c44ac641aa3c2e285f77b",
+        "entryPoint": {
+          "Custom": "pause"
+        },
+        "error": null,
+        "gas": 13702523889
+      },
+      {
+        "hash": "d5b1a001a1653330a3deccf3a098dfbdaddb3ab01ca4a7cbdc2b4d413d1c84d9",
+        "entryPoint": "Call",
+        "error": "User error: 101",
+        "gas": 26346548205
+      },
+      {
+        "hash": "3fec2f944788236e4f373b9b897bfbf0a731e8129af4706d37cb3fa8cd54af6b",
+        "entryPoint": {
+          "Custom": "unpause"
+        },
+        "error": null,
+        "gas": 13702652139
+      },
+      {
+        "hash": "a91fa5fad5aff3d3c6c475b98acbe1895ce2c3fe76a7c68bc20ea6f21caf7a74",
+        "entryPoint": {
+          "Custom": "increment"
+        },
+        "error": null,
+        "gas": 15450667663
+      },
+      {
+        "hash": "b5c2898d77033c89fffa9fc9186074644665f1305985fe11a41e4cb133871751",
+        "entryPoint": {
+          "Custom": "transfer_ownership"
+        },
+        "error": null,
+        "gas": 13968549253
+      },
+      {
+        "hash": "7c1744a8be52d9eff8a3d35450a490108b17fa81ce47c172d794548600ccc46c",
+        "entryPoint": {
+          "Custom": "pause"
+        },
+        "error": "User error: 100",
+        "gas": 13063672225
+      },
+      {
+        "hash": "94d555a14c7e3d90308fb5da8f0094f705eb15bed535e9ee09887f4e6fa8a843",
+        "entryPoint": {
+          "Custom": "pause"
+        },
+        "error": null,
+        "gas": 13702523889
+      },
+      {
+        "hash": "a1ccd06b66d6e727121527dc7714422c92837b6228c1ad32b928b577267ea188",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "3c517bd66940a18fc79fbe7143f6e54aa442fe46ed51aebd1f08076c3b20224a",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 585632175370
+      },
+      {
+        "hash": "fd5f8b6d3189db03203e6e2f68a402545db8e1c6388d6a73eb18bb3598545db3",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "81c7d364e9f3f295fdce6f6bd62951b17302d714666434ba57bffda67f78fc2f",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "58e703fe81a88c2079e1a45d31ee3f668874df5e48e42039f6518f479f3e143a",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "3774f3877950f460d9ac54a4889c223737d2988650a02417412d94804f1777ef",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 577705195952
+      },
+      {
+        "hash": "ee5c77c1afa13cd1c287df5543482a7b5553d978eb476919fc659809a5c261d7",
+        "entryPoint": {
+          "Custom": "nullable"
+        },
+        "error": null,
+        "gas": 11324641440
+      },
+      {
+        "hash": "5346087c184b0ecd6c71494287eaea19a5500f9e282784cf0ffbc94a7ce25c2d",
+        "entryPoint": {
+          "Custom": "nullable"
+        },
+        "error": null,
+        "gas": 11412219190
+      },
+      {
+        "hash": "791baeea07a09ad3f49fa5728f3ee072424d3a3810567b1fbf01acaa58252b9d",
+        "entryPoint": {
+          "Custom": "nullable"
+        },
+        "error": null,
+        "gas": 11412285895
+      },
+      {
+        "hash": "1e59e9f7a42e4f6f6e98bd5bd7ce59eaf4d6715aa32062963e028b4e5cd9554b",
+        "entryPoint": {
+          "Custom": "nullable"
+        },
+        "error": "ApiError::MissingArgument [2]",
+        "gas": 10955112570
+      },
+      {
+        "hash": "bbb2c4b2d535fcbc0b597f4ad7fe581909fd0911ef9ae21e7fbeda3c455f7a12",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "321af9b2e64cce14873a7716b57ef207aaa2735f5d4f8a23aa7ae7f162e9e5e6",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 585632175370
+      },
+      {
+        "hash": "81960f6cba5b6793ed328e14c0e77642b0eb91b64eaefeb1aca91ed7535b6548",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 42819395958
+      },
+      {
+        "hash": "93814d2c5b2c5f830a91b4c821c366d39940afe0a82a4be38e3ba873d897534b",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 42852377488
+      },
+      {
+        "hash": "e3b7c331d5d679eb6e9a260405c151dc285f13bc93fe4adf7f97717fcfe2cceb",
+        "entryPoint": "Call",
+        "error": "User error: 1",
+        "gas": 42699950558
+      }
+    ]
+  },
+  "coverage": [
+    "Annotation-only lazy URef state and configured dictionaries",
+    "Inherited ABI collection and explicit Wasm root selection",
+    "Safe additive mixins, overrides, alias/options/Optional/keyword-only metadata parity, and conflicting state/ABI rejection",
+    "Local method calls and catchable Python errors",
+    "Owner-only pause/unpause and ownership transfer",
+    "Paused writes rejected while reads remain available",
+    "Typed session calls using imported Counter methods without re-exporting them",
+    "Rollback across session/contract boundaries and preserved root-import outcome mapping"
+  ]
+}

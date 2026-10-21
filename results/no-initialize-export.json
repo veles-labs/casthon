@@ -1,0 +1,458 @@
+{
+  "date": "2026-10-17",
+  "name": "Hide the Emscripten initializer export",
+  "behavior": "The Wasm processor removes the _initialize export. Internal constructor calls remain intact; the C adapter initializes constructors and MicroPython for each invocation.",
+  "artifacts": [
+    {
+      "wasm": "build/api_smoke.metered.wasm",
+      "bytes": 486330,
+      "sha256": "42646d14841d22e7ab6c11ec1de806fa19ef8eac0b306fd450dc64eb91a16bcb",
+      "exports": [
+        "read_count",
+        "call",
+        "call_counter"
+      ]
+    },
+    {
+      "wasm": "build/api_smoke.wasm",
+      "bytes": 348817,
+      "sha256": "99e3acdc0f7aadc7e454ab02fb221d8b874f50e16d7b6f8422159f86da01711e",
+      "exports": [
+        "read_count",
+        "call",
+        "call_counter"
+      ]
+    },
+    {
+      "wasm": "build/basic.metered.wasm",
+      "bytes": 486970,
+      "sha256": "3dec19d1d2d2a09568fd6efd90578fda4872306b81efb630080ac1c0a3692ced",
+      "exports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/basic.wasm",
+      "bytes": 348985,
+      "sha256": "94e1f53c38e22d7c3ee9fe16586cb37fccb194e35f4a80e91f905f9ec32c884f",
+      "exports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/counter.metered.wasm",
+      "bytes": 488450,
+      "sha256": "12bd3d21dab3279ad696bb2d52ba050e43a29f0c7a4efbab0cceb3c31f679107",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ]
+    },
+    {
+      "wasm": "build/counter.wasm",
+      "bytes": 350524,
+      "sha256": "96e044a4ca5a9a1fbe85d6984005ef47b71ea2f35aa31fa774cb8174797d7a6a",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ]
+    },
+    {
+      "wasm": "build/counter_session.metered.wasm",
+      "bytes": 487479,
+      "sha256": "dac6286fce85969a05a8ccde8d207116d8258184a486e4461413ef5d4b128b5b",
+      "exports": [
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/counter_session.wasm",
+      "bytes": 350165,
+      "sha256": "b9c1c0773ddf24a6c3e79d2b27f9fde24d2fab647179d26642c9dc0559bc1aa7",
+      "exports": [
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/dispatch_smoke.metered.wasm",
+      "bytes": 490158,
+      "sha256": "fbc99c519c58730ff80f5c46b0fd75be2d80680ce84fe559d129d78b3e58177b",
+      "exports": [
+        "value",
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/dispatch_smoke.wasm",
+      "bytes": 352704,
+      "sha256": "266aadeb5c904ee4a0b31ec9d2988b9397061bd356dabbf2d7036c38f4e0d7f7",
+      "exports": [
+        "value",
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/ffi_smoke.metered.wasm",
+      "bytes": 489317,
+      "sha256": "f7b47808fbf3142fca0db8521c79edc38765073502ebd6bc5185a681fc27fd6e",
+      "exports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/ffi_smoke.wasm",
+      "bytes": 351686,
+      "sha256": "16fc58df8bcab2ee3599df2e0251ff047adefb13127386ef1d67ef62f2527957",
+      "exports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/minified/counter.metered.wasm",
+      "bytes": 483328,
+      "sha256": "29c8069e96cf42fe2acc9036b080d465eec5d570da537cb81e491761c3707e9d",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ]
+    },
+    {
+      "wasm": "build/minified/counter.wasm",
+      "bytes": 345934,
+      "sha256": "ff84d36457473e308f43e4838a230695b8d22240466b021d59d7a09dab4195a9",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ]
+    },
+    {
+      "wasm": "build/minified/my_token.metered.wasm",
+      "bytes": 493388,
+      "sha256": "6dbda2bd50ed5d072850fed8589d6ec21b04508120d743ba1dd66334ed3d50e1",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ]
+    },
+    {
+      "wasm": "build/minified/my_token.wasm",
+      "bytes": 355581,
+      "sha256": "22a7322b08a13fdb2ec0c8f50e6cd77c24b897d0edbe71a4e8e8b3b6059e49a9",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ]
+    },
+    {
+      "wasm": "build/minified/readback.wasm",
+      "bytes": 533,
+      "sha256": "111f3e53a3517640fe1f83afc1531221ae78e428f171c06b3e3573396cf5bbca",
+      "exports": [
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/my_token.metered.wasm",
+      "bytes": 498917,
+      "sha256": "a1978c9c7d4d60db9f9565e2346dfec80716727f0cb6e69169cc88c0bebffa86",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ]
+    },
+    {
+      "wasm": "build/my_token.wasm",
+      "bytes": 360578,
+      "sha256": "cfb26f03b17a65233f8a9509c6c73c6c74fae3463a677434f687e9a08fe30641",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ]
+    },
+    {
+      "wasm": "build/native-errors/counter.metered.wasm",
+      "bytes": 325316,
+      "sha256": "fbd99c8828cdfe9942bccb2d06e2e1ec20172fa9244e9748a550234981f34bc3",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ]
+    },
+    {
+      "wasm": "build/native-errors/counter.wasm",
+      "bytes": 222978,
+      "sha256": "e46e6caa16e7ed249651cd56760057402bdd228db62a397802920412f8cba359",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ]
+    },
+    {
+      "wasm": "build/native-errors/readback.wasm",
+      "bytes": 533,
+      "sha256": "111f3e53a3517640fe1f83afc1531221ae78e428f171c06b3e3573396cf5bbca",
+      "exports": [
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/native_unwind.metered.wasm",
+      "bytes": 488521,
+      "sha256": "e1f2dafba235e92a6912bd2ff380e6f81aa30b1c7c424e2132b1c7fa301d146b",
+      "exports": [
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/native_unwind.wasm",
+      "bytes": 351207,
+      "sha256": "59db203535777166050c4ac30b41f9d4e55e32b8c2b221e6d4d0956fcaef9960",
+      "exports": [
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/readback.wasm",
+      "bytes": 533,
+      "sha256": "111f3e53a3517640fe1f83afc1531221ae78e428f171c06b3e3573396cf5bbca",
+      "exports": [
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/typed_exports.metered.wasm",
+      "bytes": 488188,
+      "sha256": "007eeda3a7e2de2541cd3d07d6e39bbb304c5fd9d6072c48904a7203dccf0d96",
+      "exports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "presence",
+        "presence_default",
+        "presence_number",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call"
+      ]
+    },
+    {
+      "wasm": "build/typed_exports.wasm",
+      "bytes": 350026,
+      "sha256": "124fd2a0e4153b859db7583885638ba361510b2ef2b8648b492134b025cd176a",
+      "exports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "presence",
+        "presence_default",
+        "presence_number",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call"
+      ]
+    }
+  ],
+  "sizeComparisons": {
+    "counter": {
+      "beforeBytes": 350564,
+      "afterBytes": 350524,
+      "savedBytes": 40
+    },
+    "my_token": {
+      "beforeBytes": 360618,
+      "afterBytes": 360578,
+      "savedBytes": 40
+    },
+    "counter_session": {
+      "beforeBytes": 350206,
+      "afterBytes": 350165,
+      "savedBytes": 41
+    }
+  },
+  "validation": {
+    "rustCliTests": 11,
+    "nativeTests": 206,
+    "nativeSubtests": 232,
+    "wasmTests": 49,
+    "wasmSubtests": 444,
+    "minifiedCounterAndCep18Tests": 11,
+    "nativeErrorCounterTests": 3,
+    "liveCounterAndReadbackTests": 1,
+    "cargoFmt": true,
+    "cargoClippyWarningsDenied": true,
+    "cachedBuildAlsoOmitsInitializer": true,
+    "noChangeToNativeErrorAudit": true,
+    "constructorCodeAndInternalCallsPreservedByLoweringTest": true
+  },
+  "live": {
+    "network": "cspr-py-test-0d518b033d0f",
+    "protocolVersion": "2.2.0",
+    "transactions": 4,
+    "transactionHashes": [
+      "97e99a292e3a33c3f1226d2871c9876e2f49a49f615d72cb7ceef88c4e5359bf",
+      "278b5f1a8169797a79b32dbcfa84f201422f4f0efc2fcb1f527cd004e6e40206",
+      "89db2db58a9fabe491408f354716b83e2acefa87a608b3861af0d0a7e7025404",
+      "83c2086d702aa09ceca9dd828cf25d1ee37c6c954e08596d85e5afa243baa8f4"
+    ],
+    "networkStopped": true,
+    "cleanupErrors": [],
+    "report": ".cache/cspr-testing/live/tests.live.test_counter.TestCounter/report.json"
+  },
+  "sourceSha256": {
+    "tools/wasm-softfloat/src/lib.rs": "84bcc78c40c75217ee4a961a732a089643b504280dfd7a86255f1500ced65762",
+    "scripts/build.py": "2ee27eee654170ca05b2a39329a053b4143fc933e56f8bb749943706befe0ac7",
+    "native/interpreter.h": "cdd2eca1aa179628ba6ade3c2812088f44d77313ad563ebbeee27f56c2c5ba25",
+    "native/micropython/port/Makefile": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae",
+    "tests/cli.rs": "62c8b238bd20e8753e650141c1159e408783d25791ab3cbb3019212c8a60637d",
+    "tests/wasm/test_wasm_basic.py": "88e7b5ba9934b3ee882add524c76f4853ced8cb76753504b282ca1cf5f32de39",
+    "tests/wasm/test_wasm_counter.py": "eb6721a6ce219f597d3c4468eace4f7d78570193d3152ef07b4d6f527793a562",
+    "tests/wasm/test_wasm_counter_session.py": "566c97fef201afd9b8a63473a972d1b345ecd31d09484e44c2a89235d5fdcbdb",
+    "tests/wasm/test_wasm_cep18.py": "e4a55f3a90497341ccc490d007761f7c06d55d6c23f7f738dcb29553f4a69fc5"
+  }
+}

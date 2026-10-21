@@ -1,0 +1,66 @@
+{
+  "before": {
+    "bytes": 170908,
+    "sha256": "8f463a1e4c9b1ffa96381a72c05cd4cb1a89ec775d5b57b256cd8cd21c689aab"
+  },
+  "after": {
+    "bytes": 204372,
+    "sha256": "b02716f7adae13788e38463f724d19caaf879bb211e01507f4d0da27c915c26c"
+  },
+  "increaseBytes": 33464,
+  "increasePercent": 19.580124979521152,
+  "minified": {
+    "bytes": 200056,
+    "sha256": "35a4564fb5c02d15dc5fb744b9108deab3733c9f60a0cf229c6915f6faa6f35e",
+    "localCounterTests": 7,
+    "devnetValidated": false
+  },
+  "patch": {
+    "bytes": 556693,
+    "files": 75,
+    "addedLines": 1987,
+    "removedLines": 1852,
+    "sha256": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+  },
+  "gas": [
+    {
+      "operation": "install",
+      "before": 311857180198,
+      "after": 359906073052,
+      "increasePercent": 15.407338969554418
+    },
+    {
+      "operation": "increment",
+      "before": 3291850095,
+      "after": 3378576750,
+      "increasePercent": 2.634587010256917
+    },
+    {
+      "operation": "increment_by",
+      "before": 3313754225,
+      "after": 3401446925,
+      "increasePercent": 2.646324804006861
+    },
+    {
+      "operation": "typed-get-return",
+      "before": 3527476035,
+      "after": 3611142330,
+      "increasePercent": 2.3718458798827724
+    },
+    {
+      "operation": "add_fractional",
+      "before": 3317238655,
+      "after": 3405110455,
+      "increasePercent": 2.648944171308054
+    }
+  ],
+  "validation": {
+    "cpythonTests": 59,
+    "wasmTests": 20,
+    "nativeFailureCases": 52,
+    "nativeProbeInvocations": 312,
+    "devnetTransactions": 97,
+    "networkStopped": true,
+    "asyncify": false
+  }
+}

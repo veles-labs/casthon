@@ -1,0 +1,7 @@
+C_DISPATCH_UNEXPECTED:ValueError
+Traceback (most recent call last):
+  File "_cspr_dispatcher.py", in dispatch
+  File "cspr/_dispatch.py", in invoke
+  File "contract.py", in call
+  File "contract.py", in nested_failure
+ValueError: uncaught live failure 🐍

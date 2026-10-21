@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cspr-py-experiment"
+version = "0.1.0"
+description = "Procedural Python contract_api on Casper V1 MicroPython Wasm"
+requires-python = ">=3.11"
+dependencies = ["typing_extensions>=4.12; python_version<'3.12'"]
+
+[project.optional-dependencies]
+dev = ["mypy==1.19.1", "wasmtime==49.0.0", "pytest==9.1.1"]
+
+[tool.casthon]
+micropython = "1.29.0"
+targets = ["contracts/counter.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/test_*.py"]
+pythonpath = ["src", "tests", "tests/wasm", "tests/fixtures"]
+addopts = ["--import-mode=importlib"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+files = ["contracts", "src/cspr"]

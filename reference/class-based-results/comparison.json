@@ -1,0 +1,38 @@
+{
+  "pythonArtifact": {
+    "bytes": 129512,
+    "sha256": "116e5fc78be336f8c18d1f829234027e00261051b3c4400b4af4d273a4960a94"
+  },
+  "javascriptArtifact": {
+    "bytes": 374156,
+    "sha256": "824c6a4cf590c71412e1895be1c24b5d2d0bf8ad54647f7c42c3c1293c512f15"
+  },
+  "sizeReductionPercent": 65.38556110285549,
+  "caveat": "Different SDK profiles: Python has 3 stored fields and 9 entrypoints, integer-only math and terminal exceptions; JS has 1 field and 4 entrypoints, float support and catchable exceptions. This is not a controlled language benchmark.",
+  "gas": [
+    {
+      "operation": "install",
+      "pythonGas": "239277446025",
+      "javascriptGas": "678631585073",
+      "reductionPercent": 64.74118633908543
+    },
+    {
+      "operation": "increment",
+      "pythonGas": "1605726315",
+      "javascriptGas": "5263700750",
+      "reductionPercent": 69.49434644437187
+    },
+    {
+      "operation": "increment_by",
+      "pythonGas": "1631361910",
+      "javascriptGas": "5291111615",
+      "reductionPercent": 69.16787947970741
+    },
+    {
+      "operation": "typed-get-return",
+      "pythonGas": "1878089055",
+      "javascriptGas": "4849692155",
+      "reductionPercent": 61.274056270485076
+    }
+  ]
+}

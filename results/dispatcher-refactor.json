@@ -1,0 +1,33 @@
+{
+  "components": {
+    "lifecycle": "native/interpreter.h",
+    "backend": "native/unwind.h",
+    "policy": "native/outcome.h",
+    "invocation": "native/dispatcher.h"
+  },
+  "localTests": 80,
+  "nativeBackendWasmTests": 21,
+  "bootstrapCasesPerBackend": 7,
+  "bootstrapInvocations": 28,
+  "minifiedCounterTests": 7,
+  "devnetTransactions": 98,
+  "network": "cspr-py-poc-1792013903677",
+  "networkStopped": true,
+  "counter": {
+    "bytes": 335723,
+    "sha256": "7de612e3ae559efdffa8eeccd9fc45a3cf29adf5b59171fcefe67b8101757b0f"
+  },
+  "nativeCounter": {
+    "bytes": 204412,
+    "sha256": "dcf1d49ef3afd3d9f507c3da3882ca235dd02dcd8c309d230d32b1cab63ca0ca"
+  },
+  "minifiedCounter": {
+    "bytes": 331287,
+    "sha256": "1ccc2417cf619f7e4998f3b393e435f31ef4574905db08a0bdf4dfab1ec03984"
+  },
+  "preservedPatchSha256": {
+    "native/micropython/stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "native/micropython/integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native/micropython/native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+  }
+}

@@ -1,0 +1,61 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________ TestPrintFailure.test_failure_output _____________________
+
+self = <_cache.print_fd_pytest_failure.TestPrintFailure testMethod=test_failure_output>
+
+    def test_failure_output(self):
+        alice = self.funded_account("pytest-output-demo")
+        cursor = self.network.print_cursor
+        self.network.deploy(self.build("tests/fixtures/print_fd_session.py"), signer=alice, install=False,
+            args={"marker": CLString("PYTEST_PRINT_FD_DEMO"), "mode": CLU32(1)}).assert_failure("User error: 77")
+        self.network.wait_for_print("PYTEST_PRINT_FD_DEMO: finally", since=cursor, node_id=1, timeout=15)
+>       self.fail("intentional pytest failure for print-FD verification")
+E       AssertionError: intentional pytest failure for print-FD verification
+E       Captured Casper prints (node stream; no transaction attribution):
+E       node-4: PYTEST_PRINT_FD_DEMO: before | Zażółć 🐍
+E       node-4: 
+E       node-4: 
+E       node-4: PYTEST_PRINT_FD_DEMO: finally
+E       node-4: 
+E       node-4: 
+E       node-4: C_DISPATCH_API:
+E       node-4: User
+E       node-4: 
+E       node-4: 
+E       node-2: PYTEST_PRINT_FD_DEMO: before | Zażółć 🐍
+E       node-2: 
+E       node-2: 
+E       node-2: PYTEST_PRINT_FD_DEMO: finally
+E       node-2: 
+E       node-2: 
+E       node-2: C_DISPATCH_API:
+E       node-2: User
+E       node-2: 
+E       node-2: 
+E       node-3: PYTEST_PRINT_FD_DEMO: before | Zażółć 🐍
+E       node-3: 
+E       node-3: 
+E       node-3: PYTEST_PRINT_FD_DEMO: finally
+E       node-3: 
+E       node-3: 
+E       node-3: C_DISPATCH_API:
+E       node-3: User
+E       node-3: 
+E       node-3: 
+E       node-1: PYTEST_PRINT_FD_DEMO: before | Zażółć 🐍
+E       node-1: 
+E       node-1: 
+E       node-1: PYTEST_PRINT_FD_DEMO: finally
+E       node-1: 
+E       node-1: 
+E       node-1: C_DISPATCH_API:
+E       node-1: User
+E       node-1: 
+E       node-1: 
+E       Capture file: /Users/michal/Dev/cspr-py/.cache/cspr-testing/live/_cache.print_fd_pytest_failure.TestPrintFailure/contract-prints.jsonl
+
+.cache/print_fd_pytest_failure.py:14: AssertionError
+=========================== short test summary info ============================
+FAILED .cache/print_fd_pytest_failure.py::TestPrintFailure::test_failure_output
+1 failed in 10.10s

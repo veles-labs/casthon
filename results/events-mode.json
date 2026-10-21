@@ -1,0 +1,535 @@
+{
+  "date": "2026-10-16",
+  "enum": {
+    "type": "contracts.cep18_events.EventsMode",
+    "backingType": "U8",
+    "members": {
+      "NO_EVENTS": 0,
+      "CES": 1,
+      "NATIVE": 2,
+      "NATIVE_BYTES": 3
+    },
+    "state": "events_mode: URef[EventsMode]",
+    "behavior": "Reads, dispatched arguments and typed remote returns yield canonical enum members.",
+    "writes": "Typed values require members of the declared enum; explicit CLValues validate discriminants.",
+    "composition": [
+      "Optional[EventsMode]",
+      "OptionalArg[EventsMode]",
+      "OptionalArg[Optional[EventsMode]]",
+      "Dictionary[str, EventsMode]"
+    ],
+    "invalidMode": "Standard classmethod _missing_ raises InvalidEventsMode / User 60006.",
+    "metadata": "Frozen signatures refer to enums lazily, after application import, without executing source at build time."
+  },
+  "compatibility": {
+    "rustStoredAbiMatches": true,
+    "rustCesSchemaMatches": true,
+    "rustAllNineEventCodecsMatch": true,
+    "storedDiscriminantsUnchanged": true,
+    "upstreamMicropythonChanged": false,
+    "nativePatchesChanged": false
+  },
+  "validation": {
+    "nativeTests": 200,
+    "nativePythonVersions": [
+      "3.11.9",
+      "3.14.2"
+    ],
+    "wasmTests": 47,
+    "plainAndCasperMetered": true,
+    "stockStackSlots": 500,
+    "ffiFunctionsVerified": 58,
+    "typecheckedSourceFiles": 56,
+    "rejectedTypeMistakes": 42,
+    "liveTests": 4,
+    "liveTransactions": 39,
+    "expectedLiveReverts": 6,
+    "liveProtocol": "2.2.0",
+    "liveNetwork": "cspr-py-test-ede7a061adaf",
+    "liveNetworkStopped": true,
+    "cleanupErrors": [],
+    "commands": [
+      "make build",
+      "make test-native",
+      "make typecheck",
+      "make test-wasm",
+      "PYTHONPATH=src .cache/optional-arg-py311/bin/python -m unittest discover -s tests -p test_*.py -v",
+      "PYTHONPATH=src CSPR_LIVE_TESTS=1 .venv/bin/python -m unittest discover -s tests/live -p test_cep18.py -v"
+    ]
+  },
+  "runtime": {
+    "micropython": "1.29.0",
+    "archiveSha256": "8072f6ad42c0e3bbfca88ed09bf8f1106ce207a39129af920f70081b8f2fe286",
+    "asyncify": true,
+    "upstreamFilesVerified": 6741,
+    "upstreamChanges": [],
+    "patches": [],
+    "heap": {
+      "mode": "emmalloc-gc0",
+      "allocator": "emmalloc",
+      "automaticCollection": false,
+      "gcEnabled": false,
+      "objectAllocator": "emmalloc",
+      "initialRegionBytes": 0,
+      "initialRegionPolicy": "fixed",
+      "initialMemoryBytes": 4194304,
+      "memoryGrowth": false,
+      "maximumMemoryBytes": 4194304
+    },
+    "wasmFloatInstructions": false
+  },
+  "artifacts": {
+    "basic": {
+      "bytes": 349025,
+      "sha256": "90330870cf7a076fafa34113a95f785fd804552269c85bd376ad1719918faf62",
+      "exports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call"
+      ],
+      "meteredBytes": 487057,
+      "meteredSha256": "7d390b515737bf24b39452296930c01a8f40a07cae7c1e7fd6be2dafcbd01679"
+    },
+    "counter": {
+      "bytes": 350564,
+      "sha256": "b864ad936e8e1eaac9af7aad53561df75267d0b88da9c041356c7f00d4910e4a",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "meteredBytes": 488537,
+      "meteredSha256": "2ab908fd23abf01bae4236aa3f4d8073694a11046674f341f50e305f5a950409"
+    },
+    "counter_session": {
+      "bytes": 350206,
+      "sha256": "ef2af8d64385c88e3de71ff1b11509b377df3e76ebdfe68cd80cf0b5ae8aa771",
+      "exports": [
+        "call"
+      ],
+      "meteredBytes": 487567,
+      "meteredSha256": "be08d7ea2eab7a029a63867cccc4004621a7599c649eda242fa49b28518cf36a"
+    },
+    "my_token": {
+      "bytes": 360618,
+      "sha256": "c8b544641bd859eb059fbbb4aa29364c2aa8b18df5c0aaccbf39487aae8014e1",
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "meteredBytes": 499004,
+      "meteredSha256": "23f83e8ae69299f17ab4f0224ea24cebcdfecfb7f42363d37beac3735d8cb149"
+    },
+    "api_smoke": {
+      "bytes": 348857,
+      "sha256": "b6bc26f1eafa5cd83ca0cbf64ca0f9395a18b822dbabd42a1f8c5d4b4ff9e1d9",
+      "exports": [
+        "read_count",
+        "call",
+        "call_counter"
+      ],
+      "meteredBytes": 486417,
+      "meteredSha256": "3542fa9ebb38b53838bb583452c09ec6e95804ee0d92a418b07f4f78b83040fd"
+    },
+    "ffi_smoke": {
+      "bytes": 351726,
+      "sha256": "4b532e8972f899316bd338515b978ecb632f8520e4b2aa8e66e6c7f537c1c6a2",
+      "exports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call"
+      ],
+      "meteredBytes": 489404,
+      "meteredSha256": "2dec09eaf0e5e8084d65c6131be8a563febad053703f042acd4388ca6b418aad"
+    },
+    "dispatch_smoke": {
+      "bytes": 352744,
+      "sha256": "a4f9403ee62b2759c91bcc46e75c96b5286b7845868e5b9f369ed82111985c2e",
+      "exports": [
+        "value",
+        "call"
+      ],
+      "meteredBytes": 490245,
+      "meteredSha256": "ff9dac0ff10f768520099e0d087f17cff10bce7350652639e60d9d6693c734d4"
+    },
+    "native_unwind": {
+      "bytes": 351248,
+      "sha256": "fc065d5817718b7090318b3bc87724786a58aa0607e0b65498c69c1f093e5193",
+      "exports": [
+        "call"
+      ],
+      "meteredBytes": 488609,
+      "meteredSha256": "08e453c56389a8c5af84c920ba9ccbc75d8349ced7b35521fd4be3c2f474ddfb"
+    },
+    "typed_exports": {
+      "bytes": 350066,
+      "sha256": "5b78c440ebb8a0fbe3e6bec695aa17f56bb71af00cdde300c8a608056fc5b998",
+      "exports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "presence",
+        "presence_default",
+        "presence_number",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call"
+      ],
+      "meteredBytes": 488275,
+      "meteredSha256": "cf36bffb529d8f50f2c0de70ca73350e72e39d8e1e7c0b0ae76e126d62e3c022"
+    }
+  },
+  "testArtifacts": {
+    "enum_contract": {
+      "bytes": 354662,
+      "sha256": "09257608062e2b2060ce9c1ba3bb819e47fa7b9b7260ed993bdee2d620c0654a",
+      "exports": [
+        "local",
+        "call",
+        "get",
+        "set",
+        "optional"
+      ],
+      "meteredBytes": 492340,
+      "meteredSha256": "660ee4c90160979cb6eb150c854243897a614da0245463d662e5404da4bef688"
+    },
+    "cep18_session": {
+      "bytes": 357795,
+      "sha256": "f20ba47f7ac49773eabcb7ea7e59d652381ab7a48369905de118fc63f5c18849",
+      "exports": [
+        "call"
+      ],
+      "meteredBytes": 495156,
+      "meteredSha256": "4faa92fbcf0b20f99a8c18187bf86ec2d1bd76a572c2b99476608cad1382d177"
+    },
+    "cep18_client": {
+      "bytes": 358509,
+      "sha256": "32610ae05602989b31ead80635883d8302241de32f0a7ccebea012975470482c",
+      "exports": [
+        "call",
+        "approve",
+        "transfer",
+        "transfer_from",
+        "balance"
+      ],
+      "meteredBytes": 496187,
+      "meteredSha256": "41d85304eb00c80bef1051f6dc8d00084b7bb041d7918156512bea633d411115"
+    }
+  },
+  "liveTransactions": [
+    {
+      "hash": "62e2a7069885105e10af92a2c183cccb2d93e702823165c9051b5867a289763d",
+      "error": null,
+      "consumed": "100000000",
+      "cost": "100000000"
+    },
+    {
+      "hash": "fefc4184fd83e782bb318989ebdd4934e1f90940450655a9d4c9a0f2db452ce0",
+      "error": null,
+      "consumed": "100000000",
+      "cost": "100000000"
+    },
+    {
+      "hash": "66c163c29b5406e63e47d621ecc5cf44feddc6e6580283aee313f5d67285ca71",
+      "error": null,
+      "consumed": "647558640754",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "4f79507b38959a85990200a1a2e977b5fbc5f40661e37bda2e71e456995db7c9",
+      "error": null,
+      "consumed": "26539032882",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "e79a52ed34544793bd1e8b290e4aae15fcdbc00f18f07756219e742aad95a4a5",
+      "error": null,
+      "consumed": "22421154733",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "33331c69fe4d327d4b0c01820788953905a44fda05e5c6c1ecdcb542a824a67f",
+      "error": null,
+      "consumed": "28613078700",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "0de6c56f469458ffc1c81dcae19964170d9150c3bf579e11b2e698e0ceb031e1",
+      "error": null,
+      "consumed": "132521312390",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "641d9b2c2f0831dc347451e2f4a08ede28900130c0552b002c1360cae26e0815",
+      "error": "User error: 60001",
+      "consumed": "20098320280",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "6955e06431a7d6909ad3effb6b6f4b8ab1f9ae631e44a77021e2b027729ec890",
+      "error": "User error: 60015",
+      "consumed": "17492866755",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "607c10e80032b7e9194bee56468a9df8ae75ff12b6607505d2ad07d7b4bd075a",
+      "error": null,
+      "consumed": "100000000",
+      "cost": "100000000"
+    },
+    {
+      "hash": "0b8cf62501fef2720370b5f99d2508850b5d9a70680534481b3555f4a35ced99",
+      "error": null,
+      "consumed": "593048070903",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "e18fa99bcef005624acfd1fdd3d145941521cfd9605d5ccc6bd674dc9c48d33f",
+      "error": null,
+      "consumed": "139762272610",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "74d3a1f1483290e2f98dbdff9e6ae53730afc31c215bd766c7872a85cdf5bc39",
+      "error": "User error: 60006",
+      "consumed": "15677444335",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "588c40e62add131107f771976cb0ae325306c76d9c2cec188e4f302e53395c0f",
+      "error": null,
+      "consumed": "100000000",
+      "cost": "100000000"
+    },
+    {
+      "hash": "21830a0887e447a38bf7632cd9bd4b067e60992574b67cf6a4214260c1b82a7e",
+      "error": null,
+      "consumed": "100000000",
+      "cost": "100000000"
+    },
+    {
+      "hash": "056890feee206a0a04325053dcb4115684737f6a6455f03c1ef881e7034834c3",
+      "error": null,
+      "consumed": "647669147560",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "5b01fc7541220befefd843dc216706211da9cf9b31ec160abd06aae6122c88ab",
+      "error": null,
+      "consumed": "26167990266",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "ed3f820f43c168d4f524b28514dda060502532a7e6ee8f5d82eacb953aeffe5b",
+      "error": null,
+      "consumed": "26327360852",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "0eae257e2ccce653259d51bc5349c07517db094824d45c0ada0cb43d4cf2edae",
+      "error": null,
+      "consumed": "25324031367",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "42fc9397344f0f0c613298c19a935354392dcf619ee7f61c009c7d4fdae7cdd6",
+      "error": "User error: 60018",
+      "consumed": "19334257865",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "6e4ed795b01169db4acbe0792e66c5a7b1c83de12e2191e67ffd6b3bd3e828ba",
+      "error": null,
+      "consumed": "21252348838",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "a2bd1257bb11d9c406e1821eb57d48cbea58cb9d67b54739169af3a55b57a2ef",
+      "error": null,
+      "consumed": "21263108518",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "7bc556db38fbbfbb8973c8eff9634688edad07cb6052ed3333dab2e631022d18",
+      "error": null,
+      "consumed": "21043549943",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "88b208ed2777d8f67343d8e3f3d1724f97b167e210e44cbd1228fe7394e5477d",
+      "error": null,
+      "consumed": "22685867631",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "f1c96d36b7cff3f24bd757b0651795b1fe92d0518f800e53bf481f0338c73117",
+      "error": null,
+      "consumed": "25738913401",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "7c19758688601117861d870de4978e130f9b23cb81de2e5db27f7aeb8704e297",
+      "error": "User error: 60010",
+      "consumed": "20503769810",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "cfd77b5bd8527c110ba8339a099f25f390f9010ec27a38f3817cc6c1494aa995",
+      "error": null,
+      "consumed": "630047519003",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "fba829fda867d2a019bca273e2dc01ddca112985c658cd59c8b7b48dd5937030",
+      "error": "Contract is disabled",
+      "consumed": "0",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "1bc5d64ff405a03f1da867dde31d952fe16599f61d93b72be13c53d1e283d587",
+      "error": null,
+      "consumed": "132525080505",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "72daa6a1085a1fc016a8f7c50a08175bc3863428f2936b41a65bd7993cf89b64",
+      "error": null,
+      "consumed": "100000000",
+      "cost": "100000000"
+    },
+    {
+      "hash": "fbde265bc177e358c611cdcbe62d50e27a50439b989ca7c99f8a1c73b9211349",
+      "error": null,
+      "consumed": "100000000",
+      "cost": "100000000"
+    },
+    {
+      "hash": "0b93a8801f848b1d0dfe06026f23bf068fcc366d18708f23871542c48e0a8837",
+      "error": null,
+      "consumed": "647634101230",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "236bc0ac43c921f3bde0b44937e4ec9d163d7d3f3fa228d50136370e56b49ef6",
+      "error": null,
+      "consumed": "598203072193",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "c8f2f75e1396879283c64021538fc74d2068d8ad755a23050e513ee02129e0cd",
+      "error": null,
+      "consumed": "26544971139",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "accb201446e711bf0b977ff462100d108a9a8d01f58c0c4aeb7c6012e3a5b72a",
+      "error": null,
+      "consumed": "45863888189",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "fbb56b40e2f3dd82f49e40795c1dbd6c33034b1ff6c1715d7c51152c8baf2ea0",
+      "error": null,
+      "consumed": "41767523613",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "f1e990dc675f36533663e58e6185f30f1c50ab0ae73c27cd147f650380886545",
+      "error": null,
+      "consumed": "22421160628",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "2078126648f2cae12897c1a57ffc8f4cb0f1e64d0ccb468f4ae9e78a8aeceb60",
+      "error": null,
+      "consumed": "48405152732",
+      "cost": "100000000000"
+    },
+    {
+      "hash": "237a327deddad7190fff4b2820ad59b0acdaae82d92384609b690dfc93530e3b",
+      "error": null,
+      "consumed": "132577095925",
+      "cost": "800000000000"
+    }
+  ],
+  "sourceSha256": {
+    "contracts/cep18.py": "22a564850758ed74500969ca29293da73c8a617c999ab06752be09d4eae3db04",
+    "contracts/cep18_events.py": "3c8b07f8a8822eb7baf6d8ea030f51f24e8bb6f95f19ba5e6b729cd4e416686f",
+    "contracts/my_token.py": "147127e63be7f0fb3db589a5c873f3efc0bcd724803572838d5a4c8eb8b01162",
+    "contracts/typed_exports.py": "9a3db7c55eaa1b13ee36b2f21dc6791c6968b6168341a8dfb96328e707ed1480",
+    "pyproject.toml": "32d81b95966767f7cc2ea18eb05afa45a202c51f80e715062cf6feebf4cda13c",
+    "runtime/arguments.py": "1ac45f0884812859abef41ab692cbbb88e8d2610160644b214231ebd84bf458b",
+    "runtime/enums.py": "68e4cccb7778b3802d049b642e260ba78125b9d3171bb900d408081c317c29b6",
+    "scripts/build.py": "1f8128779411da16c1812da982a5eaf1561ffb230bd808c0406c91bcc137ead9",
+    "scripts/bundle.py": "beb000d95075ec99f242d4b993e76aede234efa7fe8d1a6de79483b2ab60765f",
+    "scripts/typecheck.py": "4ea0be071413b21d7bd79f7aa68265bfc30045b46cafb599261cafa27c4078a9",
+    "src/cspr/__init__.py": "1dbf2f54dc556e80ca0417cf1e3a63371fa05057b5b498a1ee96f028b833149b",
+    "src/cspr/_contract_schema.py": "bb6f32d0c56be9e8c606d0a33f72918a91326d04ee944ead61ff95fc95050364",
+    "src/cspr/_dispatch.py": "26b82af288aef1b7a0e0e53b7ea1e330787941c7fd7d5bdde87176b82e2c23aa",
+    "src/cspr/_signatures.py": "d5b4ae899abc0dd7ba3cd4d79577cfee926fc924f2c4465a85997febcbcd5666",
+    "src/cspr/_wire_types.py": "3495a24aad067879f3e914bbd351ba9262818fb1fcd508a95fb51ba9f95a1290",
+    "src/cspr/arguments.py": "2ceef573e12ff1ddc8e91de6592be925a5029ec32bd6d5b29c6e6cfca8bd8dca",
+    "src/cspr/contract_api/runtime.py": "fd565e5b6122c9e26294d132c86fac0fb13b461e8eb3461ed2a26e088e12419c",
+    "src/cspr/contract_call.py": "7a52ba13fd13ed1b1f3002a6c9b898353295027924364743966fd70da4f69562",
+    "src/cspr/contracts.py": "42a3c7598eeccaa2373bfa933b060660637c1f18b613eaf4f38808098f1360bd",
+    "src/cspr/entry_points.py": "23cc367252ff3b2374b0bb1339279c1880a566424cc29d40fcec43d8ecc49008",
+    "src/cspr/enums.py": "c07faf476261b50bd43cdddab2f65d1e7c5020b80314620e9870aea86ec33d86",
+    "src/cspr/references.py": "b1c290b9fa73f37eaefb11122347f6805fdc2f6da0db76f549f872d2ab9f5f2d",
+    "src/cspr/return_value.py": "e2fc27b878ca5e2f386a3da2c86d07c470825db4f36d905a903427377df412c6",
+    "src/cspr/values.py": "3074d97c634311f993a5a456f0a750fe3ab802b3fe68c8d48a9d627172bf5ccf",
+    "tests/fixtures/enum_contract.py": "122bb548c3d8e8b98b165f1c08fd48d62f8455be4d904bba74f3d53f791d05bf",
+    "tests/fixtures/optional_arg_session.py": "86afa25715b4124ffef4149d631827f1f9e00cd253d0fa85714872768a59c490",
+    "tests/live/test_cep18.py": "b2f857d45c3f7af7c8d18032ddc43cf97a54752b34c31b342dbcaf81328dc2ff",
+    "tests/live/test_optional_args.py": "903de03f82a06bea0bd63982ded105b8cdc995d18cc1a4a4b91ccbd5cddd6018",
+    "tests/test_cep18.py": "5a938f6c174716ee3532923b55c5b8e1e3697cba60e6dee2da531a500684a8d6",
+    "tests/test_contract_testing.py": "af8611a6bf32b1448b6d103e67c92a98420572f77c32d82e653b42a057279259",
+    "tests/test_enum_types.py": "cbd92dbc0f2d353ff71d0f39309a504a8447e987efb90ab93369431b02f32fd2",
+    "tests/test_optional_args.py": "678521c7d3934b884b7914811da82212c0eaf292eb9786f3b7e097bd634536c5",
+    "tests/wasm/test_wasm_enum_types.py": "03bdf3f3463bb9692ab15471dfad67f9bd6f543cfc1d20602c6bf9d676afb826",
+    "tests/wasm/test_wasm_typed_exports.py": "a1cdd970c36fb3b9c2fd1007ce25739a02659744b366946949b5a28a96420bca"
+  },
+  "preservedNativeRuntimeSha256": {
+    "native/micropython/stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "native/micropython/integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native/micropython/native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420",
+    "native/micropython/port/mpconfigport.h": "84b760868a45aaa4ec094c31be017666d335a975ee6148de7218a25fb06f3b14",
+    "native/micropython/port/Makefile": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae"
+  }
+}

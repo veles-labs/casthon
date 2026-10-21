@@ -1,0 +1,595 @@
+{
+  "date": "2026-10-16",
+  "runtime": "asyncify",
+  "heap": "emmalloc-gc0",
+  "upstreamMicroPythonChanges": [],
+  "api": {
+    "create": "Counter(initial, **state) runs cooperative __init__ methods and allocates new state owned by the instance, without binding state names into the account.",
+    "bind": "Counter.bind() uses object.__new__ and binds existing context state without calling user __new__ or __init__; resolution remains lazy.",
+    "namedKeys": "instance.named_keys exposes a Mapping[str, Key] of new state keys or the existing current-context named keys.",
+    "register": "instance.add_contract_version(package) supplies inherited entrypoint metadata and its state keys; package creation/account bindings remain explicit.",
+    "defaults": {
+      "count": 0,
+      "owner": "transaction caller",
+      "paused": false,
+      "increments": {}
+    },
+    "constructorsAreWasmEntrypoints": false,
+    "ordinaryInstanceAttributesPersist": false,
+    "removed": "Counter.initial_named_keys(count=...)"
+  },
+  "state": [
+    {
+      "attribute": "owner",
+      "namedKey": "owner",
+      "kind": "URef",
+      "valueType": "Key"
+    },
+    {
+      "attribute": "paused",
+      "namedKey": "paused",
+      "kind": "URef",
+      "valueType": "Bool"
+    },
+    {
+      "attribute": "count",
+      "namedKey": "count",
+      "kind": "URef",
+      "valueType": "U32"
+    },
+    {
+      "attribute": "increments",
+      "namedKey": "increments",
+      "kind": "Dictionary",
+      "keyType": "AccountHash",
+      "valueType": "U32",
+      "keyTransform": "bytes(account)[1:].hex()"
+    }
+  ],
+  "storedEntryPoints": [
+    {
+      "name": "get_owner",
+      "args": {},
+      "returns": "Key"
+    },
+    {
+      "name": "transfer_ownership",
+      "args": {
+        "new_owner": "Key"
+      },
+      "returns": "Unit"
+    },
+    {
+      "name": "pause",
+      "args": {},
+      "returns": "Unit"
+    },
+    {
+      "name": "unpause",
+      "args": {},
+      "returns": "Unit"
+    },
+    {
+      "name": "is_paused",
+      "args": {},
+      "returns": "Bool"
+    },
+    {
+      "name": "increment",
+      "args": {},
+      "returns": "Unit"
+    },
+    {
+      "name": "increment_by",
+      "args": {
+        "amount": "U32"
+      },
+      "returns": "Unit"
+    },
+    {
+      "name": "get",
+      "args": {},
+      "returns": "U32"
+    },
+    {
+      "name": "get_increments",
+      "args": {
+        "owner": "Key"
+      },
+      "returns": "U32"
+    }
+  ],
+  "validation": {
+    "nativeTests": 157,
+    "wasmTests": 36,
+    "liveTests": 7,
+    "typecheckedSourceFiles": 51,
+    "rejectedTypeMistakes": 28,
+    "stockStackSlots": 500,
+    "ffiSignaturesPerMainArtifact": 58
+  },
+  "constructorWasmProbe": {
+    "source": "tests/fixtures/constructor_contract.py",
+    "bytes": 346019,
+    "sha256": "208376c142e65dfc74012203d1698b6cfe6d912474e870d71f5b0d520e7c3674",
+    "exports": [
+      "call",
+      "fail",
+      "get",
+      "read_new"
+    ],
+    "profiles": [
+      "plain",
+      "Casper gas instrumenter and 500-slot stack limiter"
+    ],
+    "checks": [
+      "Required constructor argument and constructor URef/dictionary reads/writes",
+      "Fresh bound instances skip the constructor and discard ordinary temporary attributes",
+      "New state created inside an existing contract stays independent",
+      "Uncaught failure runs finally and rolls back new URefs, dictionaries, writes and allocation counters"
+    ]
+  },
+  "implementationNotes": [
+    "Dictionary initialization calls its Python setter directly to avoid retaining an extra native subscription frame.",
+    "Named-key binding reads its stored name directly, avoiding a nested name property call.",
+    "Native ContractHarness and frozen dispatcher both use bind() for entrypoint invocations."
+  ],
+  "artifacts": {
+    "basic": {
+      "bytes": 346839,
+      "sha256": "00462b2349f0c2d0d564387afad6adb225b535c65df222269b6313d9b71a25e2",
+      "exports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call"
+      ],
+      "functionExports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call",
+        "_initialize"
+      ]
+    },
+    "counter": {
+      "bytes": 348376,
+      "sha256": "aa98c8a53055d80fa5a7c8c2dd331e620b61513b8b97dd56b6ddc5b4c10a6857",
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "functionExports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments",
+        "_initialize"
+      ]
+    },
+    "counter_session": {
+      "bytes": 348030,
+      "sha256": "98d01157beba343b065d3e20d0248111bda8479cc14818f2d937b19447147e28",
+      "exports": [
+        "call"
+      ],
+      "functionExports": [
+        "call",
+        "_initialize"
+      ]
+    },
+    "api_smoke": {
+      "bytes": 346664,
+      "sha256": "e2dedbed3e0a09ffdb793e707b1b5089412b4a58ddec4a38a433746c3ef2c8c9",
+      "exports": [
+        "read_count",
+        "call",
+        "call_counter"
+      ],
+      "functionExports": [
+        "read_count",
+        "call",
+        "call_counter",
+        "_initialize"
+      ]
+    },
+    "ffi_smoke": {
+      "bytes": 349554,
+      "sha256": "e6c369c552dd25ddf8d6b888ebe8d94ce3572c958e9c4c070aed5adf0285a30f",
+      "exports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call"
+      ],
+      "functionExports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call",
+        "_initialize"
+      ]
+    },
+    "dispatch_smoke": {
+      "bytes": 350575,
+      "sha256": "b04c345b89db566c65b1a531760ba5095a4b010bd7645c540402631cbed00eba",
+      "exports": [
+        "value",
+        "call"
+      ],
+      "functionExports": [
+        "value",
+        "call",
+        "_initialize"
+      ]
+    },
+    "native_unwind": {
+      "bytes": 349067,
+      "sha256": "21b8cdafeedf99c453be9fa5aed5828ffcdb952142f1faac4b0de6c845e043b5",
+      "exports": [
+        "call"
+      ],
+      "functionExports": [
+        "call",
+        "_initialize"
+      ]
+    },
+    "typed_exports": {
+      "bytes": 347313,
+      "sha256": "5084e8ad919ebd76cd4c9628a137708246249c4295c79c89bbed4a2b00fc636d",
+      "exports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call"
+      ],
+      "functionExports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call",
+        "_initialize"
+      ]
+    }
+  },
+  "counterSizeChangeFromPreviousClassAPIBytes": 189,
+  "live": {
+    "protocolVersion": "2.2.0",
+    "network": "cspr-py-test-816f75fb6529",
+    "transactionCount": 39,
+    "successCount": 32,
+    "errors": {
+      "ApiError::InvalidArgument [3]": 1,
+      "ApiError::MissingArgument [2]": 2,
+      "User error: 100": 2,
+      "User error: 101": 1,
+      "User error: 1": 1
+    },
+    "networkStopped": true,
+    "cleanupErrors": [],
+    "transactions": [
+      {
+        "hash": "5bc8e7e44b6755c6f02e05002316ae7c6714733d4a92fdabedd6098aae2a5ad2",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "94b2684fa8736fcdccd819274d700dbf304c52e866d4252275da7432f0355e02",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 586577033388
+      },
+      {
+        "hash": "606ad7de6082e9dfce9004e8ea11b8545bae6a77513f09b1827d6137cc102538",
+        "entryPoint": {
+          "Custom": "increment"
+        },
+        "error": null,
+        "gas": 15284564833
+      },
+      {
+        "hash": "5d2f8cfc959e37d2d9cf043214b1bc476ef8183001abc4af43333f3b7be3d6b5",
+        "entryPoint": {
+          "Custom": "increment_by"
+        },
+        "error": null,
+        "gas": 15378734373
+      },
+      {
+        "hash": "31e0ee94daa715f8f01fb35ee450acced03c0921ae6041b1b002d60763291124",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "1bfcb64d672a48eb25a32a43d1488c188f2992324edb8bd4ba8e938e3680a955",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 586576899978
+      },
+      {
+        "hash": "b03af3694213f28c03cff477b2ccba9418248221615f474ac084d059d24bb652",
+        "entryPoint": {
+          "Custom": "increment_by"
+        },
+        "error": null,
+        "gas": 15348176368
+      },
+      {
+        "hash": "d0f877c71953fbf81d49d0e0282fdff2a57c8001c7c969da8dfc4ca02a555045",
+        "entryPoint": {
+          "Custom": "increment"
+        },
+        "error": "ApiError::InvalidArgument [3]",
+        "gas": 13454502895
+      },
+      {
+        "hash": "f6bf8b65f8cdd43d23a0fbf5ab058132d12e78c9b8a64138a6dccb758eeca2c5",
+        "entryPoint": {
+          "Custom": "increment_by"
+        },
+        "error": "ApiError::MissingArgument [2]",
+        "gas": 12278483750
+      },
+      {
+        "hash": "e03b6bac9cd4a65cc15e0f06fe0a303357e7db092da0af65f66755cfb6380b84",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "95da42f9c65a810f7cdadf75d5d9b1e14788cc6c98eeef7c19a8c1b5788d4e4a",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 586576899978
+      },
+      {
+        "hash": "5ce4471212c740ec5dbb7777182bff87dde698ae8fb1868571faa70bbdf26139",
+        "entryPoint": {
+          "Custom": "increment_by"
+        },
+        "error": null,
+        "gas": 15345783728
+      },
+      {
+        "hash": "3243cae087315413301d553eacc58b6bc28d67de9f1ae6398bbf160231d83fc1",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 13126363925
+      },
+      {
+        "hash": "bfa690204a77febe306d43893a02e73b6764594dd2cd9957e060db378bd9742c",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "a13af209c582e625c785ca03745ffbed6ffc444721e32011fe45c11842b22449",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "188a25c6f392e1b39a917cf3d6ba20a277ca26192efa3ddd2cc6e89209bb15ed",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 586576899978
+      },
+      {
+        "hash": "e129472b43268067dfdd5c8f30a421315dc10c8b9a7f243d6c5581d0c74ef8b1",
+        "entryPoint": {
+          "Custom": "pause"
+        },
+        "error": "User error: 100",
+        "gas": 12915238180
+      },
+      {
+        "hash": "0d38714896431eec114e4fd0b59702b375acdfde74aa95af01598b6a58dad1cf",
+        "entryPoint": {
+          "Custom": "pause"
+        },
+        "error": null,
+        "gas": 13549598604
+      },
+      {
+        "hash": "5a97c17567f9c53801f4fec729ff95f4a14a54e7211bf629355179cdb554535c",
+        "entryPoint": "Call",
+        "error": "User error: 101",
+        "gas": 26050214280
+      },
+      {
+        "hash": "089fd0f0f36b1cf1399644c5f87c36271aa28f79d2d9212fb4a5ad717af1ad6f",
+        "entryPoint": {
+          "Custom": "unpause"
+        },
+        "error": null,
+        "gas": 13549665414
+      },
+      {
+        "hash": "dc0a4fa62602a49740aa5a9feb31d0a2c8d38421cd7c148856448126afb4ba48",
+        "entryPoint": {
+          "Custom": "increment"
+        },
+        "error": null,
+        "gas": 15284748283
+      },
+      {
+        "hash": "f90d567a1a878fee0b41143d9420d09d53c560c11ee61508f8e09b5974de6008",
+        "entryPoint": {
+          "Custom": "transfer_ownership"
+        },
+        "error": null,
+        "gas": 13815396733
+      },
+      {
+        "hash": "221f2306530f9adc70c5f3dd8eec2dbfad00a76c4fc0d24c5085ddaf9f338d50",
+        "entryPoint": {
+          "Custom": "pause"
+        },
+        "error": "User error: 100",
+        "gas": 12915238180
+      },
+      {
+        "hash": "477de035b99878e799c746947d91b24a61074d3df15b5838f5f7c89a0149114e",
+        "entryPoint": {
+          "Custom": "pause"
+        },
+        "error": null,
+        "gas": 13549598604
+      },
+      {
+        "hash": "9866a3a58c4f0aa13f3afc8910e358521f24873c4344fe2a691be1d19d4a3600",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "a52fc8dac6c784415e7005d83c850b1ca3b4eccd1495270475a7a106a085cd44",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 586576899978
+      },
+      {
+        "hash": "4d458b52b5a25be57119ab10150aa9fb4945eb560bf6af1f9540ffac26647749",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "8ad7218129788586782efaebb5e6f44d5b5d369b49cc6ddde1b0a8bec25013ee",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "9ee9e57b10349e166589d2faf7b8da3c0ecca7a9f71e887c5a6ccd9ea7e4ae66",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "1ccbda05e2444af83a63f67e6c4ec3e60d271847019ae49630812e331e6193cc",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 577903244414
+      },
+      {
+        "hash": "2034df3448308922d91fcbdcb4c1f5198254210b7d8f665747556e5234e4c986",
+        "entryPoint": {
+          "Custom": "nullable"
+        },
+        "error": null,
+        "gas": 11342813430
+      },
+      {
+        "hash": "b5a59ae9e6cfdb4d4afe6659015c282e77a8dc421e29aba11231fa4b8731a5a4",
+        "entryPoint": {
+          "Custom": "nullable"
+        },
+        "error": null,
+        "gas": 11430391180
+      },
+      {
+        "hash": "2b15a5143bd137ccf9a6be95feb2c8bdc43eb9eab081f8febce90ec49f1149e6",
+        "entryPoint": {
+          "Custom": "nullable"
+        },
+        "error": null,
+        "gas": 11430457885
+      },
+      {
+        "hash": "8adade92bbc51298181d2d147ec3d73161cd41202fb420ca240e4feaf687c227",
+        "entryPoint": {
+          "Custom": "nullable"
+        },
+        "error": "ApiError::MissingArgument [2]",
+        "gas": 10973284560
+      },
+      {
+        "hash": "33af33cfe3f4d25a54ce0151d52bbc6e54feae221d7a8eae250042022dd55de0",
+        "entryPoint": "Transfer",
+        "error": null,
+        "gas": 100000000
+      },
+      {
+        "hash": "4e6dc9b8971b1be79f2afef102adee8659e58771c03258bdd9f57050b46b4e10",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 586576899978
+      },
+      {
+        "hash": "ec65ce82fc1b074e376783dfc1c40ba802411e91fc52b82944e2727569cac554",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 42357244278
+      },
+      {
+        "hash": "b742ea4670d82f77c89c9b287df7e7946f4e6a928a1a21191c9ebed0bca6e1d8",
+        "entryPoint": "Call",
+        "error": null,
+        "gas": 42390206593
+      },
+      {
+        "hash": "1be75377bebd2aac6ae553d4befc70a5a84414ee83972da0d7c2f81fa4420677",
+        "entryPoint": "Call",
+        "error": "User error: 1",
+        "gas": 42237798878
+      }
+    ]
+  },
+  "scope": [
+    "Default Asyncify backend validated; preserved native-errors patch files remain unchanged.",
+    "The existing CPython/MicroPython inheritance compatibility guard remains in effect.",
+    "Wasm fixtures provide independent host behavior; live tests additionally validate Counter installation, nonzero constructor values, ownership, pausing, dictionary state, session calls, return decoding and rollback on stock Casper 2.2.0."
+  ],
+  "preservedPatchSha256": {
+    "stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+  }
+}

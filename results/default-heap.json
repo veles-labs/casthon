@@ -1,0 +1,255 @@
+{
+  "passed": true,
+  "defaultRuntime": "asyncify",
+  "defaultHeap": "emmalloc-gc0",
+  "initialMemoryBytes": 4194304,
+  "maximumMemoryBytes": 4194304,
+  "memoryGrowth": false,
+  "gcEnabled": false,
+  "tests": {
+    "native-tests": 130,
+    "wasm-tests": 29,
+    "native-errors-tests": 29
+  },
+  "artifacts": {
+    "asyncify": {
+      "counter": {
+        "bytes": 340304,
+        "sha256": "8f2805eee6c8e15ce85a07decb293358782e48a1b1949cc6261ce2b0457425bb",
+        "heap": {
+          "mode": "emmalloc-gc0",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": false,
+          "objectAllocator": "emmalloc",
+          "initialRegionBytes": 0,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "hi_level": {
+        "bytes": 339486,
+        "sha256": "834ecab137e747179a8fd2c6b0857810ce883166d6244c9705faa94ae5a0846c",
+        "heap": {
+          "mode": "emmalloc-gc0",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": false,
+          "objectAllocator": "emmalloc",
+          "initialRegionBytes": 0,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "api_smoke": {
+        "bytes": 340272,
+        "sha256": "4122b5c12929935f526bf1ce5aa28c93c9da295e11a9723cc75cdcecfc21dd57",
+        "heap": {
+          "mode": "emmalloc-gc0",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": false,
+          "objectAllocator": "emmalloc",
+          "initialRegionBytes": 0,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "ffi_smoke": {
+        "bytes": 343073,
+        "sha256": "f079cc9d98f247291a68b931311fd671635da42979699e534a0444162a18697b",
+        "heap": {
+          "mode": "emmalloc-gc0",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": false,
+          "objectAllocator": "emmalloc",
+          "initialRegionBytes": 0,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "dispatch_smoke": {
+        "bytes": 344169,
+        "sha256": "41a6730d70042fa8486314d0d5e660a99fb0b2c351c16b0dec5243035279befe",
+        "heap": {
+          "mode": "emmalloc-gc0",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": false,
+          "objectAllocator": "emmalloc",
+          "initialRegionBytes": 0,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "native_unwind": {
+        "bytes": 342691,
+        "sha256": "e3a8e6cf1476940812fd6327c6c108d6e290880b0df5b64d79491f291d87f08a",
+        "heap": {
+          "mode": "emmalloc-gc0",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": false,
+          "objectAllocator": "emmalloc",
+          "initialRegionBytes": 0,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "typed_exports": {
+        "bytes": 340712,
+        "sha256": "c5365dec21e1fa926586af853bd1ecee3d630913a6c415cdc41cec0cbb1c059c",
+        "heap": {
+          "mode": "emmalloc-gc0",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": false,
+          "objectAllocator": "emmalloc",
+          "initialRegionBytes": 0,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      }
+    },
+    "native-errors": {
+      "counter": {
+        "bytes": 212711,
+        "sha256": "d9f645f0f460d492b8c2fe2e34a4fca030e3c235de3064a873099e5bfda87a76",
+        "heap": {
+          "mode": "static",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": true,
+          "objectAllocator": "micropython-gc",
+          "initialRegionBytes": 2097152,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "hi_level": {
+        "bytes": 211893,
+        "sha256": "affdd74064561a3df2f72f28f7d06326e141e19615d3818c2c7b6c3545c87dff",
+        "heap": {
+          "mode": "static",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": true,
+          "objectAllocator": "micropython-gc",
+          "initialRegionBytes": 2097152,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "api_smoke": {
+        "bytes": 212682,
+        "sha256": "d27d7ee06606513995301ac327ac8ff60f26770e183292c5d08540dad8926d4e",
+        "heap": {
+          "mode": "static",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": true,
+          "objectAllocator": "micropython-gc",
+          "initialRegionBytes": 2097152,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "ffi_smoke": {
+        "bytes": 215480,
+        "sha256": "297e18e48a4d5821f0976785161234e41c32b0b3212a7069d199c4aab464d93e",
+        "heap": {
+          "mode": "static",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": true,
+          "objectAllocator": "micropython-gc",
+          "initialRegionBytes": 2097152,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "dispatch_smoke": {
+        "bytes": 216578,
+        "sha256": "ced491b505f2ef8a8cfc637cca844d9d2586a745f64f5014eb5e589f73b471af",
+        "heap": {
+          "mode": "static",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": true,
+          "objectAllocator": "micropython-gc",
+          "initialRegionBytes": 2097152,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "native_unwind": {
+        "bytes": 215199,
+        "sha256": "20807ed4123dc7f7a9b4fa3251d45425afeaabdfbccbba9770c6af183b9005fd",
+        "heap": {
+          "mode": "static",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": true,
+          "objectAllocator": "micropython-gc",
+          "initialRegionBytes": 2097152,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      },
+      "typed_exports": {
+        "bytes": 213123,
+        "sha256": "7bc65d02c65c012c503faf17830e86dac5bcf11762380b808ea3b9378df479e2",
+        "heap": {
+          "mode": "static",
+          "allocator": "emmalloc",
+          "automaticCollection": false,
+          "gcEnabled": true,
+          "objectAllocator": "micropython-gc",
+          "initialRegionBytes": 2097152,
+          "initialRegionPolicy": "fixed",
+          "initialMemoryBytes": 4194304,
+          "memoryGrowth": false,
+          "maximumMemoryBytes": 4194304
+        }
+      }
+    }
+  },
+  "defaultArtifactsIdenticalToMeasuredGC0": true,
+  "preservedNativeBackendHeap": "static",
+  "preservedMicroPythonPatches": {
+    "stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+  },
+  "auditedPortConfigSha256": "84b760868a45aaa4ec094c31be017666d335a975ee6148de7218a25fb06f3b14",
+  "auditedPortMakefileSha256": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae",
+  "auditRejectsModifiedSnapshots": true,
+  "historicalStaticCounterBitIdentical": true
+}

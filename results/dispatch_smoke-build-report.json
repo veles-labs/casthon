@@ -1,0 +1,27 @@
+{
+  "micropython": "1.29.0",
+  "archiveSha256": "8072f6ad42c0e3bbfca88ed09bf8f1106ce207a39129af920f70081b8f2fe286",
+  "bytes": 339675,
+  "sha256": "7a78cb0479c6676ae462586b70d56dbb2abcfb157ebf0b1b02247140f04d346e",
+  "profile": "procedural-softfloat-asyncify",
+  "exports": [
+    "value",
+    "call"
+  ],
+  "upstreamFilesVerified": 6741,
+  "upstreamChanges": [],
+  "patches": [],
+  "asyncify": true,
+  "jumpBufferBytes": 4096,
+  "exceptionMapping": "outer-c-dispatcher",
+  "returnMapping": "explicit-cl-values",
+  "pythonFloatBits": 64,
+  "wasmFloatInstructions": false,
+  "softfloat": {
+    "revision": "080c31c72d5c3fd813584ea990e8a3aa10e902eb",
+    "archiveSha256": "187ad083b2147cc6489c07e4b23103e9055cea729b71f4d445db57f20be4a5f7"
+  },
+  "minification": {
+    "enabled": false
+  }
+}

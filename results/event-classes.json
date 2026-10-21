@@ -1,0 +1,396 @@
+{
+  "created": "2026-10-18T01:56:37.081997+02:00",
+  "feature": "Typed top-level Event records and explicit inherited events tuples",
+  "api": {
+    "eventBase": "cspr.Event",
+    "declaration": "events = (Mint, Burn, ...)",
+    "emit": "self.emit(Mint(recipient, amount))",
+    "registry": "Contract.event_types()",
+    "schemas": "cspr.events.event_schemas(...)",
+    "map": "Map[Key, U8]"
+  },
+  "behavior": [
+    "Collect declarations across the contract MRO; deduplicate identical event classes",
+    "Reject distinct classes sharing a wire name and undeclared event emissions",
+    "Generate CES schemas and payloads from structural CLType descriptors",
+    "Freeze record constructors and field metadata without executing application source",
+    "Validate event payloads before writes; retain catchable errors and uncaught-error rollback",
+    "Preserve all nine upstream CEP-18 event encodings, CES schemas and native JSON fixtures"
+  ],
+  "recordProfile": {
+    "inheritance": "single",
+    "fieldDefaults": false,
+    "customConstructors": false
+  },
+  "tests": {
+    "native": {
+      "passed": 214,
+      "log": "/tmp/casthon-events-pytest-final.log",
+      "subtests": 240
+    },
+    "wasm": {
+      "passed": 50,
+      "log": "/tmp/casthon-events-wasm-complete.log"
+    },
+    "minified": {
+      "passed": 11,
+      "log": "/tmp/casthon-events-minified-complete.log"
+    },
+    "nativeErrors": {
+      "passed": 3,
+      "log": "/tmp/casthon-events-native-complete.log"
+    },
+    "python311": {
+      "passed": 37,
+      "log": "/tmp/casthon-events-python311.log"
+    },
+    "rust": {
+      "passed": 11,
+      "log": "/tmp/casthon-events-rust.log"
+    },
+    "mypy": {
+      "sdkAndContracts": "passed",
+      "typedUsage": "passed",
+      "expectedTypeErrors": 45
+    },
+    "liveCep18": {
+      "passed": 4,
+      "transactions": 39,
+      "network": "cspr-py-test-78d865755643",
+      "protocolVersion": "2.2.0",
+      "networkStopped": true,
+      "cleanupErrors": []
+    }
+  },
+  "artifacts": {
+    "build/basic.wasm": {
+      "bytes": 354365,
+      "sha256": "1bba530fd709332d8c867b57549a15103e8e928f3cb4499bbb0eb4dfeb8c3f42",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "increment",
+        "increment_by",
+        "add_fractional",
+        "get",
+        "set_mode",
+        "get_mode",
+        "mode_name",
+        "add_big",
+        "get_big",
+        "fail_after_write",
+        "call"
+      ],
+      "report": "build/basic-build-report.json",
+      "meteredSha256": "225f15e13041b3c9371800adad311f94eb45305c7a2472243a22724a60808635"
+    },
+    "build/counter.wasm": {
+      "bytes": 355920,
+      "sha256": "9a218cd13fc41bc07c843df5acacec8ab927d5e4668fbc2ae3aee6f53bb0a86e",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "report": "build/counter-build-report.json",
+      "meteredSha256": "4b783a80314b9d80b45488c2b6820fccf9638f5cd71a04bff15170d033b8fb42"
+    },
+    "build/counter_session.wasm": {
+      "bytes": 355545,
+      "sha256": "7e33589be383d6b51be0a676a12b28e3ea8ce5f21800d8a408b61a739ac20f38",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "call"
+      ],
+      "report": "build/counter_session-build-report.json",
+      "meteredSha256": "d4519c9c7f24cf93f0af63da54671922c9c8eb4379d209b4f6fba81f2e58375d"
+    },
+    "build/my_token.wasm": {
+      "bytes": 366476,
+      "sha256": "cae6ec84b56b1a76dd38aff2a84eb114cb6b2b41ba1816bd090ac92488c94afb",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "report": "build/my_token-build-report.json",
+      "meteredSha256": "435d523f1cd4694853df294089b815d7b6c6afe6f8ac2b71963c9abccd635015"
+    },
+    "build/api_smoke.wasm": {
+      "bytes": 354159,
+      "sha256": "2aaeb435c48ac803a9335c3df8a766bcbda5f4cb9ff7aa2ebb665f011af4e6a3",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "read_count",
+        "call",
+        "call_counter"
+      ],
+      "report": "build/api_smoke-build-report.json",
+      "meteredSha256": "de2870dcfdeadd2e03ccdc6c1b8f7746195739b84cbf64c4a9cba2b58375603c"
+    },
+    "build/ffi_smoke.wasm": {
+      "bytes": 357057,
+      "sha256": "ec351d3cf6f01203155d8788a2d6e47708605433d24f06ac0b4c5bef841ea713",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "ping",
+        "restricted",
+        "inspect_caller",
+        "emit_events",
+        "call"
+      ],
+      "report": "build/ffi_smoke-build-report.json",
+      "meteredSha256": "462ec393ee9960d389c98a7523c172354d8c7b899f174fe7bb9e5136b1a58b89"
+    },
+    "build/dispatch_smoke.wasm": {
+      "bytes": 358188,
+      "sha256": "f3e074545b6656562c7dc2ba3b06415dbc22c11bb8aaf3268f5714905025f0b5",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "value",
+        "call"
+      ],
+      "report": "build/dispatch_smoke-build-report.json",
+      "meteredSha256": "4eebbc7a9ec123a743fc296d5d9488c5a9ff694732d9a62be47431f678046631"
+    },
+    "build/native_unwind.wasm": {
+      "bytes": 356524,
+      "sha256": "57920d00ab3e410db5c60bbf82e9f663424d99b5911b02a2d3ca4614594655b1",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "call"
+      ],
+      "report": "build/native_unwind-build-report.json",
+      "meteredSha256": "afee3888706d4009eb9d575146feb42d1bee4ee8ec9bb9967ffbf9206ef1fa8f"
+    },
+    "build/typed_exports.wasm": {
+      "bytes": 355525,
+      "sha256": "c94240b1ef474928d49816dc397bc07410178bad0e4ca0d044a43fb5d01a0c6c",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "calculate",
+        "nullable",
+        "defaults",
+        "owner",
+        "presence",
+        "presence_default",
+        "presence_number",
+        "internal",
+        "checked_return",
+        "key_return",
+        "early_ret",
+        "failure",
+        "unit",
+        "call"
+      ],
+      "report": "build/typed_exports-build-report.json",
+      "meteredSha256": "b67694d9ac6da5f2691194a307842e5f6f000318ba451d0ec789350a82e41cbd"
+    },
+    "build/minified/counter.wasm": {
+      "bytes": 351027,
+      "sha256": "73c3584b5433eb24542c4f798f8c83cdb49eb2fbe509697086dca1f8c95031ca",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "report": "build/minified/counter-build-report.json",
+      "meteredSha256": "cb8b901295414e830c7b780e41ae8531a92ed30c98c83975d9e540bf5253d623"
+    },
+    "build/minified/my_token.wasm": {
+      "bytes": 361135,
+      "sha256": "9f8348da02f64ae9bf25a0ad881ccfd8022655285e1a9a5da15b538a91ad2f71",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-asyncify",
+      "upstreamFilesVerified": 6741,
+      "upstreamChanges": [],
+      "exports": [
+        "call",
+        "init",
+        "name",
+        "symbol",
+        "decimals",
+        "total_supply",
+        "balance_of",
+        "allowance",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "transfer",
+        "transfer_from",
+        "mint",
+        "burn",
+        "change_security",
+        "change_events_mode"
+      ],
+      "report": "build/minified/my_token-build-report.json",
+      "meteredSha256": "f8d46cdda6179b7d737bb420bbc420cac2300195ba70eafb0048852e77268a4e"
+    },
+    "build/native-errors/counter.wasm": {
+      "bytes": 228382,
+      "sha256": "38ae0c7464e27a8a3abfe3abf874f288b5607c538458a7b5a4ea6d3fe9769fbe",
+      "micropython": "1.29.0",
+      "profile": "procedural-softfloat-native-errors",
+      "upstreamFilesVerified": 6743,
+      "upstreamChanges": [
+        "py/argcheck.c",
+        "py/bc.c",
+        "py/bc.h",
+        "py/binary.c",
+        "py/builtinimport.c",
+        "py/emitglue.c",
+        "py/gc.c",
+        "py/malloc.c",
+        "py/map.c",
+        "py/misc.h",
+        "py/modbuiltins.c",
+        "py/modgc.c",
+        "py/modstruct.c",
+        "py/modsys.c",
+        "py/mpprint.c",
+        "py/mpstate.h",
+        "py/mpz.c",
+        "py/nativeerror.c",
+        "py/nativeerror.h",
+        "py/nlrsetjmp.c",
+        "py/obj.c",
+        "py/obj.h",
+        "py/objarray.c",
+        "py/objattrtuple.c",
+        "py/objbool.c",
+        "py/objboundmeth.c",
+        "py/objcell.c",
+        "py/objclosure.c",
+        "py/objdict.c",
+        "py/objenumerate.c",
+        "py/objexcept.c",
+        "py/objfilter.c",
+        "py/objfloat.c",
+        "py/objfun.c",
+        "py/objgenerator.c",
+        "py/objgetitemiter.c",
+        "py/objint.c",
+        "py/objint.h",
+        "py/objint_impl.h",
+        "py/objint_mpz.c",
+        "py/objlist.c",
+        "py/objlist.h",
+        "py/objmap.c",
+        "py/objmodule.c",
+        "py/objnamedtuple.c",
+        "py/objnone.c",
+        "py/objobject.c",
+        "py/objpolyiter.c",
+        "py/objproperty.c",
+        "py/objrange.c",
+        "py/objreversed.c",
+        "py/objset.c",
+        "py/objsingleton.c",
+        "py/objslice.c",
+        "py/objstr.c",
+        "py/objstrunicode.c",
+        "py/objtuple.c",
+        "py/objtype.c",
+        "py/objzip.c",
+        "py/opmethods.c",
+        "py/pairheap.c",
+        "py/pairheap.h",
+        "py/parsenum.c",
+        "py/py.mk",
+        "py/pystack.c",
+        "py/pystack.h",
+        "py/qstr.c",
+        "py/reader.c",
+        "py/runtime.c",
+        "py/runtime.h",
+        "py/runtime_utils.c",
+        "py/scheduler.c",
+        "py/sequence.c",
+        "py/stream.c",
+        "py/vm.c",
+        "py/vstr.c"
+      ],
+      "exports": [
+        "call",
+        "get_owner",
+        "transfer_ownership",
+        "pause",
+        "unpause",
+        "is_paused",
+        "increment",
+        "increment_by",
+        "get",
+        "get_increments"
+      ],
+      "report": "build/native-errors/counter-build-report.json",
+      "meteredSha256": "2856acc3f80a6777ca6403fb4127c2661becb4c33a60dc46b71a72f751024ef4"
+    }
+  },
+  "preserved": {
+    "microPythonDefault": "pristine upstream 1.29.0 with Asyncify",
+    "stackLimit": 500,
+    "heap": "emmalloc-gc0, fixed 4 MiB",
+    "initializeExportAbsentInArtifacts": 27,
+    "nativePortMakefileSha256": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae"
+  }
+}

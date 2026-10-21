@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-20",
+  "assets": {
+    "release": "v0.4.0",
+    "target": "aarch64-apple-darwin",
+    "protocol": "2.2.0",
+    "pulledWith": "/Users/michal/Dev/casper-devnet-launcher/target/debug/casper-devnet assets pull",
+    "downloadSha512Verified": true,
+    "publishedNodeSha256": "26f506d31fcf27eedcf0e7c63f904989fe753d968e767254d1cc93f7f6468660",
+    "publishedNodeSupportsPrintFdEnv": true,
+    "publishedNodeSupportsCapabilityQuery": false
+  },
+  "compatibility": {
+    "launcher": "/Users/michal/Dev/casper-devnet-launcher/target/debug/casper-devnet",
+    "launcherSha256": "e55c211064d979a1213ee0b137a903af98311ba692a1085c9caca2737310b376",
+    "launcherSourceModified": false,
+    "nodeSourceModified": false,
+    "publishedBinaryModified": false,
+    "customAsset": "cspr-py-printfd-v040-26f506d3",
+    "wrapper": "/Users/michal/Dev/cspr-py/.cache/print-fd-compat/casper-node",
+    "reason": "Current launcher requires --devnet-capabilities; v0.4.0 only implements the FD environment hook.",
+    "wrapperBehavior": "For the capability query, verify the published node SHA-256 and advertise its known FD support. Otherwise exec the unchanged published node with inherited descriptors.",
+    "launcherSource": "Built the existing local working tree; no launcher source edits made by this experiment."
+  },
+  "capture": {
+    "source": "Launcher MCP stderr, forwarded from the inherited print descriptor",
+    "networkApi": [
+      "print_output",
+      "print_cursor",
+      "prints_since(cursor)",
+      "wait_for_print(pattern, since=cursor, node_id=1)"
+    ],
+    "receiptApi": "print_output: lines observed during submission/execution wait",
+    "failurePresentation": "Bounded exception notes for receipt assertions, test failures/errors, per-test setup/teardown/cleanups and subtests.",
+    "limits": {
+      "retainedLines": 1000,
+      "retainedCharacters": 262144,
+      "lineCharacters": 16384,
+      "failureLines": 50,
+      "failureCharacters": 8192
+    },
+    "ordering": "Arrival order only. No transaction IDs; validators can duplicate output; shared MCP clients share the stream.",
+    "delivery": "Best-effort launcher console forwarding; bounded queues can drop lines.",
+    "release": "Successful release deployment produced no contract prints."
+  },
+  "validation": {
+    "nativeUnittestTests": 238,
+    "nativePythonVersions": [
+      "3.11",
+      "3.14"
+    ],
+    "nativePytestTests": 238,
+    "nativePytestSubtests": 253,
+    "typecheckedSourceFiles": 61,
+    "rejectedTypeMistakes": 51,
+    "liveTests": 3,
+    "liveRunners": [
+      "unittest",
+      "pytest"
+    ],
+    "liveTransactions": 14,
+    "intentionalPytestFailureVerified": true,
+    "intentionalFailureExitCode": 1,
+    "failureExample": "results/print-fd-failure-example.txt",
+    "verified": [
+      "UTF-8 print capture from all four validators",
+      "prints before a revert and from finally",
+      "receipt assertion error notes",
+      "automatic unittest and pytest failure output",
+      "silent release deployment",
+      "per-test cursors",
+      "bounded capture/truncation",
+      "clean network teardown"
+    ],
+    "noTestNodeProcessesRemaining": true
+  },
+  "networks": [
+    {
+      "runner": "unittest",
+      "network": "cspr-py-test-115ff33e867d",
+      "protocol": "2.2.0",
+      "transactions": 6,
+      "capturedLines": 64,
+      "nonemptyLines": 24,
+      "nodeIds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "droppedLines": 0,
+      "stopped": true,
+      "cleanupErrors": [],
+      "capture": ".cache/cspr-testing/live/test_print_fd.TestPrintFD/contract-prints.jsonl"
+    },
+    {
+      "runner": "pytest",
+      "network": "cspr-py-test-d5e29b08df4a",
+      "protocol": "2.2.0",
+      "transactions": 6,
+      "capturedLines": 64,
+      "nonemptyLines": 24,
+      "nodeIds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "droppedLines": 0,
+      "stopped": true,
+      "cleanupErrors": [],
+      "capture": ".cache/cspr-testing/live/tests.live.test_print_fd.TestPrintFD/contract-prints.jsonl"
+    },
+    {
+      "runner": "pytestIntentionalFailure",
+      "network": "cspr-py-test-6d5e0a3b1374",
+      "protocol": "2.2.0",
+      "transactions": 2,
+      "capturedLines": 40,
+      "nonemptyLines": 16,
+      "nodeIds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "droppedLines": 0,
+      "stopped": true,
+      "cleanupErrors": [],
+      "capture": ".cache/cspr-testing/live/_cache.print_fd_pytest_failure.TestPrintFailure/contract-prints.jsonl"
+    }
+  ],
+  "artifacts": [
+    {
+      "wasm": ".cache/cspr-testing/build/0c52855297c4a2dd9a98ad8d4ee4dd0cd66d65cbc746b1cf32dbb8293adb54c2/print_fd_session.wasm",
+      "bytes": 355765,
+      "sha256": "78631b9b7372206b8a4c7829eda72b24c62689c04a5de2c05a150bad437a8735",
+      "profile": "debug",
+      "debugPrint": true,
+      "upstreamChanges": []
+    },
+    {
+      "wasm": ".cache/cspr-testing/build/a2016034b89289f349c94f1c083e29d8fac0077914d2bf41f6a5f532a23f5636/release/print_fd_session.wasm",
+      "bytes": 354624,
+      "sha256": "e7a6a89ab3cad0c0c34b5727bb2ee8efd347d507e5a8c8b78ca7df46fc9fe4e7",
+      "profile": "release",
+      "debugPrint": false,
+      "upstreamChanges": []
+    }
+  ],
+  "liveCommand": "PYTHONPATH=src CSPR_LIVE_TESTS=1 CSPR_PRINT_FD_TESTS=1 CSPR_DEVNET_BIN=/Users/michal/Dev/casper-devnet-launcher/target/debug/casper-devnet CSPR_DEVNET_CUSTOM_ASSET=cspr-py-printfd-v040-26f506d3 .venv/bin/python -m unittest discover -s tests/live -p test_print_fd.py -v"
+}

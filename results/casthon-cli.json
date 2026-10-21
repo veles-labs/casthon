@@ -1,0 +1,303 @@
+{
+  "date": "2026-10-16",
+  "name": "casthon",
+  "version": "0.1.0",
+  "binary": {
+    "path": "target/release/casthon",
+    "bytes": 4154816,
+    "sha256": "d630b57f805903bde1968a5782f2dee48916c508642acc4958b9de10bc683aa7"
+  },
+  "commands": [
+    "build",
+    "test",
+    "check",
+    "inspect",
+    "doctor",
+    "new"
+  ],
+  "architecture": {
+    "driver": "Rust CLI with repository-local Python frontend/SDK",
+    "wasmEngine": "Existing Rust lowerer/validator/instrumenter incorporated as a library",
+    "contractBuildRequiresCargo": false,
+    "buildConcurrency": "Python build-worker flock serializes the existing shared caches",
+    "testing": "Selected Python interpreter -m pytest; no wasm/live CLI modes",
+    "sdkProvider": "Current checkout; Python package separation deferred",
+    "micropython": {
+      "version": "1.29.0",
+      "sha256": "8072f6ad42c0e3bbfca88ed09bf8f1106ce207a39129af920f70081b8f2fe286"
+    }
+  },
+  "validation": {
+    "rustIntegrationTests": 10,
+    "nativePytestTests": 200,
+    "nativeSubtests": 232,
+    "wasmTests": 47,
+    "wasmSubtests": 423,
+    "minifiedCounterWasmTests": 3,
+    "minifiedCep18WasmTests": 8,
+    "plainAndCasperMetered": true,
+    "stockStackSlots": 500,
+    "typecheckedSourceFiles": 56,
+    "rejectedTypeMistakes": 42,
+    "rustfmt": true,
+    "clippyWarningsDenied": true,
+    "doctorPassed": true,
+    "cargoDisabledDuringDefaultBuild": true,
+    "generatedTemplateTests": 2,
+    "generatedCep18ProjectBuilt": true,
+    "jsonStdoutAndArgumentsAndExitCodesChecked": true,
+    "liveTests": 1,
+    "liveTransactions": 4,
+    "liveNetwork": "cspr-py-test-fe8c698c02ad",
+    "liveNetworkStopped": true,
+    "cleanupErrors": [],
+    "commands": [
+      "cargo test --locked",
+      "cargo clippy --locked --all-targets -- -D warnings",
+      "target/release/casthon doctor",
+      "target/release/casthon build --json (Cargo replaced by failing stub)",
+      "target/release/casthon build my_token counter_session --json",
+      "target/release/casthon build counter --minify --json",
+      "target/release/casthon build my_token --minify --json",
+      "target/release/casthon test -q",
+      "target/release/casthon test tests/wasm -q",
+      "CSPR_BUILD_DIR=build/minified target/release/casthon test tests/wasm/test_wasm_counter.py -q",
+      "CSPR_BUILD_DIR=build/minified target/release/casthon test tests/wasm/test_wasm_cep18.py -q",
+      "CSPR_LIVE_TESTS=1 target/release/casthon test tests/live/test_cep18.py::TestCep18::test_enum_state_and_remote_enum_arguments_and_returns -q",
+      "target/release/casthon check",
+      "make typecheck"
+    ]
+  },
+  "artifacts": {
+    "counter": {
+      "bytes": 350564,
+      "sha256": "b864ad936e8e1eaac9af7aad53561df75267d0b88da9c041356c7f00d4910e4a",
+      "matchesPrevious": true,
+      "meteredSha256": "2ab908fd23abf01bae4236aa3f4d8073694a11046674f341f50e305f5a950409"
+    },
+    "my_token": {
+      "bytes": 360618,
+      "sha256": "c8b544641bd859eb059fbbb4aa29364c2aa8b18df5c0aaccbf39487aae8014e1",
+      "matchesPrevious": true,
+      "meteredSha256": "23f83e8ae69299f17ab4f0224ea24cebcdfecfb7f42363d37beac3735d8cb149"
+    },
+    "counter_session": {
+      "bytes": 350206,
+      "sha256": "ef2af8d64385c88e3de71ff1b11509b377df3e76ebdfe68cd80cf0b5ae8aa771",
+      "matchesPrevious": true,
+      "meteredSha256": "be08d7ea2eab7a029a63867cccc4004621a7599c649eda242fa49b28518cf36a"
+    }
+  },
+  "minifiedArtifacts": {
+    "counter": {
+      "bytes": 345956,
+      "sha256": "5f365759aedc55faea3260a02c365534c7e6588dfa48195ce2255768315d3672",
+      "selected": "compact",
+      "minification": {
+        "binaryen": "wasm-opt version 132",
+        "candidates": [
+          {
+            "accepted": true,
+            "bytes": 346655,
+            "flags": [
+              "-Oz",
+              "--converge",
+              "--remove-unused-module-elements",
+              "--reorder-functions",
+              "--reorder-locals",
+              "--reorder-globals",
+              "--reorder-types",
+              "--optimize-stack-ir",
+              "--strip-debug",
+              "--strip-producers",
+              "--strip-target-features",
+              "--strip-toolchain-annotations"
+            ],
+            "input": "contract.optimized.wasm",
+            "name": "converged",
+            "sha256": "51d1575bd640cdb794a30570fd10a0989f4be3d39b013a9f4c0bcca5493a2398",
+            "tool": "wasm-opt"
+          },
+          {
+            "accepted": true,
+            "bytes": 345956,
+            "flags": [
+              "--gufa-optimizing",
+              "--duplicate-function-elimination",
+              "--merge-similar-functions",
+              "--dae-optimizing",
+              "--code-folding",
+              "--coalesce-locals-learning",
+              "--simplify-globals-optimizing",
+              "--memory-packing",
+              "-Oz",
+              "--converge",
+              "--remove-unused-module-elements",
+              "--reorder-functions",
+              "--reorder-locals",
+              "--reorder-globals",
+              "--reorder-types",
+              "--optimize-stack-ir",
+              "--strip-debug",
+              "--strip-producers",
+              "--strip-target-features",
+              "--strip-toolchain-annotations"
+            ],
+            "input": "contract.optimized.wasm",
+            "name": "compact",
+            "sha256": "5f365759aedc55faea3260a02c365534c7e6588dfa48195ce2255768315d3672",
+            "tool": "wasm-opt"
+          }
+        ],
+        "enabled": true,
+        "excluded": [
+          "ABI name mangling",
+          "fast math",
+          "trap assumptions",
+          "assert removal",
+          "flatten/rereloop (metered Counter stack regression)",
+          "constructor evaluation (metered Counter startup regression)",
+          "outlining (creates non-MVP multivalue in Binaryen 132)",
+          "gzip/Brotli (Casper deploys raw Wasm)"
+        ],
+        "inputBytes": 347802,
+        "interfacePreserved": true,
+        "outputBytes": 345956,
+        "pythonAssertions": true,
+        "pythonSourceLines": false,
+        "savedBytes": 1846,
+        "selected": "compact"
+      }
+    },
+    "my_token": {
+      "bytes": 355603,
+      "sha256": "8dbf1d6776d213bb1c607b3f941e9b901e733d57d57cd8f8f59cf1f144e3fcf2",
+      "selected": "compact",
+      "minification": {
+        "binaryen": "wasm-opt version 132",
+        "candidates": [
+          {
+            "accepted": true,
+            "bytes": 356302,
+            "flags": [
+              "-Oz",
+              "--converge",
+              "--remove-unused-module-elements",
+              "--reorder-functions",
+              "--reorder-locals",
+              "--reorder-globals",
+              "--reorder-types",
+              "--optimize-stack-ir",
+              "--strip-debug",
+              "--strip-producers",
+              "--strip-target-features",
+              "--strip-toolchain-annotations"
+            ],
+            "input": "contract.optimized.wasm",
+            "name": "converged",
+            "sha256": "d6d00cab7e63a8364109fbc4a7ce92cc215b3c5921bbbb4cf13ffa21e99b58e2",
+            "tool": "wasm-opt"
+          },
+          {
+            "accepted": true,
+            "bytes": 355603,
+            "flags": [
+              "--gufa-optimizing",
+              "--duplicate-function-elimination",
+              "--merge-similar-functions",
+              "--dae-optimizing",
+              "--code-folding",
+              "--coalesce-locals-learning",
+              "--simplify-globals-optimizing",
+              "--memory-packing",
+              "-Oz",
+              "--converge",
+              "--remove-unused-module-elements",
+              "--reorder-functions",
+              "--reorder-locals",
+              "--reorder-globals",
+              "--reorder-types",
+              "--optimize-stack-ir",
+              "--strip-debug",
+              "--strip-producers",
+              "--strip-target-features",
+              "--strip-toolchain-annotations"
+            ],
+            "input": "contract.optimized.wasm",
+            "name": "compact",
+            "sha256": "8dbf1d6776d213bb1c607b3f941e9b901e733d57d57cd8f8f59cf1f144e3fcf2",
+            "tool": "wasm-opt"
+          }
+        ],
+        "enabled": true,
+        "excluded": [
+          "ABI name mangling",
+          "fast math",
+          "trap assumptions",
+          "assert removal",
+          "flatten/rereloop (metered Counter stack regression)",
+          "constructor evaluation (metered Counter startup regression)",
+          "outlining (creates non-MVP multivalue in Binaryen 132)",
+          "gzip/Brotli (Casper deploys raw Wasm)"
+        ],
+        "inputBytes": 357456,
+        "interfacePreserved": true,
+        "outputBytes": 355603,
+        "pythonAssertions": true,
+        "pythonSourceLines": false,
+        "savedBytes": 1853,
+        "selected": "compact"
+      }
+    }
+  },
+  "minificationInvestigation": "results/casthon-minification-investigation.json",
+  "liveTransactions": [
+    {
+      "hash": "f51409d598701b5ff2edfdd5f6aacc76c67e5ad0ec156c70956ab972b96f0f1a",
+      "error": null,
+      "consumed": "100000000",
+      "cost": "100000000"
+    },
+    {
+      "hash": "97c5fe8f36b7590df3361e2a66b4d976df9b50993ff471d6a47e83a75d45c260",
+      "error": null,
+      "consumed": "593048070903",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "08ed88ed649aeb0226904173a027d19bdfa5fbce1d76c6cb609179f644656e00",
+      "error": null,
+      "consumed": "139762272610",
+      "cost": "800000000000"
+    },
+    {
+      "hash": "44e075070d40bcf6d44724716a4e31a348427710eab131a1bbaf453b04d2bf26",
+      "error": "User error: 60006",
+      "consumed": "15677444335",
+      "cost": "100000000000"
+    }
+  ],
+  "sourceSha256": {
+    "Cargo.toml": "fa5873d2a27c3e6d6ba1d0d9e23c49a11a7bdb0eb39ef2b38224b58502a08233",
+    "Cargo.lock": "f3924402d171dbb771f62ce3a05c20f376ebb3393e0146c32d872f7c2246bde8",
+    "cli/main.rs": "85045aa2b60979eb18bdd137ee0af9e0d788d36001f81f6aa33356504d6e46a0",
+    "tests/cli.rs": "ce7d8b6c245fa4b9a7ded479053e70dc33dfd0aa71dcee6c4c8845e95f0f7cc7",
+    "native/toolchain.json": "84fffad255f4b24517ce52090fc13b733a4e9d83ba05d511416e831636962901",
+    "scripts/build.py": "a6cd801f3389daa25aee229889981ff8641211ab9f609dc3b0de406d6af04800",
+    "scripts/micropython.py": "d6984156f539819267b8894c12db537161ec82c9e1086b826d0d9b2366a1eed1",
+    "scripts/softfloat.py": "e315f33ae5ffe380a83d8e23837d088db490e106703da3962b7e32a2e92e6bdf",
+    "scripts/minify.py": "ee93d66d16f4fddecca7ab05e9f47f73b3fc69d9e7ad7a1f03f24fd1605986a8",
+    "src/cspr/testing/build.py": "aa3df40a244b209a84671d95c847685dd2471f7bf80be466132782339f8f4655",
+    "tools/wasm-softfloat/src/main.rs": "b162f8ab93594ce2bb288e09d3ec2dc8ff6fdc4729977232d33f4979b0b69f5c",
+    "tools/wasm-softfloat/src/lib.rs": "e20060001840a1026e973fae093847d9c2c593ea237153c6a1b3fbeaaf564112",
+    "pyproject.toml": "f3ca26ce65ecb2c222d9ebb1d306b9235e429b7410e67f14cdf4f85d0076e84e",
+    "Makefile": "2ffa2bd975fc0a2fb7347e354aafbc8a318d744691a1d9962e07a9f0ea6fe77d"
+  },
+  "preservedNativeRuntimeSha256": {
+    "native/micropython/stackless-calls.patch": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941",
+    "native/micropython/integer-errors.patch": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0",
+    "native/micropython/native-errors.patch": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420",
+    "native/micropython/port/mpconfigport.h": "84b760868a45aaa4ec094c31be017666d335a975ee6148de7218a25fb06f3b14",
+    "native/micropython/port/Makefile": "fc44aa4677cbf4b4af1e5c43a0dc3adea4906d940440fb60a20840c076356dae"
+  }
+}

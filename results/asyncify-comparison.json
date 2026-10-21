@@ -1,0 +1,86 @@
+{
+  "defaultRuntime": "asyncify",
+  "micropython": "1.29.0",
+  "upstreamFilesVerified": 6741,
+  "upstreamChanges": [],
+  "preservedPatches": [
+    {
+      "file": "native/micropython/stackless-calls.patch",
+      "bytes": 13283,
+      "sha256": "d044df4921ff17bfd71853e70a6e16ebcbb1d58d16ddae8544258ccedc065941"
+    },
+    {
+      "file": "native/micropython/integer-errors.patch",
+      "bytes": 6350,
+      "sha256": "bc4cd2338ac631a54b7dc524c54ee0c5e291339ecaed204d5b6bd86be5fdf9b0"
+    },
+    {
+      "file": "native/micropython/native-errors.patch",
+      "bytes": 556693,
+      "sha256": "4ea214fdf11b5613cbde8f083378e870bd63ba9c76373395017a3fadd8366420"
+    }
+  ],
+  "counter": {
+    "bytes": 335723,
+    "sha256": "7de612e3ae559efdffa8eeccd9fc45a3cf29adf5b59171fcefe67b8101757b0f"
+  },
+  "preservedNativeCounter": {
+    "bytes": 204372,
+    "sha256": "b02716f7adae13788e38463f724d19caaf879bb211e01507f4d0da27c915c26c"
+  },
+  "rebuiltNativeCounter": {
+    "bytes": 204412,
+    "sha256": "dcf1d49ef3afd3d9f507c3da3882ca235dd02dcd8c309d230d32b1cab63ca0ca",
+    "localWasmTests": 21,
+    "fullDevnetValidated": false
+  },
+  "minifiedCounter": {
+    "bytes": 331287,
+    "sha256": "1ccc2417cf619f7e4998f3b393e435f31ef4574905db08a0bdf4dfab1ec03984",
+    "localCounterTests": 7,
+    "fullDevnetValidated": false,
+    "report": "results/asyncify-minified-counter-build-report.json"
+  },
+  "sizeIncreaseOverPreservedNativeBytes": 131351,
+  "sizeIncreaseOverPreservedNativePercent": 64.27054586733996,
+  "validation": {
+    "localTests": 80,
+    "cpythonTests": 59,
+    "wasmTests": 21,
+    "nativeProbeInvocations": 310,
+    "typecheckPassed": true,
+    "devnetTransactions": 98,
+    "network": "cspr-py-poc-1792013903677",
+    "networkStopped": true,
+    "stackLimit": 500,
+    "report": "results/devnet-report.json",
+    "bootstrapProbeInvocations": 28
+  },
+  "gas": [
+    {
+      "operation": "install",
+      "asyncifyGas": "567699904693",
+      "preservedNativeGas": "359906073052",
+      "ratio": 1.5773557247281502
+    },
+    {
+      "operation": "increment",
+      "asyncifyGas": "9893310315",
+      "preservedNativeGas": "3378576750",
+      "ratio": 2.928247912379081
+    },
+    {
+      "operation": "increment_by",
+      "asyncifyGas": "9931491665",
+      "preservedNativeGas": "3401446925",
+      "ratio": 2.919784398811397
+    },
+    {
+      "operation": "typed-get-return",
+      "asyncifyGas": "10071409635",
+      "preservedNativeGas": "3611142330",
+      "ratio": 2.7889816336870887
+    }
+  ],
+  "caveat": "The native reference is the archived full run before the C dispatcher responsibility refactor. Its interpreter patches remain unchanged; both current runtimes pass all 21 local Wasm tests. Payment budgets differ; comparisons use consumed gas. Only regular Asyncify artifacts have the current full devnet validation."
+}

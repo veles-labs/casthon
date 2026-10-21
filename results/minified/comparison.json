@@ -1,0 +1,38 @@
+{
+  "pythonArtifact": {
+    "bytes": 163061,
+    "sha256": "0ac48a50c584ae6bdb53c3c52a7661945231b42d9e5a7c98f67414fb24082c3d"
+  },
+  "javascriptArtifact": {
+    "bytes": 374156,
+    "sha256": "824c6a4cf590c71412e1895be1c24b5d2d0bf8ad54647f7c42c3c1293c512f15"
+  },
+  "sizeReductionPercent": 56.41898031836987,
+  "caveat": "Different SDK profiles: Python uses procedural host calls with 3 stored fields and 10 entrypoints, binary64 SoftFloat and selected stackless exception paths; JS has 1 field and 4 entrypoints, float support and catchable exceptions. This is not a controlled language benchmark.",
+  "gas": [
+    {
+      "operation": "install",
+      "pythonGas": "298255300123",
+      "javascriptGas": "678631585073",
+      "reductionPercent": 56.050483549050135
+    },
+    {
+      "operation": "increment",
+      "pythonGas": "2943593070",
+      "javascriptGas": "5263700750",
+      "reductionPercent": 44.07749965649168
+    },
+    {
+      "operation": "increment_by",
+      "pythonGas": "2958020600",
+      "javascriptGas": "5291111615",
+      "reductionPercent": 44.09453409347518
+    },
+    {
+      "operation": "typed-get-return",
+      "pythonGas": "3160669000",
+      "javascriptGas": "4849692155",
+      "reductionPercent": 34.82743029902689
+    }
+  ]
+}

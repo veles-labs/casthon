@@ -1,0 +1,100 @@
+{
+  "localChecks": {
+    "python": 39,
+    "regularWasm": 13,
+    "minifiedWasm": 13
+  },
+  "devnetTransactions": 100,
+  "networksStopped": true,
+  "artifacts": {
+    "counter": {
+      "regular": {
+        "bytes": 167154,
+        "sha256": "a4c331973da7c16da1eef7dcb58b9cb36f95fee0d5f49d81d6436a2393b10722"
+      },
+      "minified": {
+        "bytes": 163061,
+        "sha256": "0ac48a50c584ae6bdb53c3c52a7661945231b42d9e5a7c98f67414fb24082c3d"
+      },
+      "savedBytes": 4093,
+      "savedPercent": 2.4486401761250103,
+      "interfacePreserved": true,
+      "pythonSourcesIdentical": true
+    },
+    "api_smoke": {
+      "regular": {
+        "bytes": 166984,
+        "sha256": "3d526a9f6925681327f08471a133948d60c71199879458bcadd826e87b51e831"
+      },
+      "minified": {
+        "bytes": 162922,
+        "sha256": "c4ba1807099d574ee35ca062e37b14c23e4c505a7516f8a72534ea6e42241955"
+      },
+      "savedBytes": 4062,
+      "savedPercent": 2.432568389785848,
+      "interfacePreserved": true,
+      "pythonSourcesIdentical": true
+    },
+    "ffi_smoke": {
+      "regular": {
+        "bytes": 169863,
+        "sha256": "5136eaf3cb7ef5c5b8a0cd4a3bcf39de877357c1a22c9a097d8154684706c76d"
+      },
+      "minified": {
+        "bytes": 165638,
+        "sha256": "020b1fbf9748ceda4f87e2fdaae822f62b2029d35fffd440c49bf223a524b0af"
+      },
+      "savedBytes": 4225,
+      "savedPercent": 2.48729858768537,
+      "interfacePreserved": true,
+      "pythonSourcesIdentical": true
+    },
+    "dispatch_smoke": {
+      "regular": {
+        "bytes": 166568,
+        "sha256": "dece0002e5e4ae6cc6cebd011fc8f0a3dfd6ee4651686c5e5475ad1d570ae3aa"
+      },
+      "minified": {
+        "bytes": 162483,
+        "sha256": "5665b9316728db16510eb067bd0f65fad95f4cb197f90f983f8e4f90ce8179dd"
+      },
+      "savedBytes": 4085,
+      "savedPercent": 2.4524518514960856,
+      "interfacePreserved": true,
+      "pythonSourcesIdentical": true
+    }
+  },
+  "gas": [
+    {
+      "label": "install",
+      "regular": 304054239343,
+      "minified": 298255300123,
+      "reductionPercent": 1.9072055145589628
+    },
+    {
+      "label": "increment",
+      "regular": 3036831720,
+      "minified": 2943593070,
+      "reductionPercent": 3.0702606728567727
+    },
+    {
+      "label": "increment_by",
+      "regular": 3052177490,
+      "minified": 2958020600,
+      "reductionPercent": 3.084908735107672
+    },
+    {
+      "label": "typed-get-return",
+      "regular": 3247633720,
+      "minified": 3160669000,
+      "reductionPercent": 2.677787198243531
+    },
+    {
+      "label": "add_fractional",
+      "regular": 3055601725,
+      "minified": 2961308320,
+      "reductionPercent": 3.0859193535767493
+    }
+  ],
+  "caveat": "Same frozen Python sources and contract inputs; minification removes source-line metadata, keeps assertions, and can change gas/stack costs."
+}
