@@ -164,7 +164,11 @@ belongs in declared storage fields. Uncaught constructor errors use the ordinary
 invocation rollback policy, including writes made by `finally`.
 
 Only the owner may pause, unpause or transfer ownership. Both counter increment methods
-check the pause guard; reads remain available. Unauthorized calls raise `NotOwner` (User
+use `@require_unpaused` from `contracts.pausable`; the guard lives in `Pausable`.
+Pause, unpause and ownership transfer use `@require_owner` from `contracts.ownable`.
+Place these decorators underneath `@entry_point`. They preserve argument and return
+annotations, run once before the method body, and also apply to ordinary local calls.
+Reads remain available while paused. Unauthorized calls raise `NotOwner` (User
 error 100), and paused increments raise `Paused` (User error 101). The installer binds
 `py_counter`, so it can coexist with `basic.py` at `py_basic`. Build it with `make
 build-counter` or `python3.14 scripts/build.py counter`.

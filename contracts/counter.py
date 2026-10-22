@@ -9,7 +9,7 @@ from cspr import (
 from cspr.contract_api import storage
 from cspr.contract_api.runtime import get_caller, named_keys
 from cspr.contracts import entry_point, export_contract
-from contracts.pausable import Pausable
+from contracts.pausable import Pausable, require_unpaused
 
 
 def _account_key(account: AccountHash) -> str:
@@ -25,16 +25,17 @@ class Counter(Pausable):
         super().__init__(count=initial, **state)
 
     def _increment_by(self, amount: U32) -> None:
-        self._require_unpaused()
         self.count.write(self.count.read() + amount)
         caller = get_caller()
         self.increments[caller] = self.increments.get(caller, 0) + amount
 
     @entry_point
+    @require_unpaused
     def increment(self) -> None:
-        self.increment_by(1)
+        self._increment_by(1)
 
     @entry_point
+    @require_unpaused
     def increment_by(self, amount: U32) -> None:
         self._increment_by(amount)
 

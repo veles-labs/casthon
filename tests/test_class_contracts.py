@@ -312,6 +312,39 @@ export_contract(Example)
             local.increment_by(5)
             self.assertEqual(local.get(), 5)
 
+    def test_increment_decorators_check_the_pause_guard_once_per_call(self):
+        with use_host(self.host):
+            instance = Counter()
+            original = Pausable._require_unpaused
+            with patch.object(Pausable, '_require_unpaused', autospec=True, side_effect=original) as guard:
+                instance.increment()
+                self.assertEqual(guard.call_count, 1)
+                guard.reset_mock()
+                instance.increment_by(amount=3)
+                self.assertEqual(guard.call_count, 1)
+                self.assertEqual(instance.get(), 4)
+                instance.pause()
+                for operation in (instance.increment, lambda: instance.increment_by(2)):
+                    guard.reset_mock()
+                    with self.assertRaises(Paused):
+                        operation()
+                    self.assertEqual(guard.call_count, 1)
+                    self.assertEqual(instance.get(), 4)
+
+    def test_owner_decorator_checks_before_mutation_and_keeps_local_errors_catchable(self):
+        with use_host(self.host):
+            instance = Counter(owner=self.bob)
+            original = Ownable._require_owner
+            with patch.object(Ownable, '_require_owner', autospec=True, side_effect=original) as guard:
+                for operation in (instance.pause, instance.unpause,
+                                  lambda: instance.transfer_ownership(self.alice)):
+                    guard.reset_mock()
+                    with self.assertRaises(NotOwner):
+                        operation()
+                    self.assertEqual(guard.call_count, 1)
+                    self.assertEqual(instance.get_owner(), self.bob)
+                    self.assertFalse(instance.is_paused())
+
     def test_fields_follow_rebinding_and_missing_fields_fail(self):
         with use_host(self.host):
             for name, key in Counter(1).named_keys.items():

@@ -1,6 +1,7 @@
 """Reusable ownership state and owner-authorized entrypoints."""
 
-from typing import Any
+from functools import wraps
+from typing import Any, Callable, TypeVar, cast
 
 from cspr import AccountHash, URef, UserError
 from cspr.contract_api.runtime import get_caller
@@ -10,6 +11,17 @@ from cspr.contracts import Contract, entry_point
 class NotOwner(UserError):
     def __init__(self) -> None:
         super().__init__(100)
+
+
+_F = TypeVar("_F", bound=Callable[..., Any])
+
+
+def require_owner(function: _F) -> _F:
+    @wraps(function)
+    def guarded(self: "Ownable", *args: Any, **kwargs: Any) -> Any:
+        self._require_owner()
+        return function(self, *args, **kwargs)
+    return cast(_F, guarded)
 
 
 class Ownable(Contract):
@@ -27,6 +39,6 @@ class Ownable(Contract):
         return self.owner.read()
 
     @entry_point
+    @require_owner
     def transfer_ownership(self, new_owner: AccountHash) -> None:
-        self._require_owner()
         self.owner.write(new_owner)
