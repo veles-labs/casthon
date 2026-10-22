@@ -17,6 +17,8 @@ def read_type(reader: Reader) -> CLType:
         return CLType(tag, (child,), bytes if tag == 14 and child.tag == 3 else None)
     if tag == 17:
         return CLType(tag, (read_type(reader), read_type(reader)))
+    if tag in (18, 19, 20):
+        return CLType(tag, tuple(read_type(reader) for _ in range(tag - 17)))
     return CLType(tag)
 
 
@@ -39,6 +41,8 @@ def kind_json(annotation: Any) -> Any:
         return {"Option" if kind.tag == 13 else "List": kind_json(kind.children[0])}
     if kind.tag == 17:
         return {"Map": {"key": kind_json(kind.children[0]), "value": kind_json(kind.children[1])}}
+    if kind.tag in (18, 19, 20):
+        return {"Tuple" + str(kind.tag - 17): [kind_json(child) for child in kind.children]}
     return str(kind)
 
 
@@ -52,6 +56,10 @@ def json_kind(value: Any) -> CLType:
             return CLType(tag, (child,), bytes if tag == 14 and child.tag == 3 else None)
         if "Map" in value:
             return CLType(17, (json_kind(value["Map"]["key"]), json_kind(value["Map"]["value"])))
+        for tag in (18, 19, 20):
+            name = "Tuple" + str(tag - 17)
+            if name in value:
+                return CLType(tag, tuple(json_kind(child) for child in value[name]))
     raise NotImplementedError(f"CLType {value!r} is outside the Python codec subset")
 
 

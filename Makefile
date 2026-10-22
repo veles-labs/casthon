@@ -1,7 +1,7 @@
 PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3.14)
 BUILD_FLAGS ?=
 
-.PHONY: setup cli test-cli build build-hello build-basic build-counter build-counter-session build-my-token build-api-smoke build-ffi-smoke build-dispatch-smoke build-native-unwind build-typed-exports test test-native test-wasm test-live test-all typecheck validate compare
+.PHONY: setup cli test-cli build build-hello build-basic build-counter build-counter-session build-my-token build-my-nft build-api-smoke build-ffi-smoke build-dispatch-smoke build-native-unwind build-typed-exports test test-native test-wasm test-live test-all typecheck validate compare
 cli:
 	cargo build --release --locked
 
@@ -19,6 +19,7 @@ build:
 	$(PYTHON) scripts/build.py counter $(BUILD_FLAGS)
 	$(PYTHON) scripts/build.py counter_session $(BUILD_FLAGS)
 	$(PYTHON) scripts/build.py my_token $(BUILD_FLAGS)
+	$(PYTHON) scripts/build.py my_nft $(BUILD_FLAGS)
 	$(PYTHON) scripts/build.py api_smoke $(BUILD_FLAGS)
 	$(PYTHON) scripts/build.py ffi_smoke $(BUILD_FLAGS)
 	$(PYTHON) scripts/build.py dispatch_smoke $(BUILD_FLAGS)
@@ -39,6 +40,9 @@ build-counter-session:
 
 build-my-token:
 	$(PYTHON) scripts/build.py my_token $(BUILD_FLAGS)
+
+build-my-nft:
+	$(PYTHON) scripts/build.py my_nft $(BUILD_FLAGS)
 
 build-api-smoke:
 	$(PYTHON) scripts/build.py api_smoke $(BUILD_FLAGS)

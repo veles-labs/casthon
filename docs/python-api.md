@@ -251,6 +251,13 @@ annotations do not select application error classes.
 
 ### Return values
 
+Fixed tuples of one to three elements use Casper Tuple1/Tuple2/Tuple3. For
+example, `tuple[str, Key, str]` describes a CEP-78 mint receipt, and
+`list[tuple[str, Key]]` describes its ownership receipts. Tuple elements are
+validated and encoded in declaration order; variable-length tuples are unsupported.
+As a wire annotation, `URef[T]` encodes the raw Casper URef (CLType URef) and
+retains its value schema when decoded. A bare `URef` continues to encode a Key.
+
 An annotated `-> None` encodes Unit. With no return annotation, the existing low-level
 behavior applies: return a `CLValue`, or return `None` to complete normally. CLValue
 subclass annotations also retain that explicit behavior. A wire-annotated export may

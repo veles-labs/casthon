@@ -1,6 +1,6 @@
 """Explicit native invocation boundaries around ordinary contract functions."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import ModuleType
 from typing import Any, Callable, Mapping
 
@@ -21,6 +21,7 @@ from .values import inspect_value
 @dataclass(frozen=True)
 class InvocationResult:
     payload: bytes | None
+    _grants: dict[bytes, int] = field(default_factory=dict, compare=False, repr=False)
 
     @property
     def cl_value(self) -> SerializedCLValue | None:
@@ -79,7 +80,7 @@ class ContractHarness:
                         validate_return_payload(payload)
                     except BaseException:
                         raise InvalidArgument() from None
-                return InvocationResult(payload)
+                return InvocationResult(payload, dict(self.host._current.get().grants))
 
     def _grant(self, value: Any, *, validate: bool = False) -> None:
         if isinstance(value, URef):

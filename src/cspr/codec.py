@@ -2,7 +2,7 @@
 
 from typing import Any
 from .errors import ABIError as ABIError
-from .key import Key, key_length
+from .key import Key, URef, key_length
 from .types import cl_type_of
 from ._cl_types import CLType, BITS as TYPE_BITS
 from ._wire_types import enum_type
@@ -28,6 +28,17 @@ def _encode(kind: CLType, value: Any, serialize: bool = True) -> bytes:
             return b"\0" if serialize else b""
         data = _encode(kind.children[0], value, serialize)
         return b"\1" + data if serialize else b""
+    if tag in (18, 19, 20):
+        if type(value) is not tuple or len(value) != len(kind.children):
+            raise ABIError("Expected a fixed tuple")
+        data = b""
+        for child, item in zip(kind.children, value):
+            data += _encode(child, item, serialize)
+        return data
+    if tag == 12:
+        if not isinstance(value, URef):
+            raise ABIError("Expected URef")
+        return bytes(value)[1:] if serialize else b""
     if tag == 11:
         expected = kind.annotation or Key
         if not isinstance(value, Key) or (expected._prefix and not bytes(value).startswith(expected._prefix)):
@@ -97,6 +108,13 @@ def _read(kind: CLType, data: bytes, offset: int, materialize: bool) -> Any:
     tag = kind.tag
     size = 0
     value: Any = None
+    if tag in (18, 19, 20):
+        elements = []
+        for child in kind.children:
+            item, offset = _read(child, data, offset, materialize)
+            if materialize:
+                elements.append(item)
+        return tuple(elements), offset
     if tag == 13:
         if offset >= len(data) or data[offset] > 1:
             raise ABIError("Invalid Option tag")
@@ -130,7 +148,14 @@ def _read(kind: CLType, data: bytes, offset: int, materialize: bool) -> Any:
             elif materialize:
                 result.append(item)
         return result, offset
-    if tag == 11:
+    if tag == 12:
+        size = 33
+        if offset + size > len(data):
+            raise ABIError("Truncated URef")
+        value = URef(b"\x02" + data[offset:offset + size])
+        if kind.annotation is not None:
+            value = kind.annotation.wrap(value)
+    elif tag == 11:
         size = key_length(data[offset:])
         value = Key.from_bytes(data[offset:offset + size])
         expected = kind.annotation or Key

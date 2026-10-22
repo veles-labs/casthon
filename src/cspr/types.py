@@ -36,6 +36,10 @@ def cl_type_of(annotation: Any, depth: int = 0) -> CLType:
     if inner is not None:
         return CLType(13, (cl_type_of(inner, depth + 1),))
     origin, args = get_origin(annotation), get_args(annotation)
+    if origin is tuple:
+        if not 1 <= len(args) <= 3 or Ellipsis in args:
+            raise TypeError("Casper tuples require one to three fixed elements")
+        return CLType(17 + len(args), tuple(cl_type_of(arg, depth + 1) for arg in args))
     if origin in (list, dict):
         expected = 1 if origin is list else 2
         if len(args) != expected:

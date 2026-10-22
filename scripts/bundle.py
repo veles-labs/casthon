@@ -301,7 +301,7 @@ class Lower(ast.NodeTransformer):
         if isinstance(node, ast.Call) and ast.dump(node) == ast.dump(ast.parse("type(None)", mode="eval").body):
             return type(None)
         if isinstance(node, ast.Name) and node.id not in self.graph.module(path)[1]:
-            builtins = {"list": list, "dict": dict, "int": int, "str": str,
+            builtins = {"list": list, "dict": dict, "tuple": tuple, "int": int, "str": str,
                         "bytes": bytes, "bool": bool}
             if node.id in builtins:
                 return builtins[node.id]
@@ -327,7 +327,7 @@ class Lower(ast.NodeTransformer):
             args = tuple(self.annotation_value(path, item, seen) for item in items)
             if origin in (cspr.URef, cspr.Dictionary):
                 return origin[args[0] if len(args) == 1 else args]
-            if origin in (list, dict, List, Dict, Annotated, Optional, Union, cspr.OptionalArg, cspr.Map):
+            if origin in (list, dict, tuple, List, Dict, Annotated, Optional, Union, cspr.OptionalArg, cspr.Map):
                 return origin[args[0] if len(args) == 1 else args]
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
             args = (self.annotation_value(path, node.left, seen),
@@ -605,6 +605,8 @@ def frozen_annotation(annotation, module="_cspr", optional="_Optional", argument
     if isinstance(annotation, type) and issubclass(annotation, cspr.Key):
         return module + "." + annotation.__name__
     descriptor = cspr.cl_type_of(annotation)
+    if descriptor.tag == 12 and descriptor.annotation is not None:
+        return module + ".URef.of(" + frozen_annotation(descriptor.annotation.annotation, module, optional, argument, enum, here) + ")"
     if descriptor.children:
         children = ", ".join(frozen_annotation(child, module, optional, argument, enum, here) for child in descriptor.children)
         special = ", bytes" if descriptor.annotation is bytes else ""

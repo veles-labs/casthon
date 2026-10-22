@@ -104,6 +104,8 @@ and minification.
   ABI to call a deployed contract. The session exports only `call`.
 - [MyToken](contracts/my_token.py) inherits the [CEP-18 base](contracts/cep18.py),
   including its entrypoints, permissions and typed events.
+- [MyNft](contracts/my_nft.py) inherits the [CEP-78 base](contracts/cep78.py),
+  with NFT metadata, approvals, ownership receipts and typed events.
 - [Basic](contracts/basic.py) shows the procedural `contract_api` beneath the
   class API.
 
@@ -133,6 +135,7 @@ with the live opt-in described in the [testing guide](docs/testing.md).
 | [Python API](docs/python-api.md) | Classes, typed arguments, state, events and low-level calls |
 | [Testing](docs/testing.md) | Mock state, invocation boundaries and live networks |
 | [CEP-18](docs/cep18.md) | Token implementation, event formats and upgrades |
+| [CEP-78](docs/cep78.md) | NFT collections, metadata, approvals, receipts and Python upgrades |
 | [Repository and architecture](docs/architecture.md) | Code ownership, build stages and the remaining 0.1 work |
 | [Short pitch](docs/pitch.md) | A brief introduction and a small demo |
 | [Native port](native/README.md) | Interpreter lifecycle, unwinding and host completion |

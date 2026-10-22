@@ -415,8 +415,25 @@ class MockHost:
             self._abort_contract_call(3)
         except Exception:
             self._abort_contract_call(65536 + 610)
+        # Casper passes returned URef capabilities back to the calling context,
+        # including URefs nested in receipt tuples. Never grant rights the
+        # callee did not itself possess when completing the invocation.
+        self._grant_returned(result.value, result._grants)
         value = result.cl_value
         return b"" if value is None else value.payload
+
+    def _grant_returned(self, value: Any, grants: Mapping[bytes, int]) -> None:
+        if isinstance(value, URef):
+            if value.access_rights & ~grants.get(value.address, 0):
+                raise MockAccessError("Returned URef exceeds the callee's access rights")
+            self.grant(value)
+        elif isinstance(value, (list, tuple)):
+            for item in value:
+                self._grant_returned(item, grants)
+        elif isinstance(value, dict):
+            for key, item in value.items():
+                self._grant_returned(key, grants)
+                self._grant_returned(item, grants)
 
     def _abort_contract_call(self, code: int) -> NoReturn:
         error = Revert(code)
