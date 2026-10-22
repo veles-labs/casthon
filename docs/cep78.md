@@ -228,8 +228,21 @@ make build-my-nft
 CSPR_LIVE_TESTS=1 .venv/bin/python -m pytest -q tests/live/test_cep78.py
 ```
 
+Set `CSPR_DEVNET_BIN` to test a particular local launcher build. The live suite
+uses an explicit 400 CSPR contract-call payment allowance; the generic testing
+helper's 100 CSPR default is insufficient for complete-lookup mint and transfer.
+Installer and session deployments retain their 800 CSPR allowance. These are
+payment limits, not measurements of the gas consumed.
+
 Native tests cover authority, approvals, metadata modes, caller/package identity,
 filter callbacks, pagination, failed-event rollback, and Python upgrades. Both
 plain and metered Wasm exercise the compiled class and codecs. The live test
 checks installation, minting, transfer, typed session returns (including a URef
-read), burning, and upgrade on a managed local Casper network.
+read), burning, upgrade, hash/custom identifiers, native Bytes events, and
+stored-caller/package permissions on managed local Casper networks.
+
+[The recorded live run](../results/cep78-devnet.json) passed three tests and
+31 transactions on Casper 2.2.0 using the local `casper-devnet-launcher` checkout
+at `7701eb7`. Five transactions intentionally reverted. The record includes
+transaction hashes, consumed gas, deployed Wasm hashes, and the isolated HTTP
+dependency override used to avoid macOS system-proxy discovery in this environment.

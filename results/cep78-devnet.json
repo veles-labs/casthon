@@ -1,0 +1,387 @@
+{
+  "validatedAt": "2026-10-22T11:53:35.990690+00:00",
+  "status": "passed",
+  "summary": {
+    "liveTestsPassed": 3,
+    "transactions": 31,
+    "successfulTransactions": 26,
+    "expectedReverts": 5,
+    "nativeRegressionTestsPassed": 279
+  },
+  "devnet": {
+    "requestedPath": "~/Dev/casper-devnet",
+    "checkout": "/Users/michal/Dev/casper-devnet-launcher",
+    "commit": "7701eb7d4f40e2a8e5c9b1b08be5982f4f7a7f93",
+    "sourceWorkingTreeClean": true,
+    "unmodifiedRustSourceFiles": 26,
+    "validationBinary": "/Users/michal/Dev/cspr-py/.cache/cep78-validation/casper-devnet",
+    "validationBinarySha256": "467b27c3df10d166976dc5cc8d8300d3097427342e77b2d95deea2e27de16dc2",
+    "checkoutBinaryRestored": true,
+    "workaround": {
+      "reason": "The macOS SystemConfiguration proxy lookup panics inside the Rust HTTP client in this environment.",
+      "scope": "An isolated copy of the local checkout and reqwest dependency under .cache/cep78-validation.",
+      "dependency": "reqwest 0.12.28",
+      "file": "src/async_impl/client.rs",
+      "change": "Default auto_sys_proxy changed from true to false; all devnet traffic is localhost.",
+      "devnetRustSourcesChanged": false
+    }
+  },
+  "protocolVersion": "2.2.0",
+  "paymentAllowancesMotes": {
+    "contractCalls": 400000000000,
+    "sessionAndInstallDeployments": 800000000000
+  },
+  "artifacts": {
+    "e953ef609c65142547707a3ca5130c362ba812e9d90eba1c5a7fcbd405a0e6cb": {
+      "source": "contracts/my_nft.py",
+      "bytes": 395914
+    },
+    "03cef0acbb484ffb735f1aea01cf9a25f60bd56d9804ab6693c254d0e96d9fd6": {
+      "source": "tests/fixtures/cep78_session.py",
+      "bytes": 390927
+    },
+    "9f52c8343bea8a4ff05c0a061e9de0ee206216d7810e8be39a20dcfa0eb68d01": {
+      "source": "tests/fixtures/cep78_client.py",
+      "bytes": 392189
+    }
+  },
+  "sourceSha256": {
+    "contracts/cep78_errors.py": "a38765959374cccf6223bd3229bdf3107fa1ed4102434a19bf0efcc925e1b8d0",
+    "contracts/cep78.py": "d995a592bfb8877710bcf92c93c85a4a816ac1eb686c6a90ba072d96da0ab190",
+    "contracts/cep78_events.py": "f5aed1ea1eb9bec898c5e18d9dbb854dec96388a40364a4a3fdee5e23ecaefc7",
+    "contracts/cep78_metadata.py": "62c1481029d3f04e9ed396b9bd59049b1b0ba749aadb5a6aaabf270bf7299a40",
+    "contracts/cep78_modalities.py": "db897719b23b61d0bdfa71d5a377b1f25e6225246b60b81bf2ebbfa31c319f28",
+    "contracts/my_nft.py": "8b52204bd02c63bf72a0f00efe43bb66d285e3b73515796bb4282a8636c75701",
+    "tests/fixtures/cep78_session.py": "90912470edd14dfb8c774384eb98efd44fb1cacb7822d51878b157aa9d360547",
+    "tests/fixtures/cep78_client.py": "35d9529aeeeec220e5374c8a02e6debd04443ca5fef1e8fb21d17cfafcf4ab3f",
+    "tests/live/test_cep78.py": "6bd0aba42fb9f5219d6c49a77b84f35b97a55900aa22806dc851422f967c9300"
+  },
+  "coverage": [
+    "installation and inherited entrypoints",
+    "owner registration and paginated ownership receipts",
+    "mint, approve, transfer and burn",
+    "typed remote return values and returned URef reads",
+    "unauthorized changes and repeat-burn failures",
+    "Python upgrade with supply reduction and event-mode change",
+    "raw metadata BLAKE2b identifiers and custom identifiers",
+    "duplicate-identifier rollback and immutable metadata",
+    "native Bytes message persistence",
+    "stored-contract version ownership and issuer identity",
+    "package-operator enable/disable enforcement and failed-transfer rollback"
+  ],
+  "runs": [
+    {
+      "network": "cspr-py-test-867e032c63cc",
+      "protocolVersion": "2.2.0",
+      "portOffset": 0,
+      "tests": [
+        "test_mint_transfer_returns_burn_and_upgrade"
+      ],
+      "nodesStopped": true,
+      "transactions": [
+        {
+          "operation": "install_nft",
+          "transactionHash": "a95b62e09d7432c51028cf975c6af8ddefeae324e942abbf30cca538c464eea8",
+          "timestamp": "2026-10-22T11:52:15.826Z",
+          "consumedGas": 793682841204,
+          "paymentMotes": 800000000000,
+          "error": null,
+          "expectedUserError": null,
+          "wasmSha256": "e953ef609c65142547707a3ca5130c362ba812e9d90eba1c5a7fcbd405a0e6cb"
+        },
+        {
+          "operation": "register_installer",
+          "transactionHash": "9a11b96443977d937d8dc533cc16e7abe99581549e083f87f8e28ca34b6e6fe6",
+          "timestamp": "2026-10-22T11:52:19.868Z",
+          "consumedGas": 59094124644,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "register_recipient",
+          "transactionHash": "07fb315955503f1f20cf519f7d4b38eeeb61e5fbb896919d834fb35d0470f63b",
+          "timestamp": "2026-10-22T11:52:21.907Z",
+          "consumedGas": 59094211374,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "mint",
+          "transactionHash": "634b9083b9e89585ce1bfeb5b6a819e0e476e4982d165eb971e59ad378c42087",
+          "timestamp": "2026-10-22T11:52:25.967Z",
+          "consumedGas": 114656675925,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "approve",
+          "transactionHash": "d32df992b2f8250a4701d6ef71e2ea4433be7aff2e377c0a932b8e8f0e4ad01e",
+          "timestamp": "2026-10-22T11:52:31.061Z",
+          "consumedGas": 60042525936,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "transfer",
+          "transactionHash": "cf4ddbdc51f1fdaba2920873dc45a1bc386c5c8421dc92733916814d693902ff",
+          "timestamp": "2026-10-22T11:52:34.110Z",
+          "consumedGas": 180912198337,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "check_session_returns",
+          "transactionHash": "dce70542df8e202cb82927188f336c373fbeb1195f82f268f59042a6a7c8f500",
+          "timestamp": "2026-10-22T11:52:48.858Z",
+          "consumedGas": 336393167372,
+          "paymentMotes": 800000000000,
+          "error": null,
+          "expectedUserError": null,
+          "wasmSha256": "03cef0acbb484ffb735f1aea01cf9a25f60bd56d9804ab6693c254d0e96d9fd6"
+        },
+        {
+          "operation": "unauthorized_configuration",
+          "transactionHash": "510e52f841ff307801bd92c99d30c589866ee2e591c05b59c7de8ed85a583b32",
+          "timestamp": "2026-10-22T11:52:55.895Z",
+          "consumedGas": 55483245775,
+          "paymentMotes": 400000000000,
+          "error": "User error: 1",
+          "expectedUserError": 1
+        },
+        {
+          "operation": "burn",
+          "transactionHash": "1cac293e332e9463149d7ab1cfcb4f14e50bfb03320fb22820805599be87cb34",
+          "timestamp": "2026-10-22T11:52:58.954Z",
+          "consumedGas": 60847750754,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "repeat_burn",
+          "transactionHash": "ec88b89d44659cf49302fdb99a31a18afd6415091e3c22ab8a629904f5f9d12f",
+          "timestamp": "2026-10-22T11:53:01.013Z",
+          "consumedGas": 56963258030,
+          "paymentMotes": 400000000000,
+          "error": "User error: 42",
+          "expectedUserError": 42
+        },
+        {
+          "operation": "upgrade_nft",
+          "transactionHash": "e12575955ebeafc92a567407f4a3dfc022854185701eb57e0238638ea2df3ba6",
+          "timestamp": "2026-10-22T11:53:05.069Z",
+          "consumedGas": 752235206986,
+          "paymentMotes": 800000000000,
+          "error": null,
+          "expectedUserError": null,
+          "wasmSha256": "e953ef609c65142547707a3ca5130c362ba812e9d90eba1c5a7fcbd405a0e6cb"
+        }
+      ]
+    },
+    {
+      "network": "cspr-py-test-aa581dc6ccc5",
+      "protocolVersion": "2.2.0",
+      "portOffset": 0,
+      "tests": [
+        "test_hash_identifiers_duplicates_immutable_metadata_and_native_bytes",
+        "test_stored_caller_ownership_and_package_operator_permissions"
+      ],
+      "nodesStopped": true,
+      "transactions": [
+        {
+          "operation": "install_hash_nft",
+          "transactionHash": "e7a404b844579b6dff3de07b6a69e81e488fd240271600be833ae858402c2795",
+          "timestamp": "2026-10-22T11:49:08.898Z",
+          "consumedGas": 786326925238,
+          "paymentMotes": 800000000000,
+          "error": null,
+          "expectedUserError": null,
+          "wasmSha256": "e953ef609c65142547707a3ca5130c362ba812e9d90eba1c5a7fcbd405a0e6cb"
+        },
+        {
+          "operation": "register_hash_owner",
+          "transactionHash": "c56f22319595f28a59f1049e2c1f3861185df0b5921f522f41d5fd14655a5e4c",
+          "timestamp": "2026-10-22T11:49:14.543Z",
+          "consumedGas": 59122763634,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "mint_hash",
+          "transactionHash": "a052b13ef400092d586c3141bd344c33ca21364a0d15e500ecb7d89c43bbd4aa",
+          "timestamp": "2026-10-22T11:49:16.583Z",
+          "consumedGas": 120750685939,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "duplicate_hash",
+          "transactionHash": "8e35431223e327dbae5d85a121a17b595f57b7d3a8382ccec568487e44fe84c7",
+          "timestamp": "2026-10-22T11:49:21.676Z",
+          "consumedGas": 59659656815,
+          "paymentMotes": 400000000000,
+          "error": "User error: 170",
+          "expectedUserError": 170
+        },
+        {
+          "operation": "immutable_metadata",
+          "transactionHash": "ecf9ec24b3dfc16220e18dc751d31c728a69c0471fba26f26f316a07c5b24bfb",
+          "timestamp": "2026-10-22T11:49:24.736Z",
+          "consumedGas": 54877304935,
+          "paymentMotes": 400000000000,
+          "error": "User error: 104",
+          "expectedUserError": 104
+        },
+        {
+          "operation": "mint_custom_identifier",
+          "transactionHash": "b6b14809fa4ffa108401880497da4a657f906725e916ed36ba59d6767125a4f3",
+          "timestamp": "2026-10-22T11:49:28.800Z",
+          "consumedGas": 142992144446,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "install_caller_nft",
+          "transactionHash": "6a8733ae30260fdcb2fb177547df8892b2c445f0ec70b4a4bafb27090cfecc6e",
+          "timestamp": "2026-10-22T11:49:34.396Z",
+          "consumedGas": 793978408094,
+          "paymentMotes": 800000000000,
+          "error": null,
+          "expectedUserError": null,
+          "wasmSha256": "e953ef609c65142547707a3ca5130c362ba812e9d90eba1c5a7fcbd405a0e6cb"
+        },
+        {
+          "operation": "install_client",
+          "transactionHash": "d3219bee391a0a0cc29c7c8a924afa1a9ea0f80e17d497ef83ae01d42ab9f944",
+          "timestamp": "2026-10-22T11:49:45.319Z",
+          "consumedGas": 673452210080,
+          "paymentMotes": 800000000000,
+          "error": null,
+          "expectedUserError": null,
+          "wasmSha256": "9f52c8343bea8a4ff05c0a061e9de0ee206216d7810e8be39a20dcfa0eb68d01"
+        },
+        {
+          "operation": "register_caller_owner",
+          "transactionHash": "f5e1de57da3109e43bc5a87bcf97c45461ef02348364b6950f3f9c1d20abaeb6",
+          "timestamp": "2026-10-22T11:49:47.240Z",
+          "consumedGas": 59140142634,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "register_caller_recipient",
+          "transactionHash": "acb7995eac748aea0c8a307ef06d872f10b2059a2f7e6cad9164a72b2d131421",
+          "timestamp": "2026-10-22T11:49:51.299Z",
+          "consumedGas": 59140229364,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "register_stored_contract",
+          "transactionHash": "543a1facf93159dcfd22e74c2e769353cf21e905c269a9b0e3cda68ce3026a8d",
+          "timestamp": "2026-10-22T11:49:55.379Z",
+          "consumedGas": 59140237314,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "stored_mint",
+          "transactionHash": "9f2bbc3f49859b13cc7d36291e42ccc0c3bc434c14da423a8619b1624ac23345",
+          "timestamp": "2026-10-22T11:49:59.449Z",
+          "consumedGas": 167931733163,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "stored_approve",
+          "transactionHash": "fddbc0868bfa15e1d5d14d2130e464335f53cfc43fbf88c46fbfcf45c7a2d7f0",
+          "timestamp": "2026-10-22T11:50:05.559Z",
+          "consumedGas": 111625336271,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "transfer_stored_owned_token",
+          "transactionHash": "2727dd74439208f7e6ec6db8bb2e894ebad392d534017674508db17fdcfde0db",
+          "timestamp": "2026-10-22T11:50:08.615Z",
+          "consumedGas": 180956001927,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "mint_for_installer",
+          "transactionHash": "767bbcc0be3bb21d41ddf96c2f3426403112546c333578d675c6006efdf555ea",
+          "timestamp": "2026-10-22T11:50:13.696Z",
+          "consumedGas": 114747767577,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "approve_package_operator",
+          "transactionHash": "2d7bff61be35fee296a890b743d8238c719434ae11ed1018180d77047e6e8670",
+          "timestamp": "2026-10-22T11:50:16.752Z",
+          "consumedGas": 58467561671,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "disable_package_operator_mode",
+          "transactionHash": "8964081f7fdde4a91074a96d2223e2a0b1c77f88083b7a5873706fb5315803bf",
+          "timestamp": "2026-10-22T11:50:19.802Z",
+          "consumedGas": 58376105312,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "blocked_package_transfer",
+          "transactionHash": "493f19803e6c9ad39b3ee1dc96383599473da1ace25ca3b3068814dabacb0884",
+          "timestamp": "2026-10-22T11:50:23.866Z",
+          "consumedGas": 110539483125,
+          "paymentMotes": 400000000000,
+          "error": "User error: 6",
+          "expectedUserError": 6
+        },
+        {
+          "operation": "enable_package_operator_mode",
+          "transactionHash": "8d2119868ddb25a5be922f0c089151677a50183cbcca356cf6d6dafa202cca55",
+          "timestamp": "2026-10-22T11:50:28.937Z",
+          "consumedGas": 58376099477,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        },
+        {
+          "operation": "package_operator_transfer",
+          "transactionHash": "0fe1dd7abb43f8adfb1db5bcdc7ab4492e9445d15ae4beb513a6eab54b4c337d",
+          "timestamp": "2026-10-22T11:50:30.977Z",
+          "consumedGas": 260370137910,
+          "paymentMotes": 400000000000,
+          "error": null,
+          "expectedUserError": null
+        }
+      ]
+    }
+  ],
+  "rerunCommand": "CSPR_LIVE_TESTS=1 CSPR_DEVNET_BIN=.cache/cep78-validation/casper-devnet .venv/bin/python -m pytest -q tests/live/test_cep78.py",
+  "limitations": [
+    "Historical Rust storage migration is not included in this Python port.",
+    "The standard devnet binary still requires the environment-specific proxy-discovery workaround on this Mac."
+  ]
+}
