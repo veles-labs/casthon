@@ -12,6 +12,7 @@ use std::{
     process::Command,
 };
 
+mod doctor;
 mod progress;
 
 #[derive(Parser)]
@@ -425,51 +426,6 @@ fn inspect(project: &Project, path: &Path, machine: bool) -> Result<i32> {
     Ok(0)
 }
 
-fn doctor(project: &Project) -> Result<i32> {
-    println!(
-        "Casthon {}\nProject: {}\nSDK checkout: {}\nPython: {}",
-        env!("CARGO_PKG_VERSION"),
-        project.root.display(),
-        project.sdk.display(),
-        project.python.display()
-    );
-    println!(
-        "MicroPython: {} (runtime recipe {})",
-        project
-            .config
-            .micropython
-            .as_deref()
-            .unwrap_or(&project.supported),
-        project.supported
-    );
-    let mut healthy = project.pin(None).map_err(|e| eprintln!("{e:#}")).is_ok();
-    let python = project.command()?.args(["-c", "import sys; print(sys.version.split()[0]); sys.exit(0 if sys.version_info >= (3, 11) else 1)"]).status();
-    healthy &= python.is_ok_and(|s| s.success());
-    for tool in ["emcc", "wasm-opt", "node", "make", "cc"] {
-        let found = env::split_paths(&env::var_os("PATH").unwrap_or_default())
-            .map(|p| p.join(tool))
-            .find(|p| p.is_file());
-        println!(
-            "{tool}: {}",
-            found
-                .as_ref()
-                .map(|p| p.display().to_string())
-                .unwrap_or_else(|| "missing".into())
-        );
-        healthy &= found.is_some();
-    }
-    for module in ["pytest", "mypy", "wasmtime"] {
-        let found = project.command()?.args(["-c", &format!("import importlib.util; raise SystemExit(0 if importlib.util.find_spec('{module}') else 1)")]).status()?.success();
-        println!(
-            "{module} (testing/checking): {}",
-            if found { "available" } else { "not installed" }
-        );
-    }
-    println!("Wasm lowering, validation and instrumentation: built into casthon");
-    println!("Live tests additionally require casper-devnet.");
-    Ok(if healthy { 0 } else { 1 })
-}
-
 fn new_project(project: &Project, directory: &Path, template: &str) -> Result<i32> {
     let directory = absolute(&project.cwd, directory);
     ensure!(
@@ -592,7 +548,7 @@ fn run(cli: Cli) -> Result<i32> {
         Action::Test(args) => project.forward("pytest", &args.args),
         Action::Check(args) => project.forward("mypy", &args.args),
         Action::Inspect { wasm, json } => inspect(&project, &wasm, json),
-        Action::Doctor => doctor(&project),
+        Action::Doctor => doctor::run(&project),
         Action::New {
             directory,
             template,

@@ -18,6 +18,20 @@ def file_hash(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def emscripten_configuration(cache):
+    """Resolve the driver and explicit configuration used by builds and doctor."""
+    executable = shutil.which("emcc")
+    if executable is None:
+        raise FileNotFoundError("emcc not found on PATH")
+    emdir = Path(executable).resolve().parent
+    emroot = Path(os.environ.get("EMSCRIPTEN_ROOT", emdir if (emdir / "emcc.py").exists()
+                                else emdir / "../libexec")).resolve()
+    llvm = Path(os.environ.get("EMSCRIPTEN_LLVM_ROOT", emroot / "llvm/bin"))
+    binaryen = Path(os.environ.get("BINARYEN_ROOT", emroot / "binaryen"))
+    text = f"LLVM_ROOT = {str(llvm)!r}\nBINARYEN_ROOT = {str(binaryen)!r}\nNODE_JS = [{shutil.which('node')!r}]\nCACHE = {str(cache)!r}\n"
+    return emroot, binaryen, text
+
+
 def write_changed(path, data):
     """Keep make dependencies' mtimes when their contents have not changed."""
     path = Path(path)

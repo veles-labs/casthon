@@ -265,10 +265,21 @@ code, discover a dynamically registered stored ABI, or predict transaction gas.
 Built contracts omit the toolchain's `_initialize` export while retaining
 internal constructor startup.
 
-`doctor` reports the project, SDK checkout, Python and runtime pin, then checks
-Python and available tool paths. It also reports optional pytest, mypy and
-Wasmtime modules. External compiler installation is manual; full compiler
-version checks and toolchain provisioning remain future work.
+`doctor` groups its results into build dependencies and optional test tools.
+It uses ✅ for working dependencies, ❌ for required dependencies that need fixing,
+and ⚠️ for optional tools that need attention. It shows Python and tool versions,
+checks the runtime pin, and imports pytest, mypy and Wasmtime in the selected
+Python environment. Emscripten is checked using the build's Python interpreter
+and compiler configuration. Live test support is checked through `casper-devnet --help`.
+
+Failed checks include installation commands and setup links. Python package
+commands target the selected virtual environment, or explain how to create a
+project virtualenv first. Compiler hints use Homebrew or the detected Linux
+package manager, with links to the upstream instructions such as
+[Emsdk setup](https://emscripten.org/docs/getting_started/downloads.html).
+The command exits with status 1 when a required build check fails; missing
+optional test tools leave its status at 0. Version checks establish tool
+availability; contract builds still validate the resulting Casper Wasm.
 
 All normal commands currently load checkout metadata, including `inspect`.
 Use `--sdk-root /path/to/casthon` if the CLI's compiled-in default has moved.

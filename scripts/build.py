@@ -19,7 +19,7 @@ from bundle import load_contract, contract_modules, lower, lower_enums, generate
 from micropython import prepare_and_verify, verify
 from softfloat import build as build_softfloat, REVISION as SOFTFLOAT_REVISION, SHA256 as SOFTFLOAT_SHA256
 from minify import interface, minify
-from build_cache import BuildState, digest, file_hash, sync_tree, toolchain_identity, write_changed
+from build_cache import BuildState, digest, emscripten_configuration, file_hash, sync_tree, toolchain_identity, write_changed
 from build_progress import BuildProgress
 
 RECIPE = json.loads((ROOT / "native/toolchain.json").read_text())
@@ -172,12 +172,9 @@ def build(options, heap_mode, progress):
                 content += f"\n#define CSPR_DEBUG ({int(options.profile == 'debug')})\n".encode()
             write_changed(port / name, content)
 
-    emdir = Path(shutil.which("emcc")).resolve().parent
-    emroot = Path(os.environ.get("EMSCRIPTEN_ROOT", emdir if (emdir / "emcc.py").exists() else emdir / "../libexec")).resolve()
-    llvm = Path(os.environ.get("EMSCRIPTEN_LLVM_ROOT", emroot / "llvm/bin"))
-    binaryen = Path(os.environ.get("BINARYEN_ROOT", emroot / "binaryen"))
+    emroot, binaryen, config_text = emscripten_configuration(CACHE / "emscripten")
     config = CACHE / "emscripten-config.py"
-    write_changed(config, f"LLVM_ROOT = {str(llvm)!r}\nBINARYEN_ROOT = {str(binaryen)!r}\nNODE_JS = [{shutil.which('node')!r}]\nCACHE = {str(CACHE / 'emscripten')!r}\n")
+    write_changed(config, config_text)
     env = {**os.environ, "EM_CONFIG": str(config), "EMSDK_PYTHON": sys.executable}
     emcc = [sys.executable, emroot / "emcc.py"]
     wasm_opt = binaryen / "bin/wasm-opt"
