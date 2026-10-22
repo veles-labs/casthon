@@ -3,8 +3,8 @@
 import json
 from pathlib import Path
 
-from cspr import CLKey, CLKeyList, CLU8, CLU256
-from cspr.testing import LiveNetworkTest
+from casthon import CLKey, CLKeyList, CLU8, CLU256
+from casthon.testing import LiveNetworkTest
 from contracts.cep18 import address_key
 
 

@@ -8,13 +8,13 @@ import types
 import unittest
 from unittest.mock import patch
 
-from cspr import ABIError, AccountHash, ContractHash, CLKey, CLU32, U32, URef, MissingKey, UserError
-from cspr.contracts import Contract, _schema
-from cspr._contract_schema import signature_key
-from cspr._signatures import module_export_names
-from cspr.contract_api.runtime import named_keys
-from cspr.entry_points import serialize_entry_points
-from cspr.testing import ContractHarness, MockHost, use_host
+from casthon import ABIError, AccountHash, ContractHash, CLKey, CLU32, U32, URef, MissingKey, UserError
+from casthon.contracts import Contract, _schema
+from casthon._contract_schema import signature_key
+from casthon._signatures import module_export_names
+from casthon.contract_api.runtime import named_keys
+from casthon.entry_points import serialize_entry_points
+from casthon.testing import ContractHarness, MockHost, use_host
 from contracts import counter
 from contracts.counter import Counter
 from contracts.ownable import Ownable, NotOwner
@@ -40,11 +40,11 @@ def class_pair(source):
             frozen.__file__ = str(path)
             exports = types.ModuleType('_cspr_exports')
             exec(generate_exports(path, declaration['exports']), vars(exports))
-            provider = types.ModuleType('cspr._contract_schema')
+            provider = types.ModuleType('casthon._contract_schema')
             exec(lower(ROOT / 'runtime/contract_schema.py', sdk=True), vars(provider))
             lowered = lower(path)
             with patch.dict(sys.modules, {'contract': frozen, '_cspr_exports': exports,
-                                         'cspr._contract_schema': provider}):
+                                         'casthon._contract_schema': provider}):
                 exec(compile(lowered, str(path), 'exec'), vars(frozen))
                 yield author, frozen, exports
 
@@ -63,11 +63,11 @@ class ClassContractTests(unittest.TestCase):
 
     def test_export_contract_decorator_selects_inherited_methods_and_is_erased(self):
         for imports, marker in (
-            ('from cspr.contracts import export_contract as publish', 'publish'),
-            ('import cspr.contracts as contracts_api', 'contracts_api.export_contract'),
+            ('from casthon.contracts import export_contract as publish', 'publish'),
+            ('import casthon.contracts as contracts_api', 'contracts_api.export_contract'),
         ):
-            source = '''from cspr import URef, U32
-from cspr.contracts import Contract, entry_point
+            source = '''from casthon import URef, U32
+from casthon.contracts import Contract, entry_point
 ''' + imports + '''
 class Base(Contract):
     count: URef[U32]
@@ -88,7 +88,7 @@ class Example(Base): pass
 
     def test_explicit_marker_still_selects_an_imported_decorated_class(self):
         source = '''from contracts.counter import Counter as Token
-from cspr.contracts import export_contract
+from casthon.contracts import export_contract
 export_contract(Token)
 '''
         with tempfile.TemporaryDirectory() as directory:
@@ -113,7 +113,7 @@ export_contract(Token)
             '@export_contract\nclass Example(Contract):\n    @entry_point\n    def get(self) -> U32: return 0\nexport_contract(Example)\n',
         )
         for definition in definitions:
-            source = 'from cspr import U32\nfrom cspr.contracts import Contract, entry_point, export_contract\n' + definition
+            source = 'from casthon import U32\nfrom casthon.contracts import Contract, entry_point, export_contract\n' + definition
             with self.subTest(definition=definition), tempfile.TemporaryDirectory() as directory:
                 path = Path(directory) / 'invalid.py'
                 path.write_text(source)
@@ -136,8 +136,8 @@ export_contract(Token)
         self.assertTrue(issubclass(Pausable, Ownable))
 
     def test_harness_binds_a_fresh_instance_without_repeating_the_constructor(self):
-        source = '''from cspr import URef, U32
-from cspr.contracts import Contract, entry_point, export_contract
+        source = '''from casthon import URef, U32
+from casthon.contracts import Contract, entry_point, export_contract
 class Example(Contract):
     count: URef[U32]
     def __init__(self, initial: U32):
@@ -176,7 +176,7 @@ export_contract(Example)
         self.assertTrue(all(isinstance(key, URef) for key in keys.values()))
 
     def test_new_instances_keep_independent_state_beside_existing_named_keys(self):
-        from cspr.contract_api.storage import new_uref
+        from casthon.contract_api.storage import new_uref
 
         with use_host(self.host):
             named_keys['count'] = new_uref(CLU32(99))
@@ -210,7 +210,7 @@ export_contract(Example)
             self.assertEqual(original.read(), 12)
 
     def test_field_write_keeps_constructor_state_isolated_and_validates_before_mutation(self):
-        from cspr.contract_api.storage import new_uref
+        from casthon.contract_api.storage import new_uref
 
         with use_host(self.host):
             named_keys['count'] = new_uref(CLU32(99))
@@ -350,7 +350,7 @@ export_contract(Example)
             for name, key in Counter(1).named_keys.items():
                 named_keys[name] = key
             local = Counter.bind()
-            from cspr.contract_api.storage import new_uref
+            from casthon.contract_api.storage import new_uref
             named_keys['count'] = new_uref(CLU32(9))
             self.assertEqual(local.get(), 9)
             del named_keys['count']
@@ -358,9 +358,9 @@ export_contract(Example)
                 local.get()
 
     def test_native_and_frozen_schemas_preserve_fields_aliases_and_overrides(self):
-        source = '''from cspr import URef, U32
-from cspr.contracts import Contract, entry_point, export_contract
-from cspr.contract_api.runtime import named_keys
+        source = '''from casthon import URef, U32
+from casthon.contracts import Contract, entry_point, export_contract
+from casthon.contract_api.runtime import named_keys
 class Base(Contract):
     count: URef[U32] = named_keys.reference("legacy_count")
     @entry_point
@@ -396,9 +396,9 @@ export_contract(Example)
             'class Example(Base):\n    def count(self): return 3\n',
             'class Other(Contract):\n    count: URef[bool]\nclass Example(Base, Other): pass\n',
         ]
-        prefix = '''from cspr import URef, U32
-from cspr.contracts import Contract, entry_point, export_contract
-from cspr.contract_api.runtime import named_keys
+        prefix = '''from casthon import URef, U32
+from casthon.contracts import Contract, entry_point, export_contract
+from casthon.contract_api.runtime import named_keys
 class Base(Contract):
     count: URef[U32]
     @entry_point
@@ -418,8 +418,8 @@ class Base(Contract):
                         _schema(module.Example)
 
     def test_additive_mixins_share_the_inherited_abi(self):
-        source = '''from cspr import URef, U32
-from cspr.contracts import Contract, entry_point, export_contract
+        source = '''from casthon import URef, U32
+from casthon.contracts import Contract, entry_point, export_contract
 class Left(Contract):
     left: URef[U32]
     @entry_point
@@ -441,8 +441,8 @@ export_contract(Example)
 
     def test_method_alias_options_optional_defaults_and_keyword_only_parameters(self):
         source = '''from typing import Optional
-from cspr import URef, U32, EntryPointAccess
-from cspr.contracts import Contract, entry_point, export_contract
+from casthon import URef, U32, EntryPointAccess
+from casthon.contracts import Contract, entry_point, export_contract
 class Example(Contract):
     count: URef[U32]
     @entry_point(name="adjust", access=EntryPointAccess.GROUPS, groups=("admins",))
@@ -460,7 +460,7 @@ export_contract(Example)
                     instance = module.Example(count=3)
                     self.assertEqual(instance.change(), 5)
                     self.assertEqual(instance.change(5, factor=3), 20)
-            from cspr._entry_point_signature import describe_call
+            from casthon._entry_point_signature import describe_call
             provider = types.ModuleType('frozen_entry_signatures')
             exec(lower(ROOT / 'runtime/entry_point_signature.py', sdk=True), vars(provider))
             native = describe_call(author.Example.change)
@@ -475,8 +475,8 @@ export_contract(Example)
             'class Left(Base):\n    def helper(self): return super().helper()\nclass Right(Base):\n    def helper(self): return 2\n',
         ]
         for branches in variants:
-            source = '''from cspr import U32
-from cspr.contracts import Contract, entry_point, export_contract
+            source = '''from casthon import U32
+from casthon.contracts import Contract, entry_point, export_contract
 class Base(Contract):
     def helper(self): return 1
     @entry_point

@@ -6,8 +6,8 @@ import tempfile
 import threading
 import unittest
 
-from cspr.testing import DevnetClient, DevnetNetwork, LiveNetworkTest
-from cspr.testing.prints import _PrintCapture, _print_note
+from casthon.testing import DevnetClient, DevnetNetwork, LiveNetworkTest
+from casthon.testing.prints import _PrintCapture, _print_note
 
 
 class PrintCaptureTests(unittest.TestCase):

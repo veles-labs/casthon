@@ -1,7 +1,7 @@
 import os
 
-from cspr import CLU32
-from cspr.testing import ContractHarness, MockHost
+from casthon import CLU32
+from casthon.testing import ContractHarness, MockHost
 from contracts import bench_counter
 
 

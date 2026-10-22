@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Catchable CEP-18 2.0.0 errors, preserving upstream User error numbers."""
 
-from cspr import UserError
+from casthon import UserError
 
 
 class Cep18Error(UserError):

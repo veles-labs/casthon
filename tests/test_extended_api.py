@@ -5,8 +5,8 @@ import sys
 import unittest
 from pathlib import Path
 
-import cspr
-from cspr import (
+import casthon
+from casthon import (
     ABIError, AccountHash, URef, ContractHash, ContractPackageHash, PackageHash,
     ContractEntity, DictionaryAddress, EntryPoint, CLU32, U32, U512, CLU512,
     ActionType, Phase, HashAlgorithm, AddKeyFailure, RemoveKeyFailure,
@@ -15,11 +15,11 @@ from cspr import (
     Ed25519PublicKey, Ed25519Signature, Secp256k1PublicKey, Secp256k1Signature,
     AccountCaller, EntityCaller, ContractCaller, MessageString, MessageBytes,
 )
-from cspr.codec import encode, decode, cl_value, valid_payload
-from cspr.caller import decode_caller_information, decode_legacy_call_stack
-from cspr.entry_points import serialize_entry_points
-from cspr.contract_api import account, system, runtime, storage, cryptography
-from cspr.testing import use_host
+from casthon.codec import encode, decode, cl_value, valid_payload
+from casthon.caller import decode_caller_information, decode_legacy_call_stack
+from casthon.entry_points import serialize_entry_points
+from casthon.contract_api import account, system, runtime, storage, cryptography
+from casthon.testing import use_host
 from test_contract_api import MemoryHost
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -187,7 +187,7 @@ class ExtendedApiTests(unittest.TestCase):
             self.assertFalse(valid_payload("U512", data))
             with self.assertRaises(ABIError):
                 decode("U512", data)
-        self.assertEqual(cspr.wire_type(U512), "U512")
+        self.assertEqual(casthon.wire_type(U512), "U512")
 
     def test_account_domain_failures_are_values_and_weights_are_bounded(self):
         self.assertEqual(account.get_main_purse(), self.host.main)
@@ -246,7 +246,7 @@ class ExtendedApiTests(unittest.TestCase):
 
     def test_crypto_types_digests_and_signature_wire_bytes(self):
         key, signature = Ed25519PublicKey(bytes(32)), Ed25519Signature(bytes(64))
-        self.assertEqual(cspr.PublicKey.from_bytes(key.to_bytes()), key)
+        self.assertEqual(casthon.PublicKey.from_bytes(key.to_bytes()), key)
         self.assertEqual(cryptography.generic_hash(b"Casper", HashAlgorithm.SHA256), hashlib.sha256(b"Casper").digest())
         cryptography.verify_signature(b"message", signature, key)
         self.assertEqual(self.host.calls[-1], ("verify", (b"message", b"\1" + bytes(64), b"\1" + bytes(32))))
@@ -308,10 +308,10 @@ class ExtendedApiTests(unittest.TestCase):
 
     def test_frozen_enum_protocol_matches_cpython_members(self):
         namespace = {}
-        source = Path(__file__).resolve().parents[1] / "src/cspr/enums.py"
+        source = Path(__file__).resolve().parents[1] / "src/casthon/enums.py"
         exec(lower_enums(source), namespace)
         for name, frozen in namespace.items():
-            original = getattr(cspr, name, None)
+            original = getattr(casthon, name, None)
             if original is None or name == "WireEnum" or not isinstance(frozen, type):
                 continue
             for member in original:

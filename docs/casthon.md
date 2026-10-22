@@ -164,7 +164,7 @@ contains `schemaVersion`, the project, MicroPython version, build profile and an
 `artifacts` list. Each item records source, deployment Wasm, metered Wasm, report
 paths, the build log path, and build metadata.
 
-`cspr.testing.build_contract` consumes this interface for builds on demand.
+`casthon.testing.build_contract` consumes this interface for builds on demand.
 An invocation such as `casthon build hello --json > artifacts.json` records it.
 
 ### Size optimization
@@ -235,21 +235,19 @@ and setup instructions. The Counter template includes ownership and pause
 mixins. CEP-18 includes its reusable base, events, errors and upstream license.
 Existing destinations are refused.
 
-For this preview, install the checkout SDK into the new project's environment.
-Replace `/path/to/casthon` below with its actual location:
+The generated project pins the compatible `casthon-sdk` alpha and its development
+tools. Install them into the project environment with `uv`:
 
 ```sh
 cd my-counter
-uv venv
-uv pip install --python .venv/bin/python -e '/path/to/casthon[dev]'
+uv sync
 casthon test
 casthon check contracts
 casthon build
 ```
 
-The generated README contains your actual checkout path. The template's SDK
-version is taken from that checkout's Python package metadata; the CLI does not
-fetch an assumed published SDK release.
+The template's SDK version is taken from the Casthon checkout's Python package
+metadata, keeping generated projects on the SDK alpha paired with that CLI.
 
 ## Inspection and environment checks
 
@@ -305,6 +303,6 @@ and the project pin remain in place.
 
 Build workers hold a shared lock because compiler sources and port caches are
 currently shared. Writable user caches and isolated parallel workspaces are
-part of the remaining packaging work. `cspr.testing.build_contract` has its own
+part of the remaining packaging work. `casthon.testing.build_contract` has its own
 source-keyed artifact cache and uses `CASTHON_BIN`, a CLI on PATH, or a local
 built executable; it falls back to the Python builder when no CLI is found.

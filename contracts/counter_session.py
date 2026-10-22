@@ -1,6 +1,6 @@
 """Call a deployed counter using its Python functions as the typed ABI."""
 
-from cspr import ContractHash, U32, UserError, export
+from casthon import ContractHash, U32, UserError, export
 from contracts.counter import Counter
 
 

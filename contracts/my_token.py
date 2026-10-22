@@ -3,13 +3,13 @@
 
 from typing import Any
 
-from cspr import (
+from casthon import (
     ABIError, ApiError, CLString, ContractEntity,
     Hash, Key, PackageHash, U8, U256, URef, OptionalArg, MISSING, export,
 )
-from cspr.contract_api import runtime, storage
-from cspr.contract_api.runtime import named_keys
-from cspr.contracts import export_contract
+from casthon.contract_api import runtime, storage
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import export_contract
 from contracts.cep18 import Cep18
 from contracts.cep18_events import EventsMode
 from contracts.cep18_errors import (

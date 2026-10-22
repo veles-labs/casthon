@@ -2,8 +2,8 @@
 
 from functools import wraps
 
-from cspr import MISSING, OptionalArg, U32, UserError, export
-from cspr.contracts import Contract, entry_point, export_contract
+from casthon import MISSING, OptionalArg, U32, UserError, export
+from casthon.contracts import Contract, entry_point, export_contract
 
 trace = []
 

@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """CEP-18 2.0.0 events and casper-event-standard 0.7.0 storage layouts."""
 
-from cspr import Event, Bytesrepr, Json, JsonBytes, Key, Map, U8, U256, URef, CLType
-from cspr import ces
-from cspr.contract_api import runtime, storage
-from cspr.events import emit as emit_event, json_string
-from cspr.enums import WireEnum
+from casthon import Event, Bytesrepr, Json, JsonBytes, Key, Map, U8, U256, URef, CLType
+from casthon import ces
+from casthon.contract_api import runtime, storage
+from casthon.events import emit as emit_event, json_string
+from casthon.enums import WireEnum
 from contracts.cep18_errors import InvalidEventsMode
 
 

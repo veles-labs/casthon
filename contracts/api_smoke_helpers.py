@@ -1,7 +1,7 @@
 """A reusable procedural entrypoint imported by the host-API test session."""
 
-from cspr import EntryPoint, U32, U256, URef, CLU32, api_error
-from cspr.contract_api import runtime, storage
+from casthon import EntryPoint, U32, U256, URef, CLU32, api_error
+from casthon.contract_api import runtime, storage
 
 ENTRY_POINTS = [EntryPoint("read_count", {}, U32)]
 

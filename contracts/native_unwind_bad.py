@@ -1,6 +1,6 @@
 """A frozen import that fails after entering its own cleanup block."""
 
-from cspr import User
+from casthon import User
 
 SCOPE_MARKER = 99
 

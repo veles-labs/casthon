@@ -41,7 +41,7 @@ def build_contract(source: str | Path, *, project_root: str | Path | None = None
     builder = sdk / "scripts/build.py"
     casthon = _casthon(sdk) if command is None else None
     if command is None and not casthon and not builder.is_file():
-        raise RuntimeError("Building requires the cspr-py source checkout; pass command= or deploy prebuilt Wasm")
+        raise RuntimeError("Building requires the casthon-py source checkout; pass command= or deploy prebuilt Wasm")
     driver = list(command) if command is not None else (
         [casthon, "--project-root", str(project), "--sdk-root", str(sdk), "--python", sys.executable, "build"]
         if casthon else [sys.executable, str(builder)])
@@ -53,11 +53,11 @@ def build_contract(source: str | Path, *, project_root: str | Path | None = None
     inputs.update((sdk / "tools/wasm-softfloat/src").rglob("*.rs"))
     inputs.update(path for path in (sdk / "tools/wasm-softfloat/Cargo.toml", sdk / "tools/wasm-softfloat/Cargo.lock")
                   if path.is_file())
-    for folder in (sdk / "src/cspr", sdk / "runtime", sdk / "native", sdk / "scripts"):
+    for folder in (sdk / "src/casthon", sdk / "runtime", sdk / "native", sdk / "scripts"):
         inputs.update(path for path in folder.rglob("*") if path.is_file()
                       and (path.suffix in (".py", ".c", ".h", ".S", ".patch", ".json") or path.name == "Makefile")
                       and "__pycache__" not in path.parts
-                      and not (folder == sdk / "src/cspr" and
+                      and not (folder == sdk / "src/casthon" and
                                ("testing" in path.relative_to(folder).parts or path.name == "_context.py")))
     tools = {}
     for name in ("emcc", "wasm-opt", "cargo", "node"):
@@ -76,7 +76,7 @@ def build_contract(source: str | Path, *, project_root: str | Path | None = None
     for path in sorted(inputs):
         fingerprint.update(str(path).encode())
         fingerprint.update(path.read_bytes())
-    output = Path(cache or project / ".cache/cspr-testing/build").resolve() / fingerprint.hexdigest()
+    output = Path(cache or project / ".cache/casthon-testing/build").resolve() / fingerprint.hexdigest()
     output.mkdir(parents=True, exist_ok=True)
     folder = output if runtime == "asyncify" else output / "native-errors"
     if profile == "release":

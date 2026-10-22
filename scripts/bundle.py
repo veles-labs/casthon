@@ -5,10 +5,10 @@ import re
 from pathlib import Path
 from typing import Annotated, List, Dict, Optional, Union, get_args, get_origin
 
-import cspr
-from cspr.types import optional_inner
-from cspr.arguments import argument_type, optional_arg_inner
-from cspr._signatures import discover_exports, normalize_signature
+import casthon
+from casthon.types import optional_inner
+from casthon.arguments import argument_type, optional_arg_inner
+from casthon._signatures import discover_exports, normalize_signature
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -77,17 +77,17 @@ def check_profile(tree):
                     raise ValueError(
                         f"Line {node.lineno}: relative contract imports are unsupported"
                     )
-                if module == "cspr.testing" or module.startswith("cspr.testing.") or module == "cspr._signatures":
+                if module == "casthon.testing" or module.startswith("casthon.testing.") or module == "casthon._signatures":
                     raise ValueError("Testing and development helpers cannot be imported by frozen contracts")
-                if isinstance(node, ast.ImportFrom) and module == "cspr" and any(
+                if isinstance(node, ast.ImportFrom) and module == "casthon" and any(
                         alias.name in ("testing", "_signatures") for alias in node.names):
                     raise ValueError("Testing and development helpers cannot be imported by frozen contracts")
                 if module == "functools" and isinstance(node, ast.ImportFrom) and all(
                         alias.name == "wraps" for alias in node.names):
                     continue
                 if module not in ("typing", "__future__") and not (
-                    module == "cspr"
-                    or module.startswith("cspr.")
+                    module == "casthon"
+                    or module.startswith("casthon.")
                     or module == "contracts"
                     or module.startswith("contracts.")
                 ):
@@ -133,19 +133,19 @@ class Lower(ast.NodeTransformer):
             self.cspr_name += "_"
         node = self.generic_visit(node)
         if getattr(self, "uses_events", False):
-            node.body.insert(0, ast.Import(names=[ast.alias(name="cspr.events", asname=self.events_name)]))
+            node.body.insert(0, ast.Import(names=[ast.alias(name="casthon.events", asname=self.events_name)]))
         if getattr(self, "uses_contracts", False):
             index = int(bool(node.body and isinstance(node.body[0], ast.Expr) and isinstance(node.body[0].value, ast.Constant) and isinstance(node.body[0].value.value, str)))
-            node.body.insert(index, ast.Import(names=[ast.alias(name="cspr.contracts", asname=self.contracts_name)]))
+            node.body.insert(index, ast.Import(names=[ast.alias(name="casthon.contracts", asname=self.contracts_name)]))
         if self.optional_factory or self.argument_factory:
             index = int(bool(node.body and isinstance(node.body[0], ast.Expr)
                              and isinstance(node.body[0].value, ast.Constant)
                              and isinstance(node.body[0].value.value, str)))
-            node.body.insert(index, ast.ImportFrom(module="cspr._wire_types", level=0,
+            node.body.insert(index, ast.ImportFrom(module="casthon._wire_types", level=0,
                 names=[ast.alias(name="_Optional", asname=self.optional_name),
                        ast.alias(name="_OptionalArg", asname=self.argument_name),
                        ast.alias(name="_EnumRef", asname=self.enum_name)]))
-            node.body.insert(index, ast.Import(names=[ast.alias(name="cspr", asname=self.cspr_name)]))
+            node.body.insert(index, ast.Import(names=[ast.alias(name="casthon", asname=self.cspr_name)]))
         return node
 
     def is_export(self, node):
@@ -214,7 +214,7 @@ class Lower(ast.NodeTransformer):
         if not self.sdk:
             # Application enums use the same small frozen implementation as
             # host enums, without importing CPython's enum package in Wasm.
-            if len(node.bases) == 1 and class_planner(self.graph).symbol(self.path, node.bases[0]) in ("cspr.enums.WireEnum", "cspr.WireEnum"):
+            if len(node.bases) == 1 and class_planner(self.graph).symbol(self.path, node.bases[0]) in ("casthon.enums.WireEnum", "casthon.WireEnum"):
                 members = []
                 for name, value in enum_members(node).items():
                     members.append(ast.Assign(targets=[ast.Attribute(value=ast.Name(id=node.name, ctx=ast.Load()), attr=name, ctx=ast.Store())],
@@ -296,7 +296,7 @@ class Lower(ast.NodeTransformer):
         if isinstance(node, ast.Constant):
             return node.value
         if (isinstance(node, ast.ClassDef) and len(node.bases) == 1
-                and class_planner(self.graph).symbol(path, node.bases[0]) in ("cspr.enums.WireEnum", "cspr.WireEnum")):
+                and class_planner(self.graph).symbol(path, node.bases[0]) in ("casthon.enums.WireEnum", "casthon.WireEnum")):
             return self.graph.enum(path, node)
         if isinstance(node, ast.Call) and ast.dump(node) == ast.dump(ast.parse("type(None)", mode="eval").body):
             return type(None)
@@ -316,18 +316,18 @@ class Lower(ast.NodeTransformer):
                 return {"typing.Annotated": Annotated, "typing.List": List,
                         "typing.Dict": Dict, "typing.Optional": Optional,
                         "typing.Union": Union}[symbol]
-            if isinstance(symbol, str) and symbol.startswith(("cspr.", "cspr.types.", "cspr.key.")):
+            if isinstance(symbol, str) and symbol.startswith(("casthon.", "casthon.types.", "casthon.key.")):
                 name = symbol.rsplit(".", 1)[-1]
-                value = getattr(cspr, name, None)
+                value = getattr(casthon, name, None)
                 if value is not None:
                     return value
         if isinstance(node, ast.Subscript):
             origin = self.annotation_value(path, node.value, seen)
             items = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
             args = tuple(self.annotation_value(path, item, seen) for item in items)
-            if origin in (cspr.URef, cspr.Dictionary):
+            if origin in (casthon.URef, casthon.Dictionary):
                 return origin[args[0] if len(args) == 1 else args]
-            if origin in (list, dict, tuple, List, Dict, Annotated, Optional, Union, cspr.OptionalArg, cspr.Map):
+            if origin in (list, dict, tuple, List, Dict, Annotated, Optional, Union, casthon.OptionalArg, casthon.Map):
                 return origin[args[0] if len(args) == 1 else args]
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
             args = (self.annotation_value(path, node.left, seen),
@@ -338,7 +338,7 @@ class Lower(ast.NodeTransformer):
         raise ValueError("Unsupported wire annotation: " + ast.unparse(node))
 
     def lower_optional(self, annotation):
-        cspr.wire_type(annotation)
+        casthon.wire_type(annotation)
         inner = optional_inner(annotation)
         if inner is None:
             raise TypeError("Only nullable unions have a Casper wire type")
@@ -370,9 +370,9 @@ class Lower(ast.NodeTransformer):
                         symbol = None
                     if isinstance(symbol, str) and symbol.startswith("typing."):
                         raise TypeError("Unsupported frozen wire annotation: " + ast.unparse(node))
-            if origin in (cspr.URef, cspr.Dictionary):
+            if origin in (casthon.URef, casthon.Dictionary):
                 args = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
-                expected = 1 if origin is cspr.URef else 2
+                expected = 1 if origin is casthon.URef else 2
                 if len(args) != expected:
                     raise TypeError("Incorrect number of storage type parameters")
                 return ast.copy_location(ast.Call(
@@ -380,15 +380,15 @@ class Lower(ast.NodeTransformer):
                     args=[self.visit(arg) for arg in args], keywords=[]), node)
             if origin in (Optional, Union):
                 return ast.copy_location(self.lower_optional(self.annotation_value(self.path, node)), node)
-            if origin is cspr.OptionalArg or origin is Annotated:
+            if origin is casthon.OptionalArg or origin is Annotated:
                 annotation = self.annotation_value(self.path, node)
                 inner = optional_arg_inner(annotation)
                 if inner is not None:
-                    cspr.wire_type(inner)
+                    casthon.wire_type(inner)
                     self.argument_factory, self.optional_factory = True, True
                     return ast.copy_location(ast.parse(frozen_annotation(annotation, self.cspr_name, self.optional_name,
                                                                         self.argument_name, self.enum_name, self.path), mode="eval").body, node)
-            if origin in (list, dict, List, Dict, Annotated, cspr.Map):
+            if origin in (list, dict, List, Dict, Annotated, casthon.Map):
                 # Carry the type tree directly; no string grammar in frozen contracts.
                 annotation = self.annotation_value(self.path, node)
                 self.optional_factory = True
@@ -494,7 +494,7 @@ class SourceGraph:
         key = path, node.name
         if key not in self.enums:
             module = "contract" if path == self.source else path.relative_to(self.root).with_suffix("").as_posix().replace("/", ".")
-            enum = cspr.WireEnum(node.name, enum_members(node), module=module)
+            enum = casthon.WireEnum(node.name, enum_members(node), module=module)
             enum._cspr_source = path
             self.enums[key] = enum
         return self.enums[key]
@@ -571,7 +571,7 @@ class SourceGraph:
             _, symbol = self.resolve(path, node)
         except ValueError:
             return False
-        return symbol == "cspr.export"
+        return symbol == "casthon.export"
 
     def function(self, path, name):
         path, node = self.resolve(path, ast.Name(id=name))
@@ -599,12 +599,12 @@ def frozen_annotation(annotation, module="_cspr", optional="_Optional", argument
     inner = optional_inner(annotation)
     if inner is not None:
         return optional + "(" + frozen_annotation(inner, module, optional, argument, enum, here) + ")"
-    if isinstance(annotation, type) and issubclass(annotation, cspr.WireEnum):
+    if isinstance(annotation, type) and issubclass(annotation, casthon.WireEnum):
         owner = "__name__" if here is not None and getattr(annotation, "_cspr_source", None) == here else repr(annotation.__module__)
         return enum + "(" + owner + ", " + repr(annotation.__name__) + ")"
-    if isinstance(annotation, type) and issubclass(annotation, cspr.Key):
+    if isinstance(annotation, type) and issubclass(annotation, casthon.Key):
         return module + "." + annotation.__name__
-    descriptor = cspr.cl_type_of(annotation)
+    descriptor = casthon.cl_type_of(annotation)
     if descriptor.tag == 12 and descriptor.annotation is not None:
         return module + ".URef.of(" + frozen_annotation(descriptor.annotation.annotation, module, optional, argument, enum, here) + ")"
     if descriptor.children:
@@ -623,7 +623,7 @@ def resolve_signature(graph, path, node, skip_self=False):
         try:
             if isinstance(value, ast.Constant) and isinstance(value.value, str):
                 try:
-                    cspr.wire_type(value.value)
+                    casthon.wire_type(value.value)
                 except TypeError:
                     value = ast.parse(value.value, mode="eval").body
             return resolver.annotation_value(path, value)
@@ -695,7 +695,7 @@ def generate_exports(source, exports, project_root=None):
     graph = SourceGraph(project_root)
     bindings = class_bindings(source, graph)
     lines = ['"""Generated root exports and independent imported contract ABIs."""',
-             'import cspr as _cspr', 'from cspr._wire_types import _Optional, _OptionalArg, _EnumRef', 'SIGNATURES = {']
+             'import casthon as _cspr', 'from casthon._wire_types import _Optional, _OptionalArg, _EnumRef', 'SIGNATURES = {']
     for name, signature in export_signatures(source, exports, graph).items():
         lines.append(f"    {name!r}: {render_signature(signature)},")
     lines.append("}")
@@ -758,10 +758,10 @@ def load_contract(path, project_root=None):
     for name in exports:
         validate_name(name)
     signatures = export_signatures(source, exports, graph)
-    descriptions = {name: {"args": [{"name": arg, "type": cspr.wire_type(argument_type(annotation)), "hasDefault": default,
+    descriptions = {name: {"args": [{"name": arg, "type": casthon.wire_type(argument_type(annotation)), "hasDefault": default,
                                     **({"optionalArg": True} if optional_arg_inner(annotation) is not None else {})}
                                    for arg, annotation, default in parameters],
-                           "returns": cspr.wire_type(returns) if typed else None}
+                           "returns": casthon.wire_type(returns) if typed else None}
                     for name, (parameters, typed, returns) in signatures.items()}
     return {"source": source.name, "exports": exports, "signatures": descriptions}, source
 

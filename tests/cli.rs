@@ -503,6 +503,10 @@ fn new_creates_templates_and_refuses_existing_directories() {
             manifest["tool"]["casthon"]["micropython"].as_str().unwrap(),
             recipe["micropython"]["version"].as_str().unwrap()
         );
+        assert_eq!(
+            manifest["project"]["dependencies"][0].as_str().unwrap(),
+            "casthon-sdk==0.1.0a1"
+        );
         assert!(
             project
                 .path()
@@ -510,6 +514,14 @@ fn new_creates_templates_and_refuses_existing_directories() {
                 .join("tests/test_contract.py")
                 .is_file()
         );
+        assert!(
+            fs::read_to_string(project.path().join(template).join("tests/test_contract.py"))
+                .unwrap()
+                .contains("from casthon.testing import MockHost, use_host")
+        );
+        let readme = fs::read_to_string(project.path().join(template).join("README.md")).unwrap();
+        assert!(readme.contains("uv sync"));
+        assert!(!readme.contains(sdk().to_string_lossy().as_ref()));
         let output = command(project.path())
             .args(["new", template])
             .output()

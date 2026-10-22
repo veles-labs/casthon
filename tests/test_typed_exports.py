@@ -8,13 +8,13 @@ from pathlib import Path
 from typing import Optional
 from unittest.mock import patch
 
-import cspr
-from cspr._wire_types import _Optional
-from cspr.codec import ABIError, cl_type, cl_value, decode, encode, valid_payload
-from cspr.contract_api import runtime
-from cspr.entry_points import EntryPoint
-from cspr.return_value import serialize_typed_return
-from cspr.testing import use_host
+import casthon
+from casthon._wire_types import _Optional
+from casthon.codec import ABIError, cl_type, cl_value, decode, encode, valid_payload
+from casthon.contract_api import runtime
+from casthon.entry_points import EntryPoint
+from casthon.return_value import serialize_typed_return
+from casthon.testing import use_host
 from test_contract_api import MemoryHost
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,12 +25,12 @@ from bundle import generate_exports, load_contract, lower
 class OptionalTests(unittest.TestCase):
     def test_optional_wire_fixtures_and_frozen_annotation_parity(self):
         for author, frozen, descriptor in (
-            (Optional[cspr.U32], _Optional("U32"), "Option<U32>"),
+            (Optional[casthon.U32], _Optional("U32"), "Option<U32>"),
             (str | None, _Optional(str), "Option<String>"),
-            (Optional[cspr.AccountHash], _Optional(cspr.AccountHash), "Option<Key>"),
+            (Optional[casthon.AccountHash], _Optional(casthon.AccountHash), "Option<Key>"),
         ):
-            self.assertEqual(cspr.wire_type(author), descriptor)
-            self.assertEqual(cspr.wire_type(frozen), descriptor)
+            self.assertEqual(casthon.wire_type(author), descriptor)
+            self.assertEqual(casthon.wire_type(frozen), descriptor)
         self.assertEqual(cl_value("Option<U32>", None).hex(), "01000000000d04")
         self.assertEqual(cl_value("Option<U32>", 7).hex(), "0500000001070000000d04")
         for value in (None, 0, 0xffffffff):
@@ -42,31 +42,31 @@ class OptionalTests(unittest.TestCase):
                 decode("Option<U32>", data)
             self.assertFalse(valid_payload("Option<U32>", data))
         self.assertEqual(cl_type("Option<Bytes>"), b"\x0d\x0e\x03")
-        for invalid in (cspr.U32 | str, Optional[int], "Option<Bogus>", "Option<" * 33 + "U32" + ">" * 33):
+        for invalid in (casthon.U32 | str, Optional[int], "Option<Bogus>", "Option<" * 33 + "U32" + ">" * 33):
             with self.assertRaises(TypeError):
-                cspr.wire_type(invalid)
+                casthon.wire_type(invalid)
 
     def test_optional_key_decoding_and_return_validation_keep_the_variant(self):
         host = MemoryHost()
-        owner = cspr.AccountHash(bytes([11]) * 32)
+        owner = casthon.AccountHash(bytes([11]) * 32)
         with use_host(host):
-            for annotation in (Optional[cspr.AccountHash], _Optional(cspr.AccountHash)):
+            for annotation in (Optional[casthon.AccountHash], _Optional(casthon.AccountHash)):
                 host.args["owner"] = b"\1" + bytes(owner)
-                self.assertIsInstance(runtime.get_named_arg("owner", annotation), cspr.AccountHash)
+                self.assertIsInstance(runtime.get_named_arg("owner", annotation), casthon.AccountHash)
                 self.assertEqual(runtime.get_named_arg("owner", annotation), owner)
                 host.args["owner"] = b"\0"
                 self.assertIsNone(runtime.get_named_arg("owner", annotation))
-                host.args["owner"] = b"\1" + bytes(cspr.Hash(bytes(32)))
+                host.args["owner"] = b"\1" + bytes(casthon.Hash(bytes(32)))
                 with self.assertRaises(ABIError):
                     runtime.get_named_arg("owner", annotation)
                 self.assertIsNone(runtime.try_get_named_arg("owner", annotation))
-                with self.assertRaises(cspr.InvalidArgument):
-                    serialize_typed_return(annotation, cspr.CLValue("Option<Key>", cspr.Hash(bytes(32))))
+                with self.assertRaises(casthon.InvalidArgument):
+                    serialize_typed_return(annotation, casthon.CLValue("Option<Key>", casthon.Hash(bytes(32))))
                 self.assertEqual(serialize_typed_return(annotation, owner),
                                  cl_value("Option<Key>", owner))
 
     def test_optional_entrypoint_metadata_and_runtime_expressions_freeze(self):
-        source = '''from cspr import EntryPoint, U32, AccountHash, wire_type
+        source = '''from casthon import EntryPoint, U32, AccountHash, wire_type
 from typing import Optional as Maybe
 Alias = Maybe[U32]
 _cspr_optional = 1
@@ -87,7 +87,7 @@ def describe():
             self.assertEqual(frozen["_cspr_optional"], 1)
             self.assertEqual(frozen["_cspr_types"], 2)
             self.assertEqual(frozen["ENTRY_POINTS"][0].to_bytes(),
-                             EntryPoint("read", {"owner": Optional[cspr.AccountHash]}, Optional[cspr.U32]).to_bytes())
+                             EntryPoint("read", {"owner": Optional[casthon.AccountHash]}, Optional[casthon.U32]).to_bytes())
 
 
 class TypedExportTests(unittest.TestCase):
@@ -107,7 +107,7 @@ class TypedExportTests(unittest.TestCase):
         return contract, exports["SIGNATURES"], dispatcher["invoke"]
 
     def test_parameters_and_returns_do_not_change_direct_python_calls(self):
-        contract, signatures, invoke = self.prepare('''from cspr import U32, export
+        contract, signatures, invoke = self.prepare('''from casthon import U32, export
 @export
 def calculate(amount: U32, label: str) -> U32:
     assert type(amount) is int
@@ -121,7 +121,7 @@ def calculate(amount: U32, label: str) -> U32:
 
     def test_decorated_reusable_function_can_be_selected_by_an_export_binding(self):
         contract, signatures, invoke = self.prepare('''from functools import wraps as preserve
-from cspr import U32, export
+from casthon import U32, export
 def double(function):
     @preserve(function)
     def decorated(*args, **kwargs): return function(*args, **kwargs) * 2
@@ -137,7 +137,7 @@ call = export(reusable)
             self.assertEqual(invoke(contract["call"], signatures["call"]), cl_value("U32", 10))
 
     def test_defaults_apply_only_to_absent_arguments(self):
-        contract, signatures, invoke = self.prepare('''from cspr import U32, export
+        contract, signatures, invoke = self.prepare('''from casthon import U32, export
 from typing import Optional
 default_label = "original"
 @export
@@ -157,7 +157,7 @@ def required(amount: U32 | None) -> U32 | None:
             host.args["amount"] = b"\1" + encode("U32", 0)
             self.assertEqual(invoke(contract["required"], signatures["required"]), cl_value("Option<U32>", 0))
             host.args.clear()
-            with self.assertRaises(cspr.MissingArgument):
+            with self.assertRaises(casthon.MissingArgument):
                 invoke(contract["required"], signatures["required"])
             host.args["amount"] = b"bad"
             with self.assertRaises(ABIError):
@@ -166,10 +166,10 @@ def required(amount: U32 | None) -> U32 | None:
     def test_typed_returns_validate_after_cleanup_and_legacy_returns_stay_explicit(self):
         events = []
         for value, expected in (
-            (7, cl_value("U32", 7)), (cspr.CLU32(7), cl_value("U32", 7)),
+            (7, cl_value("U32", 7)), (casthon.CLU32(7), cl_value("U32", 7)),
             (True, None), (-1, None), (1 << 32, None), (None, None),
-            (cspr.CLString("bad"), None),
-            (cspr.SerializedCLValue(b"\1\0\0\0\7\4"), None),
+            (casthon.CLString("bad"), None),
+            (casthon.SerializedCLValue(b"\1\0\0\0\7\4"), None),
         ):
             with self.subTest(value=value):
                 def function():
@@ -177,17 +177,17 @@ def required(amount: U32 | None) -> U32 | None:
                         return value
                     finally:
                         events.append("finally")
-                _, _, invoke = self.prepare("from cspr import export\n@export\ndef unused(): pass\n")
+                _, _, invoke = self.prepare("from casthon import export\n@export\ndef unused(): pass\n")
                 if expected is None:
-                    with self.assertRaises(cspr.InvalidArgument):
+                    with self.assertRaises(casthon.InvalidArgument):
                         invoke(function, ([], True, "U32"))
                 else:
                     self.assertEqual(invoke(function, ([], True, "U32")), expected)
                 self.assertEqual(events.pop(), "finally")
         self.assertEqual(invoke(lambda: None, ([], True, "Unit")), cl_value("Unit", None))
         self.assertIsNone(invoke(lambda: None, ([], False, None)))
-        self.assertEqual(invoke(lambda: cspr.CLU32(3), ([], False, None)), cl_value("U32", 3))
-        with self.assertRaises(cspr.InvalidArgument):
+        self.assertEqual(invoke(lambda: casthon.CLU32(3), ([], False, None)), cl_value("U32", 3))
+        with self.assertRaises(casthon.InvalidArgument):
             invoke(lambda: 3, ([], False, None))
 
     def test_shared_annotated_exports_resolve_without_executing_contract_code(self):
@@ -197,14 +197,14 @@ def required(amount: U32 | None) -> U32 | None:
             package.mkdir()
             (package / "__init__.py").write_text("")
             (package / "shared.py").write_text('''from __future__ import annotations
-from cspr import U32 as Amount
+from casthon import U32 as Amount
 from typing import Optional as Maybe
 Nullable = Maybe[Amount]
 def implementation(amount: "Nullable", *, label: str = "hello") -> "Amount":
     return (amount or 0) + len(label)
 ''')
             path = package / "root.py"
-            path.write_text('''from cspr import export
+            path.write_text('''from casthon import export
 from contracts.shared import implementation
 raise RuntimeError("must not run during build")
 ENTRY_POINTS = unknown_metadata_factory()
@@ -228,7 +228,7 @@ calculate = export(implementation)
         ):
             with self.subTest(signature=signature), tempfile.TemporaryDirectory() as directory:
                 path = Path(directory) / "probe.py"
-                path.write_text("from cspr import U32, Ret, export\n@export\n" + signature + "\n")
+                path.write_text("from casthon import U32, Ret, export\n@export\n" + signature + "\n")
                 with self.assertRaises(ValueError):
                     load_contract(path)
 

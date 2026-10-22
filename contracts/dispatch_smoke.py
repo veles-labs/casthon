@@ -1,9 +1,9 @@
 """Exercise ordinary internal calls and the outer return/error boundary."""
 
 from typing import cast, NoReturn
-from cspr import ApiError, User, UserError, Ret, Revert, Read, ValueNotFound, MissingKey, Hash, U32, URef, CLValue, CLU32, CLString, CLUnit, export
-from cspr import MissingArgument, InvalidArgument, Key, U8, CLKeyList, CLSecurityMap, wire_type, Ed25519PublicKey, Ed25519Signature
-from cspr.contract_api import runtime, storage, cryptography
+from casthon import ApiError, User, UserError, Ret, Revert, Read, ValueNotFound, MissingKey, Hash, U32, URef, CLValue, CLU32, CLString, CLUnit, export
+from casthon import MissingArgument, InvalidArgument, Key, U8, CLKeyList, CLSecurityMap, wire_type, Ed25519PublicKey, Ed25519Signature
+from casthon.contract_api import runtime, storage, cryptography
 
 
 class ProbeError(User):

@@ -8,15 +8,15 @@ from pathlib import Path
 from typing import Optional
 from unittest.mock import patch
 
-from cspr import (
+from casthon import (
     ABIError, ApiError, AccountHash, CLValue, CLU32, CLString, ContractHash,
     EntryPoint, MISSING, MissingArgument, OptionalArg, U32, URef, wire_type,
 )
-from cspr.arguments import argument_type, optional_arg_inner
-from cspr._wire_types import _Optional, _OptionalArg
-from cspr.contract_api import runtime
-from cspr.entry_points import serialize_entry_points
-from cspr.testing import ContractHarness, MockHost, use_host
+from casthon.arguments import argument_type, optional_arg_inner
+from casthon._wire_types import _Optional, _OptionalArg
+from casthon.contract_api import runtime
+from casthon.entry_points import serialize_entry_points
+from casthon.testing import ContractHarness, MockHost, use_host
 from contracts import typed_exports
 from test_contract_calls import RecordingHost
 from test_entry_point_factory import contract_pair
@@ -115,7 +115,7 @@ class OptionalArgTests(unittest.TestCase):
         self.assertEqual(host.calls[4][2], {})
 
     def test_frozen_aliases_runtime_subscriptions_and_defaults_match_native(self):
-        source = '''from cspr import OptionalArg as Arg, MISSING, U32, AccountHash, export
+        source = '''from casthon import OptionalArg as Arg, MISSING, U32, AccountHash, export
 from typing import Optional as Maybe
 Alias = Arg[Maybe[U32]]
 _cspr_optional_arg = 12
@@ -124,7 +124,7 @@ def value(amount: Alias = MISSING) -> str:
     if amount is MISSING: return "missing"
     return "none" if amount is None else str(amount)
 def read():
-    from cspr.contract_api.runtime import get_named_arg
+    from casthon.contract_api.runtime import get_named_arg
     return get_named_arg("owner", Arg[Maybe[AccountHash]])
 '''
         contract, signatures, invoke = typed_test_helpers.TypedExportTests().prepare(source)
@@ -137,7 +137,7 @@ def read():
         self.assertEqual(contract["_cspr_optional_arg"], 12)
 
     def test_factories_keep_optional_arguments_dynamic_and_preserve_required_order(self):
-        source = '''from cspr import OptionalArg, MISSING, OptionalArg as Arg, U32, EntryPoint, export
+        source = '''from casthon import OptionalArg, MISSING, OptionalArg as Arg, U32, EntryPoint, export
 @export
 def read(owner: str, maybe: OptionalArg[U32], count: U32 = 7, *, note: Arg[str] = MISSING) -> str:
     return owner
@@ -148,8 +148,8 @@ ENTRY_POINTS = [EntryPoint.from_function(read)]
             for module in (author, frozen):
                 self.assertEqual(serialize_entry_points(module.ENTRY_POINTS), serialize_entry_points([expected]))
         # Classes use the same rule; the marker also participates in override checks.
-        source = '''from cspr import OptionalArg, MISSING, U32
-from cspr.contracts import Contract, entry_point, export_contract
+        source = '''from casthon import OptionalArg, MISSING, U32
+from casthon.contracts import Contract, entry_point, export_contract
 @export_contract
 class Example(Contract):
     @entry_point
@@ -168,7 +168,7 @@ class Example(Contract):
     def test_invalid_marker_placements_fail_before_building(self):
         for argument, returns in (("OptionalArg[OptionalArg[U32]]", "str"),
                                   ("Optional[OptionalArg[U32]]", "str"), ("U32", "OptionalArg[U32]")):
-            source = "from cspr import OptionalArg, U32, export\nfrom typing import Optional\n@export\ndef f(value: " + argument + ") -> " + returns + ": pass\n"
+            source = "from casthon import OptionalArg, U32, export\nfrom typing import Optional\n@export\ndef f(value: " + argument + ") -> " + returns + ": pass\n"
             with self.subTest(argument=argument, returns=returns), tempfile.TemporaryDirectory() as directory:
                 path = Path(directory) / "invalid.py"
                 path.write_text(source)
@@ -176,7 +176,7 @@ class Example(Contract):
                     load_contract(path)
 
     def test_frozen_sentinel_has_one_identity_and_does_not_compare_equal_to_values(self):
-        scope = {"__package__": "cspr"}
+        scope = {"__package__": "casthon"}
         exec(lower(ROOT / "runtime/arguments.py", sdk=True), scope)
         missing = scope["MISSING"]
         self.assertIs(scope["MissingType"](0), missing)

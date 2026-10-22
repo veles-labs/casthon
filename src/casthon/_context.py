@@ -11,5 +11,5 @@ def _host() -> Any:
         return _HOST.get()
     except LookupError:
         raise RuntimeError(
-            "Use cspr.testing.use_host() when running contracts under CPython"
+            "Use casthon.testing.use_host() when running contracts under CPython"
         ) from None

@@ -9,14 +9,14 @@ See reference/cep18/LICENSE for the upstream license.
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast
 
-from cspr import (
+from casthon import (
     AccountCaller, ContractCaller, EntityCaller,
     Key, U8, URef, U256, Dictionary, OptionalArg, MISSING, MissingArgument, base64,
 )
-from cspr.contract_api import runtime
-from cspr.contract_api.runtime import named_keys
-from cspr.contracts import Contract, entry_point
-from cspr.enums import WireEnum
+from casthon.contract_api import runtime
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point
+from casthon.enums import WireEnum
 from contracts.cep18_errors import (
     AlreadyInitialized, CannotTargetSelfUser, InsufficientAllowance,
     InsufficientBalance, InsufficientRights, InvalidAdminList, InvalidBurnTarget,

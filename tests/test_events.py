@@ -7,15 +7,15 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from cspr import ABIError, AccountHash, CLValue, Event, Key, Map, U8, U32, U256, URef, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes
-from cspr.codec import encode, decode, cl_type, valid_payload
-from cspr.contracts import Contract
-from cspr.events import event_schema, event_schemas
-from cspr.messages import MessagePayload
-from cspr import ces, emit
-from cspr.testing import MockHost, use_host
-from cspr.contract_api import storage, runtime
-from cspr.testing.values import inspect_value, runtime_args, from_json
+from casthon import ABIError, AccountHash, CLValue, Event, Key, Map, U8, U32, U256, URef, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes
+from casthon.codec import encode, decode, cl_type, valid_payload
+from casthon.contracts import Contract
+from casthon.events import event_schema, event_schemas
+from casthon.messages import MessagePayload
+from casthon import ces, emit
+from casthon.testing import MockHost, use_host
+from casthon.contract_api import storage, runtime
+from casthon.testing.values import inspect_value, runtime_args, from_json
 from test_class_contracts import class_pair
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -140,8 +140,8 @@ class EventTests(unittest.TestCase):
         self.assertIsNone(json.loads(LedgerChanged({}, None).to_message().value)['memo'])
 
     def test_frozen_event_inheritance_composition_and_constructors(self):
-        source = '''from cspr import Event, Bytesrepr, U32, Key, Map, export
-from cspr.contracts import Contract, export_contract
+        source = '''from casthon import Event, Bytesrepr, U32, Key, Map, export
+from casthon.contracts import Contract, export_contract
 class Started(Event, Bytesrepr):
     actor: Key
 class Added(Started):
@@ -169,7 +169,7 @@ class Example(Second, First):
     def test_builder_does_not_execute_source_and_rejects_bad_declarations(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'event_fixture.py'
-            prefix = 'from cspr import Event, U32, export\nfrom cspr.contracts import Contract, export_contract\n@export\ndef call() -> None: pass\n'
+            prefix = 'from casthon import Event, U32, export\nfrom casthon.contracts import Contract, export_contract\n@export\ndef call() -> None: pass\n'
             path.write_text(prefix + 'raise RuntimeError("must not run")\nclass Changed(Event):\n    value: U32\n@export_contract\nclass Token(Contract):\n    events = (Changed,)\n')
             load_contract(path)
             self.assertIn('_bind_event(Changed', lower(path))
@@ -227,7 +227,7 @@ class Example(Second, First):
 
     def test_json_validation_does_not_serialize_binary_fields(self):
         record = LedgerChanged({self.owner: 12}, 'memo')
-        with patch('cspr.events.encode', side_effect=AssertionError('binary serialization')), \
+        with patch('casthon.events.encode', side_effect=AssertionError('binary serialization')), \
              patch.object(Key, 'to_bytes', side_effect=AssertionError('binary Key serialization')):
             self.assertIn('memo', record.to_message().value)
         with self.assertRaises(ABIError):
@@ -269,7 +269,7 @@ class Example(Second, First):
         class Default(Multiple):
             def to_message(self):
                 return Json.to_message(self)
-        with patch('cspr.contract_api.runtime._call') as call:
+        with patch('casthon.contract_api.runtime._call') as call:
             for record, encoder, expected in (
                 (Multiple(7), Json.to_message, MessageString('{"value":7}')),
                 (Multiple(7), Bytesrepr.to_message, MessageBytes(encode(U32, 7))),
@@ -286,7 +286,7 @@ class Example(Second, First):
         class BadDefault(Event):
             def to_message(self):
                 return b'wrong carrier'
-        with patch('cspr.contract_api.runtime._call') as call:
+        with patch('casthon.contract_api.runtime._call') as call:
             for record, encoder, error in (
                 (Event(), None, 'no message encoder'),
                 (Multiple(7), None, 'Multiple event encoders'),
@@ -300,7 +300,7 @@ class Example(Second, First):
             call.assert_not_called()
 
     def test_emit_rejects_non_events_and_empty_topic_before_encoding(self):
-        with patch('cspr.contract_api.runtime._call') as call, \
+        with patch('casthon.contract_api.runtime._call') as call, \
              patch.object(Json, 'to_message', side_effect=AssertionError('must not encode')) as encoder:
             for payload in (MessageString('payload'), MessageBytes(b'payload'), b'\0\0\0\0\0', object()):
                 with self.subTest(payload=payload), self.assertRaisesRegex(TypeError, 'Expected Event'):
@@ -320,7 +320,7 @@ class Example(Second, First):
             finally:
                 cleanup.append(event)
         record = Credited(self.owner, 1)
-        with patch('cspr.contract_api.runtime._call') as call:
+        with patch('casthon.contract_api.runtime._call') as call:
             with self.assertRaisesRegex(ValueError, 'encoding failed'):
                 emit(record, encoder=failing_encoder)
             with self.assertRaises(ABIError):
@@ -329,8 +329,8 @@ class Example(Second, First):
             call.assert_not_called()
 
     def test_encoder_selection_native_and_frozen_parity(self):
-        source = '''from cspr import Event, MessageEncoder, MessageString, MessageBytes, Bytesrepr, Json, JsonBytes, U32, export
-from cspr.contracts import Contract, export_contract
+        source = '''from casthon import Event, MessageEncoder, MessageString, MessageBytes, Bytesrepr, Json, JsonBytes, U32, export
+from casthon.contracts import Contract, export_contract
 class Custom(MessageEncoder):
     def to_message(self) -> MessageString | MessageBytes:
         return MessageString('custom')
@@ -365,8 +365,8 @@ class Example(Contract):
                 self.assertEqual(Json.to_message(module.Multiple(7)).value, '{"value":7}')
 
     def test_encoder_inheritance_with_different_micropython_lookup_is_rejected(self):
-        source = '''from cspr import Event, Json, U32, export
-from cspr.contracts import Contract, export_contract
+        source = '''from casthon import Event, Json, U32, export
+from casthon.contracts import Contract, export_contract
 class First(Json):
     pass
 class Second(Json):

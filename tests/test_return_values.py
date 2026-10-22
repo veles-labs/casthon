@@ -2,9 +2,9 @@
 
 import unittest
 
-from cspr import CLU32, CLUnit, InvalidArgument, Ret, Revert, UserError, SerializedCLValue
-from cspr.contract_api import runtime
-from cspr.return_value import serialize_return, validate_return_payload
+from casthon import CLU32, CLUnit, InvalidArgument, Ret, Revert, UserError, SerializedCLValue
+from casthon.contract_api import runtime
+from casthon.return_value import serialize_return, validate_return_payload
 
 
 class LiveReturn(CLU32):

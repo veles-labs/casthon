@@ -121,7 +121,7 @@ class DevnetClient:
 
     def initialize(self) -> None:
         self.request("initialize", {"protocolVersion": "2024-11-05", "capabilities": {},
-                                    "clientInfo": {"name": "cspr-py-testing", "version": "0.1.0"}})
+                                    "clientInfo": {"name": "casthon-py-testing", "version": "0.1.0"}})
         with self._lock:
             assert self.process.stdin is not None
             self.process.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
@@ -176,7 +176,7 @@ class _PortLease:
     """Coordinate the supported devnet port blocks across test processes."""
 
     def __init__(self, offset: int | None, nodes: int, *, directory: Path | None = None) -> None:
-        self.directory = directory or Path(tempfile.gettempdir()) / f"cspr-py-ports-{os.getuid()}"
+        self.directory = directory or Path(tempfile.gettempdir()) / f"casthon-py-ports-{os.getuid()}"
         self.directory.mkdir(parents=True, exist_ok=True)
         self.files: list[TextIO] = []
         self.offset = -1
@@ -312,20 +312,20 @@ class QueryResult:
 
 class DevnetNetwork:
     def __init__(self, *, name: str | None = None, protocol_version: str = "2.2.0",
-                 seed: str = "cspr-py-tests", nodes: int = 4, users: int = 2,
+                 seed: str = "casthon-py-tests", nodes: int = 4, users: int = 2,
                  port_offset: int | None = None, timeout: float = 120,
                  diagnostics: Path | str | None = None, owned: bool = True,
                  client: DevnetTransport | None = None, binary: str = "casper-devnet",
                  custom_asset: str | None = None) -> None:
         if not 1 <= nodes <= 16 or users < 1 or timeout <= 0:
             raise ValueError("Require 1–16 nodes, at least one user and a positive timeout")
-        self.name = name or "cspr-py-test-" + uuid.uuid4().hex[:12]
+        self.name = name or "casthon-py-test-" + uuid.uuid4().hex[:12]
         self.protocol_version, self.seed = protocol_version, seed
         self.nodes, self.users, self.port_offset = nodes, users, port_offset
         self.timeout, self.owned, self.binary = timeout, owned, binary
         self.custom_asset = custom_asset
         self._prints = client._prints if isinstance(client, DevnetClient) else _PrintCapture()
-        self.diagnostics = Path(diagnostics or Path.cwd() / ".cache/cspr-testing/live" / self.name)
+        self.diagnostics = Path(diagnostics or Path.cwd() / ".cache/casthon-testing/live" / self.name)
         self.accounts: dict[str, TestAccount] = {}
         self.transactions: list[TransactionReceipt] = []
         self._client, self._owns_client = client, client is None

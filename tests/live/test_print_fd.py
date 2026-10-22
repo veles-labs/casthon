@@ -5,8 +5,8 @@ import os
 import re
 import unittest
 
-from cspr import CLString, CLU32
-from cspr.testing import LiveNetworkTest, build_contract
+from casthon import CLString, CLU32
+from casthon.testing import LiveNetworkTest, build_contract
 
 
 @unittest.skipUnless(os.environ.get("CSPR_PRINT_FD_TESTS") == "1", "Requires print-FD capable launcher/assets")

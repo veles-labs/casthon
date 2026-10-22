@@ -1,6 +1,6 @@
 """Enum member identity across frozen dispatch, URefs and dictionaries."""
 
-from cspr.testing import build_contract
+from casthon.testing import build_contract
 
 from test_wasm_basic import WasmTestCase
 from wasm_harness import Harness, ROOT, envelope

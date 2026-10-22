@@ -7,9 +7,9 @@ import tempfile
 import types
 import unittest
 
-from cspr import AccountHash, URef, U32, CLU32, CLString, User, Ret, InvalidArgument, MissingArgument, MissingKey, Read, ABIError
-from cspr.contract_api import runtime, storage
-from cspr.testing import MockHost, MockAccessError, UnsupportedHostCall, ContractHarness, use_host
+from casthon import AccountHash, URef, U32, CLU32, CLString, User, Ret, InvalidArgument, MissingArgument, MissingKey, Read, ABIError
+from casthon.contract_api import runtime, storage
+from casthon.testing import MockHost, MockAccessError, UnsupportedHostCall, ContractHarness, use_host
 from contracts import counter, typed_exports
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -42,7 +42,7 @@ class NativeCounterTests(unittest.TestCase):
         contract.invoke("increment_by", {"amount": CLU32(5)}, caller=self.alice)
         contract.invoke("increment_by", {"amount": CLU32(2)}, caller=self.bob)
         self.assertEqual(contract.invoke("get").value, 7)
-        from cspr import CLKey
+        from casthon import CLKey
         self.assertEqual(contract.invoke("get_increments", {"owner": CLKey(self.alice)}).value, 5)
         self.assertEqual(contract.invoke("get_increments", {"owner": CLKey(self.bob)}).value, 2)
         with self.assertRaises(ValueError):
@@ -100,7 +100,7 @@ class NativeCounterTests(unittest.TestCase):
             self.host.verify_signature(b"", b"", b"")
 
     def test_arguments_cannot_grant_a_callers_stolen_uref(self):
-        from cspr import CLKey
+        from casthon import CLKey
         with use_host(self.host):
             key = storage.new_uref(CLU32(7))
             runtime.named_keys["owned"] = key
@@ -135,7 +135,7 @@ class NativeBoundaryTests(unittest.TestCase):
         self.harness = ContractHarness(typed_exports, host=self.host)
 
     def test_optional_defaults_and_imported_exports(self):
-        from cspr import CLValue
+        from casthon import CLValue
         from typing import Optional
         self.assertEqual(self.harness.invoke("calculate", {"amount": CLU32(5), "label": CLString("abc")}).value, 8)
         self.assertEqual(self.harness.invoke("defaults").value, "default:7")
@@ -154,7 +154,7 @@ class NativeBoundaryTests(unittest.TestCase):
                 self.harness.invoke("checked_return", {"operation": CLString(operation)})
             self.assertEqual(self.host.cells[key.address], before)
         self.assertEqual(self.harness.invoke("early_ret", {"amount": CLU32(13)}).value, 13)
-        from cspr.testing.values import inspect_value
+        from casthon.testing.values import inspect_value
         self.assertEqual(inspect_value(self.host.cells[key.address])[1], 2)
 
     def test_caught_errors_commit_and_escaping_python_errors_keep_tracebacks(self):
@@ -201,14 +201,14 @@ class NativeBoundaryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.harness.invoke("_mark")
         from bundle import check_profile
-        for code in ("from cspr.testing import MockHost", "from cspr import testing", "import cspr.testing.live"):
+        for code in ("from casthon.testing import MockHost", "from casthon import testing", "import casthon.testing.live"):
             with self.assertRaises(ValueError):
                 check_profile(ast.parse(code))
 
     def test_native_and_builder_signatures_share_the_same_wire_policy(self):
         from bundle import export_signatures
-        from cspr import wire_type
-        from cspr.arguments import argument_type, optional_arg_inner
+        from casthon import wire_type
+        from casthon.arguments import argument_type, optional_arg_inner
         compiled = export_signatures(Path(typed_exports.__file__).resolve(), list(self.harness.exports))
         def canonical(signature):
             arguments, typed, returns = signature
@@ -225,9 +225,9 @@ class NativeBoundaryTests(unittest.TestCase):
             contracts = root / "contracts"
             contracts.mkdir()
             (contracts / "__init__.py").write_text("")
-            (contracts / "shared.py").write_text("from cspr import U32\ndef calculate(amount: U32) -> U32: return amount + 1\n")
+            (contracts / "shared.py").write_text("from casthon import U32\ndef calculate(amount: U32) -> U32: return amount + 1\n")
             path = contracts / "token.py"
-            path.write_text("from cspr import export\nfrom contracts.shared import calculate\nread = export(calculate)\n")
+            path.write_text("from casthon import export\nfrom contracts.shared import calculate\nread = export(calculate)\n")
             declaration, _ = load_contract(path, project_root=root)
             self.assertEqual(declaration["signatures"]["read"]["args"][0]["type"], "U32")
             self.assertIn("'read'", generate_exports(path, declaration["exports"], project_root=root))

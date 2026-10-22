@@ -11,7 +11,7 @@ __attribute__((noinline)) static void dispatch_body(void) {
     nlr_buf_t boundary;
     if (nlr_push(&boundary) == 0) {
         // Preload the SDK outside another Python import frame (500 stack slots).
-        mp_obj_t sdk = mp_import_name(MP_QSTR_cspr, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
+        mp_obj_t sdk = mp_import_name(MP_QSTR_casthon, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
         check_bootstrap();
         bind_sdk_outcomes(sdk);
         mp_obj_t module = mp_import_name(MP_QSTR__cspr_dispatcher, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));

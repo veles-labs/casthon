@@ -3,8 +3,8 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast
 
-from cspr import URef, UserError
-from cspr.contracts import entry_point
+from casthon import URef, UserError
+from casthon.contracts import entry_point
 from contracts.ownable import Ownable, require_owner
 
 

@@ -55,7 +55,7 @@ transferring to it. The same class ABI works in Python sessions and other stored
 contracts:
 
 ```python
-from cspr import ContractHash, Key
+from casthon import ContractHash, Key
 from contracts.cep78 import Cep78
 
 def issue(nft: ContractHash, owner: Key) -> str:

@@ -1,6 +1,6 @@
 """Basic procedural counter using explicit Casper arguments and ordinary return/raise."""
 
-from cspr import (
+from casthon import (
     U8,
     U32,
     U256,
@@ -15,7 +15,7 @@ from cspr import (
     User,
     export,
 )
-from cspr.contract_api import runtime, storage
+from casthon.contract_api import runtime, storage
 
 MODE_PAUSED = 0
 MODE_ACTIVE = 1

@@ -16,19 +16,19 @@ from softfloat import build as build_softfloat
 
 CASES = {
     "unexpected": ("raise ValueError('broken bootstrap')", 65538, "C_DISPATCH_BOOTSTRAP:ValueError"),
-    "api": ("from cspr import User\nraise User(81)", 65538, "C_DISPATCH_BOOTSTRAP:User"),
-    "abi": ("from cspr import ABIError\nraise ABIError('broken bootstrap')", 3, "C_DISPATCH_BOOTSTRAP:ABIError"),
-    "revert": ("from cspr import Revert\nraise Revert(65618)", 65618, "C_DISPATCH_BOOTSTRAP:Revert"),
-    "ret": ("from cspr import Ret\nraise Ret(b'\\x04\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x04')", 65538, "C_DISPATCH_BOOTSTRAP:Ret"),
-    "missing_dispatch": ("from cspr.return_value import validate_return_payload", 65538, "C_DISPATCH_BOOTSTRAP:AttributeError"),
-    "bad_code": ("from cspr import Revert\nclass BadCode(Revert):\n def __init__(self): pass\n @property\n def code(self): raise ValueError('bad code')\nraise BadCode()", 3, "C_DISPATCH_INVALID_API_CODE"),
+    "api": ("from casthon import User\nraise User(81)", 65538, "C_DISPATCH_BOOTSTRAP:User"),
+    "abi": ("from casthon import ABIError\nraise ABIError('broken bootstrap')", 3, "C_DISPATCH_BOOTSTRAP:ABIError"),
+    "revert": ("from casthon import Revert\nraise Revert(65618)", 65618, "C_DISPATCH_BOOTSTRAP:Revert"),
+    "ret": ("from casthon import Ret\nraise Ret(b'\\x04\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x04')", 65538, "C_DISPATCH_BOOTSTRAP:Ret"),
+    "missing_dispatch": ("from casthon.return_value import validate_return_payload", 65538, "C_DISPATCH_BOOTSTRAP:AttributeError"),
+    "bad_code": ("from casthon import Revert\nclass BadCode(Revert):\n def __init__(self): pass\n @property\n def code(self): raise ValueError('bad code')\nraise BadCode()", 3, "C_DISPATCH_INVALID_API_CODE"),
 }
 
 IMPORT_CASES = {
     "import_unexpected": ("raise ValueError('contract import')", 65536 + 610, "C_DISPATCH_UNEXPECTED:ValueError"),
-    "import_api": ("from cspr import UserError\nraise UserError(81)", 65536 + 81, "C_DISPATCH_API:User"),
-    "import_revert": ("from cspr import Revert\nraise Revert(65618)", 65618, "C_DISPATCH_REVERT:Revert"),
-    "import_ret": ("from cspr import Ret\nraise Ret(b'\\x04\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x04')", None, "C_DISPATCH_RET:Ret"),
+    "import_api": ("from casthon import UserError\nraise UserError(81)", 65536 + 81, "C_DISPATCH_API:User"),
+    "import_revert": ("from casthon import Revert\nraise Revert(65618)", 65618, "C_DISPATCH_REVERT:Revert"),
+    "import_ret": ("from casthon import Ret\nraise Ret(b'\\x04\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x04')", None, "C_DISPATCH_RET:Ret"),
 }
 
 

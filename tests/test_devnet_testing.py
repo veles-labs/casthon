@@ -9,10 +9,10 @@ import types
 import unittest
 from unittest.mock import patch
 
-from cspr import AccountHash, Hash, CLU32, CLValue, U32
-from cspr.crypto import Ed25519PublicKey
-from cspr.testing import DevnetClient, DevnetError, DevnetNetwork, LiveNetworkTest, build_contract
-from cspr.testing.devnet import _PortLease
+from casthon import AccountHash, Hash, CLU32, CLValue, U32
+from casthon.crypto import Ed25519PublicKey
+from casthon.testing import DevnetClient, DevnetError, DevnetNetwork, LiveNetworkTest, build_contract
+from casthon.testing.devnet import _PortLease
 
 
 STDIO_SERVER = '''import json, sys
@@ -218,7 +218,7 @@ class LiveLifecycleTests(unittest.TestCase):
                 raise RuntimeError("subclass setup failed")
             def test_unused(self):
                 events.append("unreachable")
-        with patch.dict("os.environ", {"CSPR_LIVE_TESTS": "1"}), patch("cspr.testing.live.DevnetNetwork", Network):
+        with patch.dict("os.environ", {"CSPR_LIVE_TESTS": "1"}), patch("casthon.testing.live.DevnetNetwork", Network):
             result = unittest.TestResult()
             unittest.defaultTestLoader.loadTestsFromTestCase(Example).run(result)
             self.assertTrue(result.wasSuccessful())
@@ -236,7 +236,7 @@ class LiveLifecycleTests(unittest.TestCase):
             binary = "default-launcher"
 
         with patch.dict("os.environ", {"CSPR_LIVE_TESTS": "1", "CSPR_DEVNET_BIN": "/tmp/local-casper-devnet"}), \
-                patch("cspr.testing.live.DevnetNetwork") as factory:
+                patch("casthon.testing.live.DevnetNetwork") as factory:
             Example.setUpClass()
             try:
                 self.assertEqual(factory.call_args.kwargs["binary"], "/tmp/local-casper-devnet")

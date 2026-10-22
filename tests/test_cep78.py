@@ -8,16 +8,16 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from cspr import (
+from casthon import (
     ABIError, AccountHash, ApiError, CLBool, CLKey, CLKeyList, CLString,
     CLU8, CLU64, CLValue, ContractHash, DictionaryItemKeyExceedsLength,
     Key, Revert, U8, U64, URef, Bytesrepr, Json, JsonBytes,
 )
-from cspr.codec import cl_type, decode, encode
-from cspr.caller import decode_caller_information
-from cspr.events import event_schema, event_schemas
-from cspr.testing import ContractHarness, MockHost, use_host
-from cspr.testing.values import inspect_value, parse_key
+from casthon.codec import cl_type, decode, encode
+from casthon.caller import decode_caller_information
+from casthon.events import event_schema, event_schemas
+from casthon.testing import ContractHarness, MockHost, use_host
+from casthon.testing.values import inspect_value, parse_key
 from contracts import cep78_errors as errors, my_nft
 from contracts.cep78 import Cep78, address_key, immediate_caller, operator_key
 from contracts.cep78_metadata import validate_metadata, validate_schema
@@ -107,7 +107,7 @@ class Cep78ReferenceTests(unittest.TestCase):
         fixtures = json.loads((ROOT / "reference/cep18/fixtures.json").read_text())["callers"]
         for data, expected in zip(fixtures, ((0x00, 0x11), (0x01, 0x44), (0x11, 0x66))):
             info, = decode_caller_information(bytes.fromhex(data))
-            with patch("cspr.contract_api.runtime.get_immediate_caller", return_value=info):
+            with patch("casthon.contract_api.runtime.get_immediate_caller", return_value=info):
                 caller, package = immediate_caller()
             self.assertEqual((bytes(caller)[0], bytes(caller)[-1]), expected)
             if expected[0] != 0:
@@ -221,9 +221,9 @@ class Cep78Tests(unittest.TestCase):
             nft.invoke("migrate")
 
     def test_mock_return_capabilities_allow_fresh_references_and_reject_forged_rights(self):
-        from cspr.contract_api import storage
-        from cspr.contracts import Contract, entry_point
-        from cspr.testing.mock import MockAccessError
+        from casthon.contract_api import storage
+        from casthon.contracts import Contract, entry_point
+        from casthon.testing.mock import MockAccessError
 
         with self.host.context(account=self.alice), use_host(self.host):
             secret = storage.new_uref(CLString("caller only"))
@@ -432,7 +432,7 @@ class Cep78Tests(unittest.TestCase):
         receipts = nft.invoke("updated_receipts").value
         self.assertEqual(len(receipts), 2)
         with self.host.context(contract=nft.contract), use_host(self.host):
-            from cspr.contract_api import storage
+            from casthon.contract_api import storage
             bits = storage.dictionary_read(receipts[1][1], list[bool])
             self.assertEqual((len(bits), bits[0], sum(bits)), (1000, True, 1))
 

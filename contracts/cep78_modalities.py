@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Closed U8 modalities from the pinned CEP-78 2.0.0 reference."""
 
-from cspr.enums import WireEnum
+from casthon.enums import WireEnum
 from contracts import cep78_errors as errors
 
 

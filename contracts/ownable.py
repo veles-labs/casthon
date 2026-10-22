@@ -3,9 +3,9 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast
 
-from cspr import AccountHash, URef, UserError
-from cspr.contract_api.runtime import get_caller
-from cspr.contracts import Contract, entry_point
+from casthon import AccountHash, URef, UserError
+from casthon.contract_api.runtime import get_caller
+from casthon.contracts import Contract, entry_point
 
 
 class NotOwner(UserError):

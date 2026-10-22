@@ -503,12 +503,12 @@ fn new_project(project: &Project, directory: &Path, template: &str) -> Result<i3
     };
     fs::write(
         directory.join("tests/test_contract.py"),
-        format!("from cspr.testing import MockHost, use_host\n{test}"),
+        format!("from casthon.testing import MockHost, use_host\n{test}"),
     )?;
     fs::write(
         directory.join("pyproject.toml"),
         format!(
-            "[project]\nname = {name:?}\nversion = \"0.1.0\"\nrequires-python = \">=3.11\"\ndependencies = [{dependency:?}]\n\n[tool.casthon]\nmicropython = {:?}\ntargets = [\"contracts/{target}.py\"]\n\n[tool.pytest.ini_options]\ntestpaths = [\"tests\"]\n",
+            "[project]\nname = {name:?}\nversion = \"0.1.0\"\nrequires-python = \">=3.11\"\ndependencies = [{dependency:?}]\n\n[dependency-groups]\ndev = [\"mypy==1.19.1\", \"pytest==9.1.1\", \"wasmtime==49.0.0\"]\n\n[tool.casthon]\nmicropython = {:?}\ntargets = [\"contracts/{target}.py\"]\n\n[tool.pytest.ini_options]\ntestpaths = [\"tests\"]\n",
             project.supported
         ),
     )?;
@@ -519,8 +519,7 @@ fn new_project(project: &Project, directory: &Path, template: &str) -> Result<i3
     fs::write(
         directory.join("README.md"),
         format!(
-            "# {name}\n\nThis proof of concept uses the local Casthon checkout. Install its SDK first:\n\n```sh\nuv venv\nuv pip install --python .venv/bin/python -e '{}[dev]'\ncasthon build\ncasthon test\n```\n",
-            project.sdk.display()
+            "# {name}\n\nInstall the pinned Casthon SDK and development tools, then build and test:\n\n```sh\nuv sync\ncasthon build\ncasthon test\ncasthon check contracts\n```\n"
         ),
     )?;
     println!("Created {} ({template})", directory.display());

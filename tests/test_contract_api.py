@@ -5,8 +5,8 @@ import json
 import unittest
 from pathlib import Path
 
-import cspr
-from cspr import (
+import casthon
+from casthon import (
     AccountHash,
     Key,
     URef,
@@ -19,11 +19,11 @@ from cspr import (
     U32,
     U256,
 )
-from cspr import api_error
-from cspr.codec import ABIError, cl_value, encode, decode
-from cspr.entry_points import serialize_entry_points
-from cspr.contract_api import runtime, storage
-from cspr.testing import use_host
+from casthon import api_error
+from casthon.codec import ABIError, cl_value, encode, decode
+from casthon.entry_points import serialize_entry_points
+from casthon.contract_api import runtime, storage
+from casthon.testing import use_host
 from contracts import basic, api_smoke
 
 
@@ -36,7 +36,7 @@ class MemoryHost:
 
     def get_key(self, name):
         if name not in self.keys:
-            raise cspr.MissingKey()
+            raise casthon.MissingKey()
         return self.keys[name]
 
     def has_key(self, name):
@@ -61,7 +61,7 @@ class MemoryHost:
 
     def get_named_arg(self, name):
         if name not in self.args:
-            raise cspr.MissingArgument()
+            raise casthon.MissingArgument()
         return self.args[name]
 
     def blake2b(self, data):
@@ -76,7 +76,7 @@ class MemoryHost:
     def read_value(self, key):
         value = self.cells.get(key)
         if value is None:
-            raise cspr.ValueNotFound()
+            raise casthon.ValueNotFound()
         return (
             None
             if value is None
@@ -101,7 +101,7 @@ class MemoryHost:
     def dictionary_get(self, key, item):
         value = self.dicts[key].get(item)
         if value is None:
-            raise cspr.ValueNotFound()
+            raise casthon.ValueNotFound()
         return (
             None
             if value is None
@@ -131,7 +131,7 @@ class ContractApiTests(unittest.TestCase):
 
     def test_arguments_are_read_explicitly_and_optional_errors_match_rust(self):
         self.assertIsNone(runtime.try_get_named_arg("amount", U32))
-        with self.assertRaises(cspr.MissingArgument) as error:
+        with self.assertRaises(casthon.MissingArgument) as error:
             runtime.get_named_arg("amount", U32)
         self.assertEqual(error.exception.code, 2)
         self.host.args["amount"] = b"bad"
@@ -155,11 +155,11 @@ class ContractApiTests(unittest.TestCase):
         self.assertFalse(runtime.has_key("count"))
         self.assertIsNone(runtime.get_key("count"))
         self.assertIsNone(storage.read(URef(bytes([255]) * 32), U256))
-        with self.assertRaises(cspr.ValueNotFound) as error:
+        with self.assertRaises(casthon.ValueNotFound) as error:
             storage.read_or_revert(URef(bytes([255]) * 32), U256)
         self.assertEqual(error.exception.code, 6)
         self.host.cells[bytes(count)] = cl_value("String", "bad")
-        with self.assertRaises(cspr.Read) as error:
+        with self.assertRaises(casthon.Read) as error:
             storage.read_or_revert(count, U256)
         self.assertEqual(error.exception.code, api_error.READ)
         self.host.args["amount"] = b"bad"
@@ -167,7 +167,7 @@ class ContractApiTests(unittest.TestCase):
             runtime.get_named_arg("amount", U32)
 
     def test_unit_reads_and_optional_key_variant_failures(self):
-        unit = storage.new_uref(cspr.CLUnit())
+        unit = storage.new_uref(casthon.CLUnit())
         self.assertIsNone(storage.read_or_revert(unit, None))
         self.host.args["address"] = bytes(self.host.owner)
         self.assertIsNone(runtime.try_get_named_arg("address", ContractHash))
@@ -183,26 +183,26 @@ class ContractApiTests(unittest.TestCase):
         storage.dictionary_put(seed, "holder", CLU256(42))
         self.assertEqual(storage.dictionary_get(seed, "holder", U256), 42)
         for item in ("x" * 65, "ż" * 33):
-            with self.assertRaises(cspr.DictionaryItemKeyExceedsLength) as error:
+            with self.assertRaises(casthon.DictionaryItemKeyExceedsLength) as error:
                 storage.dictionary_put(seed, item, CLU256(1))
             self.assertEqual(error.exception.code, 36)
 
     def test_storage_failures_are_catchable_and_run_finally(self):
         seed = storage.new_dictionary("balances")
-        bad = storage.new_uref(cspr.CLString("bad"))
+        bad = storage.new_uref(casthon.CLString("bad"))
         missing = URef(bytes([255]) * 32)
         for operation, expected_type, code in (
-            (lambda: storage.read_or_revert(missing, U32), cspr.ValueNotFound, 6),
-            (lambda: storage.read_or_revert(bad, U32), cspr.Read, 5),
-            (lambda: storage.dictionary_get(seed, "x" * 65, U32), cspr.DictionaryItemKeyExceedsLength, 36),
-            (lambda: storage.dictionary_put(seed, "x" * 65, CLU32(1)), cspr.DictionaryItemKeyExceedsLength, 36),
+            (lambda: storage.read_or_revert(missing, U32), casthon.ValueNotFound, 6),
+            (lambda: storage.read_or_revert(bad, U32), casthon.Read, 5),
+            (lambda: storage.dictionary_get(seed, "x" * 65, U32), casthon.DictionaryItemKeyExceedsLength, 36),
+            (lambda: storage.dictionary_put(seed, "x" * 65, CLU32(1)), casthon.DictionaryItemKeyExceedsLength, 36),
         ):
             events = []
             try:
                 operation()
             except Exception as error:
                 self.assertIsInstance(error, expected_type)
-                self.assertIsInstance(error, cspr.ApiError)
+                self.assertIsInstance(error, casthon.ApiError)
                 events.append(error.code)
             finally:
                 events.append("finally")
@@ -254,7 +254,7 @@ class ContractApiTests(unittest.TestCase):
                 + cl_value("Key", self.host.owner),
             ),
         )
-        with self.assertRaises(cspr.Ret) as returned:
+        with self.assertRaises(casthon.Ret) as returned:
             runtime.ret(CLU32(42))
         self.assertEqual(returned.exception.payload, cl_value("U32", 42))
 
@@ -276,28 +276,28 @@ class ContractApiTests(unittest.TestCase):
         basic.add_fractional()
         self.assertEqual(basic.get().to_bytes(), cl_value("U32", 7))
         self.host.args = {}
-        with self.assertRaises(cspr.Ret) as returned:
+        with self.assertRaises(casthon.Ret) as returned:
             api_smoke.call()
         self.assertEqual(returned.exception.payload, cl_value("U32", 12))
         self.assertEqual(runtime.get_caller(), self.host.owner)
         self.assertFalse(runtime.has_key("temporary"))
 
     def test_basic_errors_are_catchable_python_exceptions(self):
-        with self.assertRaises(cspr.MissingKey) as error:
+        with self.assertRaises(casthon.MissingKey) as error:
             basic.get()
         self.assertEqual(error.exception.code, api_error.MISSING_KEY)
-        self.host.keys["mode"] = bytes(storage.new_uref(cspr.CLU8(0)))
-        with self.assertRaises(cspr.User) as error:
+        self.host.keys["mode"] = bytes(storage.new_uref(casthon.CLU8(0)))
+        with self.assertRaises(casthon.User) as error:
             basic.increment()
-        self.assertIsInstance(error.exception, cspr.ApiError)
+        self.assertIsInstance(error.exception, casthon.ApiError)
         self.assertEqual(error.exception.code, api_error.user(100))
         self.host.args["mode"] = encode("U8", 2)
-        with self.assertRaises(cspr.InvalidArgument):
+        with self.assertRaises(casthon.InvalidArgument):
             basic.set_mode()
 
     def test_revert_bypasses_exception_handlers_and_runs_finally(self):
         events = []
-        with self.assertRaises(cspr.Revert) as error:
+        with self.assertRaises(casthon.Revert) as error:
             try:
                 runtime.revert(api_error.user(43))
             except Exception:
@@ -312,12 +312,12 @@ class ContractApiTests(unittest.TestCase):
         events = []
         try:
             runtime.revert(api_error.READ)
-        except cspr.Revert as error:
+        except casthon.Revert as error:
             events.append(error.code)
         finally:
             events.append("finally")
         self.assertEqual(events, [api_error.READ, "finally"])
-        with self.assertRaises(cspr.Revert) as error:
+        with self.assertRaises(casthon.Revert) as error:
             try:
                 runtime.revert(api_error.READ)
             finally:
@@ -325,15 +325,15 @@ class ContractApiTests(unittest.TestCase):
         self.assertEqual(error.exception.code, api_error.MISSING_KEY)
 
     def test_api_and_user_errors_are_caught_by_exception(self):
-        for raised in (cspr.ApiError(api_error.READ), cspr.UserError(44)):
+        for raised in (casthon.ApiError(api_error.READ), casthon.UserError(44)):
             try:
                 raise raised
             except Exception as caught:
                 self.assertIs(caught, raised)
-                self.assertIsInstance(caught, cspr.ApiError)
+                self.assertIsInstance(caught, casthon.ApiError)
             else:
                 self.fail("API exception was not caught")
-        self.assertIs(cspr.UserError, cspr.User)
+        self.assertIs(casthon.UserError, casthon.User)
 
     def test_no_contract_authoring_framework_and_export_is_an_identity(self):
         for name in (
@@ -342,8 +342,8 @@ class ContractApiTests(unittest.TestCase):
             "entrypoint",
             "cl_enum",
         ):
-            self.assertFalse(hasattr(cspr, name))
-        self.assertIs(cspr.export(basic.call), basic.call)
+            self.assertFalse(hasattr(casthon, name))
+        self.assertIs(casthon.export(basic.call), basic.call)
 
 
 class ReferenceTests(unittest.TestCase):
@@ -358,7 +358,7 @@ class ReferenceTests(unittest.TestCase):
             self.assertIsNot(type(key), Key)
             self.assertEqual(bytes(key).hex(), f["bytes"])
             self.assertEqual(str(key), f["formatted"])
-        types = {"0b": Key, "07": U256, "03": cspr.U8, "0a": str, "09": None}
+        types = {"0b": Key, "07": U256, "03": casthon.U8, "0a": str, "09": None}
         entries = [
             EntryPoint(
                 f["name"],

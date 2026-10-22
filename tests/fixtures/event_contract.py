@@ -1,9 +1,9 @@
 """Typed event records composed across a diamond of contract mixins."""
 
-from cspr import ABIError, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, Key, Map, U32, URef, export
-from cspr.contract_api import runtime, storage
-from cspr import ces, emit
-from cspr.contracts import Contract, entry_point, export_contract
+from casthon import ABIError, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, Key, Map, U32, URef, export
+from casthon.contract_api import runtime, storage
+from casthon import ces, emit
+from casthon.contracts import Contract, entry_point, export_contract
 
 
 class Started(Event, Bytesrepr):

@@ -1,7 +1,7 @@
 """Built-in printing and outer-dispatch outcomes in debug/release builds."""
 
-from cspr import ABIError, ApiError, CLU32, Revert, Ret, U32, export
-from cspr.contract_api import runtime, storage
+from casthon import ABIError, ApiError, CLU32, Revert, Ret, U32, export
+from casthon.contract_api import runtime, storage
 
 conversions = 0
 

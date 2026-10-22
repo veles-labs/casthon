@@ -1,9 +1,9 @@
 """Stored caller probe: token operations belong to this contract's package."""
 
-from cspr import ContractHash, ContractPackageHash, Key, U256, export
-from cspr.contract_api import storage
-from cspr.contract_api.runtime import named_keys
-from cspr.contracts import Contract, entry_point, export_contract
+from casthon import ContractHash, ContractPackageHash, Key, U256, export
+from casthon.contract_api import storage
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point, export_contract
 from contracts.cep18 import Cep18
 
 

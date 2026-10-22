@@ -1,14 +1,14 @@
 """Invoke ordinary Python through frozen signatures; error policy lives in C."""
 
 from _cspr_exports import SIGNATURES
-from cspr._dispatch import invoke
-from cspr.return_value import validate_return_payload
+from casthon._dispatch import invoke
+from casthon.return_value import validate_return_payload
 import _cspr_exports
 
 # Load the class SDK before importing nested application mixins. This keeps
 # interpreter bootstrap below Casper's stock 500-slot native stack limit.
 if getattr(_cspr_exports, "CLASS_SCHEMAS", None):
-    import cspr.contracts
+    import casthon.contracts
 
 
 def dispatch(entry, contract):

@@ -19,8 +19,8 @@ commands live in the [CLI guide](casthon.md); contract tests have their own
 [contracts/basic.py](../contracts/basic.py) contains procedural functions:
 
 ```python
-from cspr import EntryPoint, U32, URef, CLU32, MissingKey, export
-from cspr.contract_api import runtime, storage
+from casthon import EntryPoint, U32, URef, CLU32, MissingKey, export
+from casthon.contract_api import runtime, storage
 
 ENTRY_POINTS = [
     EntryPoint("increment_by", {"amount": U32}),
@@ -51,7 +51,7 @@ functions. Parameters require supported Casper wire annotations. The same marker
 to stored-contract functions and session functions:
 
 ```python
-from cspr import export
+from casthon import export
 
 @export
 def call() -> None:
@@ -73,9 +73,9 @@ contract TOML file.
 
 ```python
 from typing import Any
-from cspr import URef, U32, AccountHash, Dictionary
-from cspr.contract_api.runtime import named_keys
-from cspr.contracts import entry_point, export_contract
+from casthon import URef, U32, AccountHash, Dictionary
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import entry_point, export_contract
 from contracts.pausable import Pausable
 
 @export_contract
@@ -218,7 +218,7 @@ Use `OptionalArg[T]` when the named argument itself may be absent:
 
 ```python
 from typing import Optional
-from cspr import MISSING, OptionalArg, U32, export
+from casthon import MISSING, OptionalArg, U32, export
 
 @export
 def describe(amount: OptionalArg[Optional[U32]] = MISSING) -> str:
@@ -345,7 +345,7 @@ explicitly selected.
 Reusable procedural modules can supply both functions and metadata:
 
 ```python
-from cspr import EntryPoint, export
+from casthon import EntryPoint, export
 from contracts import shared
 
 ENTRY_POINTS = [*shared.ENTRY_POINTS, EntryPoint("local", {})]
@@ -404,7 +404,7 @@ its annotations to call a deployed contract:
 
 ```python
 from contracts.counter import Counter
-from cspr import ContractHash, U32, UserError, export
+from casthon import ContractHash, U32, UserError, export
 
 @export
 def call(contract: ContractHash, amount: U32, expected: U32) -> U32:
@@ -447,8 +447,8 @@ the session; it does not verify the code or ABI installed at the supplied hash.
 when registering a version:
 
 ```python
-from cspr import EntryPoint, CLU32, U32, URef, MissingKey, export
-from cspr.contract_api import runtime, storage
+from casthon import EntryPoint, CLU32, U32, URef, MissingKey, export
+from casthon.contract_api import runtime, storage
 
 ENTRY_POINTS = [
     EntryPoint("increment_by", {"amount": U32}),
@@ -502,8 +502,8 @@ factories preserve signature order explicitly in frozen MicroPython.
 
 | Python module | Supported functions |
 | --- | --- |
-| `cspr.contract_api.runtime` | `get_named_arg`, `try_get_named_arg`, `ret`, `revert`, `get_key`, `has_key`, `put_key`, `remove_key`, `list_named_keys`, `get_caller`, `get_protocol_version`, `blake2b`, `call_contract`, `emit_message` |
-| `cspr.contract_api.storage` | `read`, `read_from_key`, `read_or_revert`, `new_uref`, `write`, `add`, `new_dictionary`, `dictionary_get`, `dictionary_put`, `create_contract_package_at_hash`, `add_contract_version`, `disable_contract_version` |
+| `casthon.contract_api.runtime` | `get_named_arg`, `try_get_named_arg`, `ret`, `revert`, `get_key`, `has_key`, `put_key`, `remove_key`, `list_named_keys`, `get_caller`, `get_protocol_version`, `blake2b`, `call_contract`, `emit_message` |
+| `casthon.contract_api.storage` | `read`, `read_from_key`, `read_or_revert`, `new_uref`, `write`, `add`, `new_dictionary`, `dictionary_get`, `dictionary_put`, `create_contract_package_at_hash`, `add_contract_version`, `disable_contract_version` |
 
 The remaining upstream `ext_ffi` functions are exposed through these procedural modules:
 
@@ -735,7 +735,7 @@ boundary serialization. Build it with `make build-typed-exports`.
 An event is an annotated record. An encoder mixin supplies its message format:
 
 ```python
-from cspr import Event, Json, emit
+from casthon import Event, Json, emit
 
 class Greeted(Event, Json):
     name: str
@@ -756,5 +756,5 @@ choice such as `emit(event, encoder=Json.to_message)`, or a record-defined
 
 Contract mixins can declare `events = (Greeted,)`; `Contract.event_types()` collects
 their schemas. Native message delivery does not need an ambient contract object. CES
-storage has its own explicit backend, `cspr.ces`. The [CEP-18 guide](cep18.md) covers
+storage has its own explicit backend, `casthon.ces`. The [CEP-18 guide](cep18.md) covers
 event composition, CES and message formats.

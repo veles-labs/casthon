@@ -5,11 +5,11 @@ from functools import wraps
 from pathlib import Path
 import unittest
 
-from cspr import ABIError, CLU32, U32
-from cspr._signatures import function_signature
-from cspr.contract_api import runtime
-from cspr.contracts import EntryPointReference
-from cspr.testing import ContractHarness, MockHost, use_host
+from casthon import ABIError, CLU32, U32
+from casthon._signatures import function_signature
+from casthon.contract_api import runtime
+from casthon.contracts import EntryPointReference
+from casthon.testing import ContractHarness, MockHost, use_host
 from test_class_contracts import class_pair
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,9 +29,9 @@ class ArgumentLoadingTests(unittest.TestCase):
 
     def test_ordinary_decorators_run_once_after_decoding_and_on_local_calls(self):
         source = '''from functools import wraps
-from cspr import OptionalArg, MISSING, U32, UserError
-from cspr.contract_api.runtime import named_keys
-from cspr.contracts import Contract, entry_point, export_contract
+from casthon import OptionalArg, MISSING, U32, UserError
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point, export_contract
 TRACE = []
 class Denied(UserError):
     def __init__(self): super().__init__(90)

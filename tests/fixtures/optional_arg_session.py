@@ -1,6 +1,6 @@
 """A session calls presence-aware exports without importing their Wasm exports."""
 
-from cspr import ContractHash, MISSING, UserError, export
+from casthon import ContractHash, MISSING, UserError, export
 from contracts.typed_exports import presence, presence_default, presence_number
 
 

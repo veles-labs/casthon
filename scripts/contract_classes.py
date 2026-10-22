@@ -3,9 +3,9 @@
 import ast
 from dataclasses import dataclass
 
-import cspr
-from cspr.references import URefType, DictionaryType
-from cspr._contract_schema import state_key, signature_key
+import casthon
+from casthon.references import URefType, DictionaryType
+from casthon._contract_schema import state_key, signature_key
 
 ROOT = (None, "Contract")
 ROOT_ATTRIBUTES = {"__init__", "bind", "named_keys", "entry_points", "_cspr_schema", "event_types"}
@@ -60,14 +60,14 @@ class ClassPlanner:
         return value if owner is None else None
 
     def marker(self, path, node):
-        return self.symbol(path, node.func if isinstance(node, ast.Call) else node) == "cspr.contracts.entry_point"
+        return self.symbol(path, node.func if isinstance(node, ast.Call) else node) == "casthon.contracts.entry_point"
 
     def export_marker(self, path, node):
-        return self.symbol(path, node.func if isinstance(node, ast.Call) else node) == "cspr.contracts.export_contract"
+        return self.symbol(path, node.func if isinstance(node, ast.Call) else node) == "casthon.contracts.export_contract"
 
     def options(self, path, node):
-        values = dict(name=None, access=cspr.EntryPointAccess.PUBLIC, groups=(),
-                      entry_point_type=cspr.EntryPointType.CALLED, payment=cspr.EntryPointPayment.CALLER)
+        values = dict(name=None, access=casthon.EntryPointAccess.PUBLIC, groups=(),
+                      entry_point_type=casthon.EntryPointType.CALLED, payment=casthon.EntryPointPayment.CALLER)
         if isinstance(node, ast.Call):
             if node.args:
                 raise ValueError("@entry_point options must be keyword arguments")
@@ -81,7 +81,7 @@ class ClassPlanner:
                     parts = symbol.split(".") if isinstance(symbol, str) else []
                     if len(parts) < 3 or parts[-2] not in ("EntryPointAccess", "EntryPointType", "EntryPointPayment"):
                         raise ValueError("Entrypoint options must be literals or Casper enums")
-                    value = getattr(getattr(cspr, parts[-2]), parts[-1])
+                    value = getattr(getattr(casthon, parts[-2]), parts[-1])
                 values[keyword.arg] = value
         if values["name"] is not None and not isinstance(values["name"], str):
             raise ValueError("An entrypoint name must be a string")
@@ -95,17 +95,17 @@ class ClassPlanner:
             annotation = self.annotation(path, node.annotation)
         except (ValueError, TypeError):
             # Non-storage annotations, including ClassVar, remain Python data.
-            if isinstance(node.annotation, ast.Subscript) and self.symbol(path, node.annotation.value) in ("cspr.URef", "cspr.Dictionary", "cspr.key.URef", "cspr.references.Dictionary"):
+            if isinstance(node.annotation, ast.Subscript) and self.symbol(path, node.annotation.value) in ("casthon.URef", "casthon.Dictionary", "casthon.key.URef", "casthon.references.Dictionary"):
                 raise
             return None
         if not (isinstance(annotation, (URefType, DictionaryType)) or
-                isinstance(annotation, type) and issubclass(annotation, cspr.Key)):
+                isinstance(annotation, type) and issubclass(annotation, casthon.Key)):
             return None
-        if annotation is cspr.URef:
+        if annotation is casthon.URef:
             raise ValueError("State URefs require a value type: URef[T]")
         name, configuration = node.target.id, node.value
         if configuration is not None:
-            if not isinstance(configuration, ast.Call) or self.symbol(path, configuration.func) != "cspr.contract_api.runtime.named_keys.reference":
+            if not isinstance(configuration, ast.Call) or self.symbol(path, configuration.func) != "casthon.contract_api.runtime.named_keys.reference":
                 raise ValueError("Annotated state only accepts named_keys.reference(...) configuration")
             if len(configuration.args) > 1:
                 raise ValueError("The state annotation already supplies its type")
@@ -138,7 +138,7 @@ class ClassPlanner:
         bases = []
         for base in node.bases:
             owner, target = self.graph.resolve(path, base)
-            if owner is None and target == "cspr.contracts.Contract":
+            if owner is None and target == "casthon.contracts.Contract":
                 bases.append(ROOT)
             elif owner is not None and isinstance(target, ast.ClassDef):
                 parent = self.plan(owner, target)

@@ -9,15 +9,15 @@ import types
 import unittest
 from unittest.mock import patch
 
-from cspr import (
+from casthon import (
     AccountHash, ApiError, CLKey, CLKeyList, CLString, CLU8, CLU256,
     ContractHash, ContractPackageHash, Key, InvalidArgument, MessageBytes, MessageString, UserError,
     ABIError, MissingArgument,
 )
-from cspr.caller import decode_caller_information
-from cspr.entry_points import serialize_entry_points
-from cspr.testing import ContractHarness, MockHost, use_host
-from cspr.testing.values import inspect_value, parse_key
+from casthon.caller import decode_caller_information
+from casthon.entry_points import serialize_entry_points
+from casthon.testing import ContractHarness, MockHost, use_host
+from casthon.testing.values import inspect_value, parse_key
 from contracts import my_token
 from contracts.cep18 import Cep18, MAX_U256, address_key, allowance_key, immediate_caller
 from contracts.cep18_errors import (
@@ -26,9 +26,9 @@ from contracts.cep18_errors import (
     InvalidEventsMode, InvalidMinterList, InvalidNoneList, InvalidEnableMBFlag, MintBurnDisabled, Overflow,
 )
 from contracts.cep18_events import EventsMode, Transfer
-from cspr import Bytesrepr, Json, JsonBytes
-from cspr.codec import encode
-from cspr.events import event_schemas, event_schema
+from casthon import Bytesrepr, Json, JsonBytes
+from casthon.codec import encode
+from casthon.events import event_schemas, event_schema
 from contracts.my_token import MyToken
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,7 +83,7 @@ class Cep18ReferenceTests(unittest.TestCase):
                     Key.from_bytes(b"\x11\x02" + bytes([0x66]) * 32))
         for data, key in zip(FIXTURES["callers"], expected):
             info, = decode_caller_information(bytes.fromhex(data))
-            with patch("cspr.contract_api.runtime.get_immediate_caller", return_value=info):
+            with patch("casthon.contract_api.runtime.get_immediate_caller", return_value=info):
                 self.assertEqual(immediate_caller(), key)
 
     def test_frozen_inherited_schemas_and_enum_members_match_authoring(self):
@@ -96,9 +96,9 @@ class Cep18ReferenceTests(unittest.TestCase):
         self.assertNotIn("@entry_point", lower(ROOT / "contracts/cep18.py"))
         self.assertNotIn("@export_contract", lower(path))
         frozen_enums = types.ModuleType("frozen_enums")
-        sdk_enums = types.ModuleType("cspr.enums")
-        exec(lower_enums(ROOT / "src/cspr/enums.py"), vars(sdk_enums))
-        with patch.dict(sys.modules, {"cspr.enums": sdk_enums}):
+        sdk_enums = types.ModuleType("casthon.enums")
+        exec(lower_enums(ROOT / "src/casthon/enums.py"), vars(sdk_enums))
+        with patch.dict(sys.modules, {"casthon.enums": sdk_enums}):
             exec(lower(ROOT / "contracts/cep18_events.py"), vars(frozen_enums))
         mode = frozen_enums.EventsMode
         self.assertEqual((mode.CES.name, int(mode.CES), mode.from_value(1)), ("CES", 1, mode.CES))
@@ -111,7 +111,7 @@ class Cep18ReferenceTests(unittest.TestCase):
                      "    def method(self): pass"):
             with self.subTest(body=body), tempfile.TemporaryDirectory() as directory:
                 path = Path(directory) / "enum_fixture.py"
-                path.write_text("from cspr.enums import WireEnum\nclass Mode(WireEnum):\n" + body + "\n")
+                path.write_text("from casthon.enums import WireEnum\nclass Mode(WireEnum):\n" + body + "\n")
                 with self.assertRaises(ValueError):
                     lower(path)
 
@@ -202,7 +202,7 @@ class Cep18Tests(unittest.TestCase):
                    ("transfer", {"recipient": bytes(self.bob)}),
                    ("transfer_from", {"owner": bytes(self.alice), "recipient": bytes(self.bob)}),
                    ("mint", {"owner": bytes(self.alice)}), ("burn", {"owner": bytes(self.alice)}))
-        from cspr import ABIError
+        from casthon import ABIError
         for entry, args in entries:
             for invalid in (b"", b"\x21" + bytes(33), b"\x01", b"\x00\x01"):
                 with self.subTest(entry=entry, invalid=invalid), self.assertRaises(ABIError):

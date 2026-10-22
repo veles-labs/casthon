@@ -1,10 +1,10 @@
 """Typed event freezing, inheritance, CES writes and exception rollback in Wasm."""
 
 import sys
-from cspr import AccountHash, Map, U32, MessageString, MessageBytes
-from cspr.codec import cl_value
-from cspr.events import event_schemas
-from cspr.testing import build_contract
+from casthon import AccountHash, Map, U32, MessageString, MessageBytes
+from casthon.codec import cl_value
+from casthon.events import event_schemas
+from casthon.testing import build_contract
 from test_wasm_basic import WasmTestCase
 from wasm_harness import Harness, ROOT, envelope, unwrap
 

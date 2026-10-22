@@ -1,7 +1,7 @@
 """Installed node metadata and typed remote omission versus encoded Option::None."""
 
-from cspr import CLKey, CLString, CLU32
-from cspr.testing import LiveNetworkTest
+from casthon import CLKey, CLString, CLU32
+from casthon.testing import LiveNetworkTest
 
 
 class TestOptionalArgs(LiveNetworkTest):

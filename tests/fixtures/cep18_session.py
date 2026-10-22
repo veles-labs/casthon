@@ -1,6 +1,6 @@
 """Only call is exported: imported CEP-18 class methods supply typed call ABIs."""
 
-from cspr import ContractHash, Key, U256, UserError, export
+from casthon import ContractHash, Key, U256, UserError, export
 from contracts.cep18 import Cep18
 
 

@@ -1,4 +1,4 @@
-"""Casper data types; host functions live in cspr.contract_api."""
+"""Casper data types; host functions live in casthon.contract_api."""
 
 from typing import Any, Callable, TypeVar
 

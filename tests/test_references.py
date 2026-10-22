@@ -6,13 +6,13 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import cspr
-from cspr import (
+import casthon
+from casthon import (
     URef, U32, U256, Key, AccountHash, ContractHash, Dictionary,
     CLU32, CLU256, CLKey, CLUnit, SerializedCLValue,
 )
-from cspr.contract_api import runtime, storage
-from cspr.testing import use_host
+from casthon.contract_api import runtime, storage
+from casthon.testing import use_host
 from test_contract_api import MemoryHost
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +27,7 @@ class ReferenceTests(unittest.TestCase):
         self.keys = runtime.named_keys
 
     def test_declarations_do_not_call_the_host(self):
-        with patch("cspr._ffi._host", side_effect=AssertionError("Unexpected host access")):
+        with patch("casthon._ffi._host", side_effect=AssertionError("Unexpected host access")):
             count = self.keys.reference("count", URef[U32])
             ledger = self.keys.reference("ledger", Dictionary[AccountHash, U256](key=lambda k: bytes(k).hex()))
             contract = self.keys.reference("contract", ContractHash)
@@ -54,7 +54,7 @@ class ReferenceTests(unittest.TestCase):
 
     def test_references_resolve_current_binding_and_removal_does_not_revoke(self):
         count = self.keys.reference("count", URef[U32])
-        with self.assertRaises(cspr.MissingKey):
+        with self.assertRaises(casthon.MissingKey):
             count.read()
         count.set(count.create(1))
         original = count.get()
@@ -66,7 +66,7 @@ class ReferenceTests(unittest.TestCase):
         count.remove()
         self.assertNotIn("count", self.keys)
         self.assertEqual(original.read(), 1)
-        with self.assertRaises(cspr.MissingKey):
+        with self.assertRaises(casthon.MissingKey):
             count.read()
 
     def test_references_use_the_active_host_context(self):
@@ -74,7 +74,7 @@ class ReferenceTests(unittest.TestCase):
         count.set(count.create(1))
         other = MemoryHost()
         with use_host(other):
-            with self.assertRaises(cspr.MissingKey):
+            with self.assertRaises(casthon.MissingKey):
                 count.read()
             count.set(count.create(20))
             self.assertEqual(count.read(), 20)
@@ -89,14 +89,14 @@ class ReferenceTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             contract.set(self.host.owner)
         self.keys[contract.name] = self.host.owner
-        with self.assertRaises(cspr.InvalidArgument):
+        with self.assertRaises(casthon.InvalidArgument):
             contract.get()
         any_key = self.keys.reference("any", Key)
         any_key.set(storage.new_uref(CLU32(0)))
         self.assertIsInstance(any_key.get(), URef)
         count = self.keys.reference("count", URef[U32])
         self.keys[count.name] = self.host.owner
-        with self.assertRaises(cspr.InvalidArgument):
+        with self.assertRaises(casthon.InvalidArgument):
             count.read()
         with self.assertRaises(TypeError):
             count.set(self.host.owner)
@@ -104,7 +104,7 @@ class ReferenceTests(unittest.TestCase):
     def test_typed_values_validate_before_allocation_or_write(self):
         count = self.keys.reference("count", URef[U32])
         for value in (-1, 1 << 32, True, "1"):
-            with self.assertRaises(cspr.ABIError):
+            with self.assertRaises(casthon.ABIError):
                 count.create(value)
         for value in (CLU256(1), CLKey(self.host.owner)):
             with self.assertRaises(TypeError):
@@ -115,20 +115,20 @@ class ReferenceTests(unittest.TestCase):
         self.assertEqual(count.read(), 9)
         with self.assertRaises(TypeError):
             count.write(CLU256(1))
-        with self.assertRaises(cspr.ABIError):
+        with self.assertRaises(casthon.ABIError):
             count.write(1 << 32)
-        with self.assertRaises(cspr.InvalidArgument):
+        with self.assertRaises(casthon.InvalidArgument):
             count.write(SerializedCLValue(b"\4\0\0\0\1\0\0\0\xff"))
         self.assertEqual(count.read(), 9)
 
     def test_typed_urefs_use_existing_read_errors_and_support_unit(self):
         count = self.keys.reference("count", URef[U32])
         count.set(count.create(1))
-        self.host.cells[bytes(count.get())] = cspr.CLString("bad").to_bytes()
-        with self.assertRaises(cspr.Read):
+        self.host.cells[bytes(count.get())] = casthon.CLString("bad").to_bytes()
+        with self.assertRaises(casthon.Read):
             count.read()
         self.host.cells.clear()
-        with self.assertRaises(cspr.ValueNotFound):
+        with self.assertRaises(casthon.ValueNotFound):
             count.read()
         unit = self.keys.reference("unit", URef[None])
         unit.set(unit.create(None))
@@ -206,20 +206,20 @@ class ReferenceTests(unittest.TestCase):
         ledger = ref
         with patch.object(self.host, "dictionary_put", side_effect=AssertionError("Unexpected write")):
             for key, value, error in (
-                (7, 1, TypeError), ("ż" * 33, 1, cspr.DictionaryItemKeyExceedsLength),
-                ("a", 1 << 32, cspr.ABIError), ("a", CLU256(1), TypeError),
+                (7, 1, TypeError), ("ż" * 33, 1, casthon.DictionaryItemKeyExceedsLength),
+                ("a", 1 << 32, casthon.ABIError), ("a", CLU256(1), TypeError),
             ):
                 with self.subTest(key=key), self.assertRaises(error):
                     ledger[key] = value
         for transform in (lambda key: 7, lambda key: "x" * 65):
             schema = Dictionary[str, U32](key=transform, seed=ledger.seed)
-            with self.assertRaises((TypeError, cspr.DictionaryItemKeyExceedsLength)):
+            with self.assertRaises((TypeError, casthon.DictionaryItemKeyExceedsLength)):
                 schema["a"]
 
     def test_dictionary_resolution_and_capability_lifetimes(self):
         ref = self.keys.reference("items", Dictionary[str, U32])
         self.assertIsInstance(ref, Dictionary)
-        with self.assertRaises(cspr.MissingKey):
+        with self.assertRaises(casthon.MissingKey):
             ref.get("a")
         ref.set(ref.create())
         original = Dictionary[str, U32](seed=ref.seed)
@@ -230,7 +230,7 @@ class ReferenceTests(unittest.TestCase):
         self.assertEqual(ref.get("a"), 11)
         self.assertEqual(original["a"], 7)
         with use_host(MemoryHost()):
-            with self.assertRaises(cspr.MissingKey):
+            with self.assertRaises(casthon.MissingKey):
                 ref.get("a", 0)
             ref.set(ref.create())
             ref["a"] = 99
@@ -240,10 +240,10 @@ class ReferenceTests(unittest.TestCase):
             iter(original)
         ref.remove()
         self.assertEqual(original["a"], 7)
-        with self.assertRaises(cspr.MissingKey):
+        with self.assertRaises(casthon.MissingKey):
             ref.get("a")
         self.keys[ref.name] = self.host.owner
-        with self.assertRaises(cspr.InvalidArgument):
+        with self.assertRaises(casthon.InvalidArgument):
             ref.get("a")
         with self.assertRaises(TypeError):
             ref.set(self.host.owner)
@@ -274,8 +274,8 @@ class ReferenceTests(unittest.TestCase):
         self.assertEqual(self.host.next, 1)
 
     def test_freezer_lowers_aliases_and_preserves_lazy_type_schemas(self):
-        source = '''from cspr import URef as Ref, U32 as Number, AccountHash as Owner, Dictionary as Items
-from cspr.contract_api.runtime import named_keys
+        source = '''from casthon import URef as Ref, U32 as Number, AccountHash as Owner, Dictionary as Items
+from casthon.contract_api.runtime import named_keys
 Value = Number
 Counter = Ref[Value]
 count = named_keys.reference("count", Counter)

@@ -1,6 +1,6 @@
 """Small procedural sessions exercising the low-level host API."""
 
-from cspr import (
+from casthon import (
     U32,
     U256,
     URef,
@@ -12,7 +12,7 @@ from cspr import (
     api_error,
     export,
 )
-from cspr.contract_api import runtime, storage
+from casthon.contract_api import runtime, storage
 from contracts import api_smoke_helpers
 
 ENTRY_POINTS = [*api_smoke_helpers.ENTRY_POINTS]

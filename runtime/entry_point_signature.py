@@ -5,7 +5,7 @@ def _descriptions(function):
     import _cspr_exports
     import sys
 
-    classes = sys.modules.get("cspr.contracts")
+    classes = sys.modules.get("casthon.contracts")
     if classes is not None and isinstance(function, (classes.BoundEntryPoint, classes.EntryPointReference)):
         return [function.describe()]
 

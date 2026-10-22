@@ -3,8 +3,8 @@
 import hashlib
 from typing import Optional
 
-from cspr import U32, CLU32, CLKey, CLValue, SerializedCLValue, URef
-from cspr.testing import LiveNetworkTest
+from casthon import U32, CLU32, CLKey, CLValue, SerializedCLValue, URef
+from casthon.testing import LiveNetworkTest
 
 
 class TestCounter(LiveNetworkTest):

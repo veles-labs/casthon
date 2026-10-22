@@ -7,7 +7,7 @@ from test_wasm_basic import WasmTestCase, imported_signatures
 from wasm_harness import Harness, ROOT, envelope, payload
 
 sys.path.insert(0, str(ROOT / "src"))
-from cspr.testing import build_contract
+from casthon.testing import build_contract
 
 
 class PrintWasmTests(WasmTestCase):

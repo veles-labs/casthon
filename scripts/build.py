@@ -96,15 +96,15 @@ def build(options, heap_mode, progress):
     generated = output_dir / target
     generated.mkdir(exist_ok=True)
     modules = contract_modules(source, project_root)
-    modules.update({"cspr/" + str(path.relative_to(ROOT / "src/cspr")): path
-                    for path in sorted((ROOT / "src/cspr").rglob("*.py"))
+    modules.update({"casthon/" + str(path.relative_to(ROOT / "src/casthon")): path
+                    for path in sorted((ROOT / "src/casthon").rglob("*.py"))
                     if path.name not in ("_context.py", "_signatures.py")
-                    and path.relative_to(ROOT / "src/cspr").parts[0] != "testing"})
-    modules["cspr/types.py"] = ROOT / "runtime/types.py"
-    modules["cspr/arguments.py"] = ROOT / "runtime/arguments.py"
-    modules["cspr/_entry_point_signature.py"] = ROOT / "runtime/entry_point_signature.py"
-    modules["cspr/_contract_schema.py"] = ROOT / "runtime/contract_schema.py"
-    modules["cspr/_event_schema.py"] = ROOT / "runtime/event_schema.py"
+                    and path.relative_to(ROOT / "src/casthon").parts[0] != "testing"})
+    modules["casthon/types.py"] = ROOT / "runtime/types.py"
+    modules["casthon/arguments.py"] = ROOT / "runtime/arguments.py"
+    modules["casthon/_entry_point_signature.py"] = ROOT / "runtime/entry_point_signature.py"
+    modules["casthon/_contract_schema.py"] = ROOT / "runtime/contract_schema.py"
+    modules["casthon/_event_schema.py"] = ROOT / "runtime/event_schema.py"
     modules["_cspr_dispatcher.py"] = ROOT / "runtime/dispatcher.py"
     signatures = generated / "_cspr_exports.py"
     write_changed(signatures, generate_exports(source, declaration["exports"], project_root))
@@ -113,8 +113,8 @@ def build(options, heap_mode, progress):
     for name, path in modules.items():
         output = generated / name
         output.parent.mkdir(parents=True, exist_ok=True)
-        write_changed(output, lower_enums(path) if name == "cspr/enums.py" else
-                      lower(path, sdk=name.startswith(("cspr/", "_cspr_")), project_root=project_root))
+        write_changed(output, lower_enums(path) if name == "casthon/enums.py" else
+                      lower(path, sdk=name.startswith(("casthon/", "_cspr_")), project_root=project_root))
         progress.advance()
     # Removals must invalidate freezing too: make cannot detect a removed prerequisite.
     modules_changed = write_changed(generated / "modules.json", json.dumps(sorted(modules)) + "\n")

@@ -2,9 +2,9 @@
 
 from typing import Any, Optional
 
-from cspr import ContractHash, Dictionary, MISSING, OptionalArg, URef, WireEnum, export
-from cspr.contract_api import runtime, storage
-from cspr.contracts import Contract, entry_point, export_contract
+from casthon import ContractHash, Dictionary, MISSING, OptionalArg, URef, WireEnum, export
+from casthon.contract_api import runtime, storage
+from casthon.contracts import Contract, entry_point, export_contract
 from contracts.cep18_events import EventsMode
 
 

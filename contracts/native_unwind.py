@@ -1,8 +1,8 @@
 """Procedural probes for errors travelling through C helpers and callbacks."""
 
 from typing import Any, NoReturn, cast
-from cspr import CLU32, U32, URef, User, Ret, Revert, export
-from cspr.contract_api import runtime, storage
+from casthon import CLU32, U32, URef, User, Ret, Revert, export
+from casthon.contract_api import runtime, storage
 
 SCOPE_MARKER = 17
 

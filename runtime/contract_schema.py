@@ -3,7 +3,7 @@
 
 def prepare_class(cls):
     from _cspr_exports import CLASS_SCHEMAS
-    from cspr.contracts import Schema, Method
+    from casthon.contracts import Schema, Method
     import sys
 
     for module_name, class_name, field_names, methods, events in CLASS_SCHEMAS:

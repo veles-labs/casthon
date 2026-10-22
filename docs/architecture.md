@@ -1,6 +1,6 @@
 # Repository and architecture
 
-Casthon has two public pieces: the Rust `casthon` command and the Python `cspr`
+Casthon has two public pieces: the Rust `casthon` command and the Python `casthon`
 SDK. They share a compiler and a Casper-specific MicroPython port. Keeping them
 in one repository lets a change to a type, decorator or class schema update its
 freezer and execution tests in the same change.
@@ -9,8 +9,8 @@ freezer and execution tests in the same change.
 
 | Path | Responsibility |
 | --- | --- |
-| `src/cspr/` | Python SDK: wire types, codecs, contract API, class/state helpers and events |
-| `src/cspr/testing/` | Mock host, native invocation harness and live-network helpers; excluded from contract Wasm |
+| `src/casthon/` | Python SDK: wire types, codecs, contract API, class/state helpers and events |
+| `src/casthon/testing/` | Mock host, native invocation harness and live-network helpers; excluded from contract Wasm |
 | `cli/` | Rust command-line interface, configuration, templates and build orchestration |
 | `scripts/` | Static source analysis, lowering, freezing, runtime builds and optimization |
 | `runtime/` | Frozen Python dispatcher and MicroPython-specific replacements for SDK inspection/typing helpers |
@@ -40,7 +40,7 @@ The remaining coupling is in how these components find and select each other:
   relative to that checkout, and writes caches there.
 - The freezer imports SDK schema helpers. `runtime/` supplies corresponding
   frozen implementations, so compiler and SDK versions must be compatible.
-- `cspr.testing.build_contract` also locates the SDK checkout. It is useful
+- `casthon.testing.build_contract` also locates the SDK checkout. It is useful
   today, but that lookup will need an installed-resource boundary.
 - `contracts/` contains both teaching examples and exhaustive FFI probes.
   The README links the teaching examples; the probes serve the regression suite.
@@ -50,10 +50,9 @@ should carry versioned compiler/runtime resources and build against the SDK in
 the project's selected Python environment. A known compatible version pair is
 enough for 0.1. Separate repositories are unnecessary for that arrangement.
 
-There is also release housekeeping to do: the SDK still uses the
-`cspr-py-experiment` distribution name, the Rust package has `publish = false`,
-and the project needs a top-level license and a release pipeline. These decisions
-belong to release packaging.
+The Python SDK is distributed as `casthon-sdk`; its public import package is
+`casthon`. The Rust package still has `publish = false`, and the project needs a
+top-level license and a release pipeline before a stable release.
 
 ## From Python to Wasm
 

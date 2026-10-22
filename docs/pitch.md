@@ -33,7 +33,7 @@ From a configured checkout:
 For a quick native demonstration, run this with the checkout's Python environment:
 
 ```python
-from cspr.testing import MockHost, use_host
+from casthon.testing import MockHost, use_host
 from contracts.hello import Hello
 
 with use_host(MockHost()):

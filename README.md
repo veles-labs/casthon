@@ -8,7 +8,7 @@
 
 Write a contract as a Python class, give its entrypoints type annotations, and
 build it into Casper-compatible WebAssembly. Casthon freezes your code with
-MicroPython; the `cspr` SDK handles arguments, storage, return values and host calls.
+MicroPython; the `casthon` SDK handles arguments, storage, return values and host calls.
 
 The same contract source runs in ordinary Python tests. You can compose classes,
 catch exceptions, and use `finally` for cleanup. An uncaught contract error becomes
@@ -19,10 +19,10 @@ a Casper revert at the outer invocation boundary.
 Here is [hello.py](contracts/hello.py), including its installer:
 
 ```python
-from cspr import ContractHash, ContractPackageHash, U32, URef, UserError, export
-from cspr.contract_api import storage
-from cspr.contract_api.runtime import named_keys
-from cspr.contracts import Contract, entry_point, export_contract
+from casthon import ContractHash, ContractPackageHash, U32, URef, UserError, export
+from casthon.contract_api import storage
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point, export_contract
 
 
 @export_contract

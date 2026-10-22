@@ -1,8 +1,8 @@
 # Testing contracts
 
-The normal feedback loop runs contract source and the real `cspr` library under
+The normal feedback loop runs contract source and the real `casthon` library under
 CPython. The scoped host changes; contract functions remain ordinary Python.
-`cspr.testing` is development-only and is excluded from frozen contract Wasm.
+`casthon.testing` is development-only and is excluded from frozen contract Wasm.
 
 ```sh
 make setup         # Development environment, type checker and Wasmtime
@@ -25,8 +25,8 @@ fresh state. The real runtime/storage functions and codecs run unchanged.
 
 ```python
 import unittest
-from cspr import AccountHash
-from cspr.testing import MockHost, use_host
+from casthon import AccountHash
+from casthon.testing import MockHost, use_host
 from contracts.counter import Counter
 
 
@@ -59,8 +59,8 @@ is the root. Imported decorated classes do not add exports to the importing
 module; explicit `export_contract(ImportedClass)` selection remains supported.
 
 ```python
-from cspr import CLU32
-from cspr.testing import ContractHarness, MockHost
+from casthon import CLU32
+from casthon.testing import ContractHarness, MockHost
 from contracts import counter
 
 host = MockHost()
@@ -91,7 +91,7 @@ each installed hash. A session can therefore use the deployed-contract API in
 native tests:
 
 ```python
-from cspr import CLKey
+from casthon import CLKey
 from contracts import counter_session
 
 caller = ContractHarness(counter_session, host=host)
@@ -200,8 +200,8 @@ example `CSPR_DEVNET_BIN=../casper-devnet-launcher/target/debug/casper-devnet`.
 This overrides the test class's `binary` setting for that run.
 
 ```python
-from cspr import CLU32
-from cspr.testing import LiveNetworkTest
+from casthon import CLU32
+from casthon.testing import LiveNetworkTest
 
 
 class TestCounter(LiveNetworkTest):
@@ -248,7 +248,7 @@ session calls, transfers, errors, deterministic keys and Optional values.
 `build_contract()` and `LiveNetworkTest.build()` cache artifacts by source,
 helper modules, SDK/compiler/runtime inputs and build flags. They verify cached
 artifact hashes and coordinate concurrent builders. The bundled build helper
-currently requires a cspr-py source checkout; an explicit builder `command=` or
+currently requires a casthon-py source checkout; an explicit builder `command=` or
 prebuilt Wasm can be used elsewhere. The build CLI also supports `--project-root`
 and `--output-dir` for external projects using `contracts.*` helper modules.
 
@@ -258,7 +258,7 @@ and `custom_asset`. `binary` selects a launcher executable; `custom_asset`
 selects an installed named asset instead of the packaged protocol bundle. Default port
 blocks are leased across processes; unique network names prevent class/worker
 collisions. Diagnostics, receipts and node logs are retained under
-`.cache/cspr-testing/live/`. Teardown stops the owned network and retains its
+`.cache/casthon-testing/live/`. Teardown stops the owned network and retains its
 runtime files; it avoids the launcher's concurrent file-deletion race.
 
 `DevnetNetwork(name="existing", owned=False)` attaches without stopping the

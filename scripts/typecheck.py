@@ -8,8 +8,8 @@ root = Path(__file__).resolve().parent.parent
 subprocess.run([sys.executable, "-m", "mypy"], cwd=root, check=True)
 flow = root / ".cache/revert_types.py"
 flow.write_text("""from typing import Mapping, NoReturn, Optional, assert_type
-from cspr import Key, URef, U32, U256, AccountHash, ContractHash, ContractPackageHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
-from cspr.contract_api import runtime
+from casthon import Key, URef, U32, U256, AccountHash, ContractHash, ContractPackageHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
+from casthon.contract_api import runtime
 from contracts import counter
 from contracts.my_token import MyToken
 from contracts.cep18_events import EventsMode, Mint, ChangeSecurity
@@ -152,8 +152,8 @@ except Ret as outcome:
 """)
 subprocess.run([sys.executable, "-m", "mypy", str(flow)], cwd=root, check=True)
 bad = root / ".cache/type_errors.py"
-bad.write_text("""from cspr import Event, Bytesrepr, Json, MessageEncoder, MessageString, MessageBytes, AccountHash, ContractHash, ContractPackageHash, Dictionary, URef, U32, CLU32, CLKey, OptionalArg, emit
-from cspr.contract_api import runtime, storage
+bad.write_text("""from casthon import Event, Bytesrepr, Json, MessageEncoder, MessageString, MessageBytes, AccountHash, ContractHash, ContractPackageHash, Dictionary, URef, U32, CLU32, CLKey, OptionalArg, emit
+from casthon.contract_api import runtime, storage
 from contracts import counter
 from contracts.my_token import MyToken
 from contracts.cep18 import SecurityBadge

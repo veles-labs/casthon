@@ -12,7 +12,7 @@ const output = resolve(root, process.env.CSPR_BUILD_DIR ?? 'build');
 const cache = resolve(root, '.cache');
 mkdirSync(cache, { recursive: true });
 const wasm = resolve(output, 'basic.wasm');
-const network = `cspr-py-poc-${Date.now()}`;
+const network = `casthon-py-poc-${Date.now()}`;
 const node = { network_name: network, node_id: 1 };
 const report = { network, asset: '2.2.0', started: new Date().toISOString(),
   wasm: { bytes: statSync(wasm).size, sha256: createHash('sha256').update(readFileSync(wasm)).digest('hex') },

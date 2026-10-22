@@ -7,10 +7,10 @@ import unittest
 from typing import Optional
 from unittest.mock import patch
 
-from cspr import AccountHash, ContractHash, U32, CLValue, CLU32, CLKey, Revert, export
-from cspr.bytesrepr import Reader
-from cspr.codec import ABIError, encode
-from cspr.testing import ContractHarness, MockHost, use_host
+from casthon import AccountHash, ContractHash, U32, CLValue, CLU32, CLKey, Revert, export
+from casthon.bytesrepr import Reader
+from casthon.codec import ABIError, encode
+from casthon.testing import ContractHarness, MockHost, use_host
 from contracts import counter, counter_session
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -110,18 +110,18 @@ class TypedCallTests(unittest.TestCase):
 
     def test_native_and_frozen_binding_agree_on_defaults_and_export_aliases(self):
         from test_entry_point_factory import contract_pair
-        from cspr import _entry_point_signature as native_signature
+        from casthon import _entry_point_signature as native_signature
         source = '''from typing import Optional
-from cspr import U32, export
+from casthon import U32, export
 def implementation(amount: Optional[U32] = None, *, label: str = "default") -> Optional[U32]:
     raise AssertionError("Must not run locally")
 query = export(implementation)
 '''
         with contract_pair(source) as (author, frozen):
             for module in (author, frozen):
-                provider = native_signature if module is author else sys.modules["cspr._entry_point_signature"]
+                provider = native_signature if module is author else sys.modules["casthon._entry_point_signature"]
                 host = RecordingHost(encode("Option<U32>", None))
-                with patch.dict(sys.modules, {"cspr._entry_point_signature": provider}), use_host(host):
+                with patch.dict(sys.modules, {"casthon._entry_point_signature": provider}), use_host(host):
                     self.assertIsNone(self.contract.call(module.query, label="hello"))
                     with self.assertRaises(TypeError):
                         self.contract.call(module.query, None, "hello")
@@ -129,8 +129,8 @@ query = export(implementation)
                 self.assertEqual(set(host.calls[0][2]), {"label"})
         with contract_pair(source + 'second = export(implementation)\n') as (author, frozen):
             for module in (author, frozen):
-                provider = native_signature if module is author else sys.modules["cspr._entry_point_signature"]
-                with patch.dict(sys.modules, {"cspr._entry_point_signature": provider}), self.assertRaisesRegex(ValueError, "multiple export names"):
+                provider = native_signature if module is author else sys.modules["casthon._entry_point_signature"]
+                with patch.dict(sys.modules, {"casthon._entry_point_signature": provider}), self.assertRaisesRegex(ValueError, "multiple export names"):
                     self.contract.call(module.query)
 
     def test_imported_frozen_signatures_do_not_expand_session_exports(self):
@@ -141,11 +141,11 @@ query = export(implementation)
         exec(generate_exports(source, declaration["exports"]), vars(signatures))
         self.assertEqual(list(signatures.SIGNATURES), ["call"])
         self.assertIn("increment_by", [method[0] for module, cls, fields, methods, events in signatures.CLASS_SCHEMAS if module == "contracts.counter" and cls == "Counter" for method in methods])
-        metadata = types.ModuleType("cspr._entry_point_signature")
+        metadata = types.ModuleType("casthon._entry_point_signature")
         exec(lower(ROOT / "runtime/entry_point_signature.py", sdk=True), vars(metadata))
         host = RecordingHost(encode("U32", 12))
         with patch.dict(sys.modules, {"_cspr_exports": signatures,
-                                     "cspr._entry_point_signature": metadata}), use_host(host):
+                                     "casthon._entry_point_signature": metadata}), use_host(host):
             self.assertEqual(self.contract.call(counter.Counter.get), 12)
 
 
@@ -170,7 +170,7 @@ class NativeSessionTests(unittest.TestCase):
 
     def test_session_failure_rolls_back_successful_remote_writes(self):
         self.invoke(5, 5)
-        from cspr import UserError
+        from casthon import UserError
         with self.assertRaises(UserError):
             self.invoke(2, 99)
         self.assertEqual(ContractHarness(counter, host=self.host).at(self.contract).invoke("get").value, 5)
@@ -191,6 +191,6 @@ class NativeSessionTests(unittest.TestCase):
                 self.assertIsInstance(error, Revert)
                 # An engine revert remains fatal even if Python intercepts the
                 # mock's transport signal. Account writes must also roll back.
-                from cspr.contract_api.runtime import named_keys
+                from casthon.contract_api.runtime import named_keys
                 named_keys["should_rollback"] = self.contract
         self.assertNotIn("should_rollback", self.host.accounts[self.host.caller])

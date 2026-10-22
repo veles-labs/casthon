@@ -139,7 +139,7 @@ mixins. The base `Event` owns record metadata and construction; encoders produce
 `MessageString` or `MessageBytes`. Delivery uses `emit` with the event instance:
 
 ```python
-from cspr import Event, Bytesrepr, Json, Key, U256, emit
+from casthon import Event, Bytesrepr, Json, Key, U256, emit
 
 class Mint(Event, Bytesrepr):
     recipient: Key
@@ -195,10 +195,10 @@ MRO. Identical classes are deduplicated; conflicting wire names are rejected.
 uses the topic registered with Casper and does not need a contract instance or
 an ambient Python contract object.
 
-CES is an explicit storage backend in `cspr.ces`:
+CES is an explicit storage backend in `casthon.ces`:
 
 ```python
-from cspr import ces
+from casthon import ces
 
 # Within a stored contract:
 ces.initialize(MyToken.event_types())

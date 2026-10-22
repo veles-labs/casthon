@@ -3,8 +3,8 @@
 import json
 from hashlib import blake2b
 
-from cspr import CLBool, CLKey, CLString, CLU8, CLU64
-from cspr.testing import LiveNetworkTest
+from casthon import CLBool, CLKey, CLString, CLU8, CLU64
+from casthon.testing import LiveNetworkTest
 from contracts.cep78 import address_key
 
 

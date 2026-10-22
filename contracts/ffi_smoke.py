@@ -1,6 +1,6 @@
 """Procedural devnet probes for the remaining ext_ffi function families."""
 
-from cspr import (
+from casthon import (
     EntryPoint, EntryPointAccess, U8, U32, U64, U512,
     CLU32, CLU64, CLU512, CLBool, CLBytes, AccountHash, URef,
     ContractPackageHash, ContractHash, ContractEntity, PackageHash, DictionaryAddress,
@@ -9,7 +9,7 @@ from cspr import (
     Ed25519PublicKey, Ed25519Signature, Secp256k1PublicKey, Secp256k1Signature,
     api_error, export,
 )
-from cspr.contract_api import runtime, storage, account, system, cryptography
+from casthon.contract_api import runtime, storage, account, system, cryptography
 
 ENTRY_POINTS = [
     EntryPoint("ping", {}, U32),

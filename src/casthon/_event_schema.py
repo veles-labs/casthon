@@ -25,7 +25,7 @@ def _validate_lookup(owner: type[Event]) -> None:
         if next((base for base in order if name in namespace(base)), None) is not next((base for base in micro if name in namespace(base)), None):
             raise ValueError("MicroPython event inheritance would resolve differently: " + name)
     for base in order:
-        if base in (Event, MessageEncoder, Json) or base.__module__ == "cspr.events":
+        if base in (Event, MessageEncoder, Json) or base.__module__ == "casthon.events":
             continue
         for function in vars(base).values():
             if not inspect.isfunction(function) or "super" not in function.__code__.co_names:

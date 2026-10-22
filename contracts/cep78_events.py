@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """CEP-78 events, with explicit CES, CEP47 and native message policies."""
 
-from cspr import Bytesrepr, CLType, CLValue, Event, Json, JsonBytes, Key, Map, U64, URef, ces
-from cspr.contract_api import runtime, storage
-from cspr.events import emit as emit_event, event_schema
+from casthon import Bytesrepr, CLType, CLValue, Event, Json, JsonBytes, Key, Map, U64, URef, ces
+from casthon.contract_api import runtime, storage
+from casthon.events import emit as emit_event, event_schema
 from contracts.cep78_modalities import EventsMode
 from contracts.cep78_metadata import json_string
 

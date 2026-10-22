@@ -1,6 +1,6 @@
 """Execute real Wasm against independent Casper host fixtures using Wasmtime.
 
-This is deliberately separate from cspr.testing.MockHost: the wire fixtures and
+This is deliberately separate from casthon.testing.MockHost: the wire fixtures and
 FFI implementation must catch mistakes in the SDK and its native adapter.
 """
 

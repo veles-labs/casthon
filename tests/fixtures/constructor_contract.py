@@ -1,9 +1,9 @@
 """Constructor lifecycle probe, compiled by the Wasm test suite."""
 
-from cspr import Dictionary, U32, URef, UserError, export
-from cspr.contract_api import storage
-from cspr.contract_api.runtime import named_keys
-from cspr.contracts import Contract, entry_point, export_contract
+from casthon import Dictionary, U32, URef, UserError, export
+from casthon.contract_api import storage
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point, export_contract
 
 
 class State(Contract):

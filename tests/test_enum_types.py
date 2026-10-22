@@ -8,12 +8,12 @@ from pathlib import Path
 from typing import Optional
 from unittest.mock import patch
 
-from cspr import ABIError, CLValue, CLU8, CLU32, InvalidArgument, URef, WireEnum, wire_type
-from cspr._dispatch import invoke
-from cspr._wire_types import _EnumRef
-from cspr.contract_api import runtime
-from cspr.return_value import serialize_typed_return, typed_value
-from cspr.testing import ContractHarness, MockHost, use_host
+from casthon import ABIError, CLValue, CLU8, CLU32, InvalidArgument, URef, WireEnum, wire_type
+from casthon._dispatch import invoke
+from casthon._wire_types import _EnumRef
+from casthon.contract_api import runtime
+from casthon.return_value import serialize_typed_return, typed_value
+from casthon.testing import ContractHarness, MockHost, use_host
 from contracts.cep18 import SecurityBadge
 from contracts.cep18_errors import InvalidEventsMode
 from contracts.cep18_events import EventsMode
@@ -88,7 +88,7 @@ class EnumTypeTests(unittest.TestCase):
             session.at(contract).invoke("set", {"mode": CLU8(4)})
 
     def test_freezing_root_enum_annotations_does_not_execute_source(self):
-        source = '''from cspr import WireEnum, URef, OptionalArg, MISSING, export
+        source = '''from casthon import WireEnum, URef, OptionalArg, MISSING, export
 from typing import Optional
 class Mode(WireEnum):
     OFF = 0
@@ -109,8 +109,8 @@ raise RuntimeError("build must not execute this")
             self.assertNotIn("import contract", table)
 
     def test_frozen_enum_identity_optional_aliases_and_dispatch_match_native(self):
-        source = '''from cspr.enums import WireEnum
-from cspr import OptionalArg, MISSING, export
+        source = '''from casthon.enums import WireEnum
+from casthon import OptionalArg, MISSING, export
 from typing import Optional
 class Mode(WireEnum):
     OFF = 0
@@ -125,13 +125,13 @@ def echo(mode: OptionalArg[Alias] = MISSING) -> Alias:
             path.write_text(source)
             declaration, _ = load_contract(path)
             lowered, table = lower(path), generate_exports(path, declaration["exports"])
-        frozen = types.ModuleType("cspr.enums")
-        exec(lower_enums(ROOT / "src/cspr/enums.py"), vars(frozen))
+        frozen = types.ModuleType("casthon.enums")
+        exec(lower_enums(ROOT / "src/casthon/enums.py"), vars(frozen))
         contract = types.ModuleType("contract")
         tables = {}
         host = MockHost()
-        with patch.dict(sys.modules, {"cspr.enums": frozen, "contract": contract}), \
-                patch("cspr._wire_types.WireEnum", frozen.WireEnum), use_host(host):
+        with patch.dict(sys.modules, {"casthon.enums": frozen, "contract": contract}), \
+                patch("casthon._wire_types.WireEnum", frozen.WireEnum), use_host(host):
             exec(lowered, vars(contract))
             exec(table, tables)
             self.assertIs(contract.Mode(1), contract.Mode.ON)

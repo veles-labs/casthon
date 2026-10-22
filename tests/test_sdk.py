@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from bundle import check_profile, contract_modules, load_contract, lower
-from cspr import U8, U32, U64, U256, Key, wire_type
-from cspr.codec import ABIError, cl_value, decode, encode, valid_payload
+from casthon import U8, U32, U64, U256, Key, wire_type
+from casthon.codec import ABIError, cl_value, decode, encode, valid_payload
 
 
 class CodecTests(unittest.TestCase):
@@ -64,31 +64,31 @@ class CodecTests(unittest.TestCase):
                 decode("String", len(b).to_bytes(4, "little") + b)
 
     def test_explicit_clvalue_classes_and_fallback_validation(self):
-        import cspr
+        import casthon
 
         for value, kind, plain in (
-            (cspr.CLU8(7), "U8", 7),
-            (cspr.CLU32(7), "U32", 7),
-            (cspr.CLU64(7), "U64", 7),
-            (cspr.CLU256(7), "U256", 7),
-            (cspr.CLString("ż🐍"), "String", "ż🐍"),
-            (cspr.CLBool(True), "Bool", True),
-            (cspr.CLBytes(b"abc"), "Bytes", b"abc"),
-            (cspr.CLUnit(), "Unit", None),
+            (casthon.CLU8(7), "U8", 7),
+            (casthon.CLU32(7), "U32", 7),
+            (casthon.CLU64(7), "U64", 7),
+            (casthon.CLU256(7), "U256", 7),
+            (casthon.CLString("ż🐍"), "String", "ż🐍"),
+            (casthon.CLBool(True), "Bool", True),
+            (casthon.CLBytes(b"abc"), "Bytes", b"abc"),
+            (casthon.CLUnit(), "Unit", None),
             (
-                cspr.CLKey(cspr.AccountHash(bytes(32))),
+                casthon.CLKey(casthon.AccountHash(bytes(32))),
                 "Key",
-                cspr.AccountHash(bytes(32)),
+                casthon.AccountHash(bytes(32)),
             ),
             (
-                cspr.CLKeyList([cspr.AccountHash(bytes(32))]),
+                casthon.CLKeyList([casthon.AccountHash(bytes(32))]),
                 "List<Key>",
-                [cspr.AccountHash(bytes(32))],
+                [casthon.AccountHash(bytes(32))],
             ),
             (
-                cspr.CLSecurityMap({cspr.AccountHash(bytes(32)): 0}),
+                casthon.CLSecurityMap({casthon.AccountHash(bytes(32)): 0}),
                 "Map<Key,U8>",
-                {cspr.AccountHash(bytes(32)): 0},
+                {casthon.AccountHash(bytes(32)): 0},
             ),
         ):
             self.assertEqual(value.to_bytes(), cl_value(kind, plain))
@@ -100,7 +100,7 @@ class CodecTests(unittest.TestCase):
             self.assertFalse(valid_payload("Key", payload))
         for value in (-1, 1 << 256, True, "1"):
             with self.assertRaises(ABIError):
-                cspr.CLU256(value)
+                casthon.CLU256(value)
 
 
 class BundleTests(unittest.TestCase):
@@ -109,7 +109,7 @@ class BundleTests(unittest.TestCase):
             root = Path(directory)
             source = root / "example.py"
             source.write_text(
-                'from cspr import EntryPoint, U32, export\n'
+                'from casthon import EntryPoint, U32, export\n'
                 'raise RuntimeError("must not execute")\n'
                 'ENTRY_POINTS = [EntryPoint("get", {}, U32)]\n'
                 'def helper(): pass\ndef get() -> None: pass\n'
@@ -143,7 +143,7 @@ class BundleTests(unittest.TestCase):
                 tempfile.TemporaryDirectory() as directory,
             ):
                 root = Path(directory)
-                (root / "x.py").write_text('from cspr import export, U32\n' + function + '\n')
+                (root / "x.py").write_text('from casthon import export, U32\n' + function + '\n')
                 with self.assertRaises(ValueError):
                     load_contract(root / "x.py")
 
@@ -151,12 +151,12 @@ class BundleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "x.py"
-            source.write_text('from cspr import EntryPoint, export\nENTRY_POINTS = [EntryPoint("get", {})]\n'
+            source.write_text('from casthon import EntryPoint, export\nENTRY_POINTS = [EntryPoint("get", {})]\n'
                               '@export\ndef get(): pass\ndef call(): pass\n')
             self.assertEqual(load_contract(source)[0]["exports"], ["get"])
-            source.write_text('from cspr import export\n@export\ndef call(): pass\n')
+            source.write_text('from casthon import export\n@export\ndef call(): pass\n')
             self.assertEqual(load_contract(source)[0]["exports"], ["call"])
-            source.write_text('from cspr import EntryPoint\nENTRY_POINTS = [EntryPoint("get", {})]\n'
+            source.write_text('from casthon import EntryPoint\nENTRY_POINTS = [EntryPoint("get", {})]\n'
                               'def get(): pass\n')
             with self.assertRaisesRegex(ValueError, "explicitly"):
                 load_contract(source)
@@ -164,13 +164,13 @@ class BundleTests(unittest.TestCase):
     def test_marker_aliases_are_erased_and_export_marker_must_be_outermost(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "x.py"
-            source.write_text('import cspr as sdk\nfrom cspr import export as expose\n'
+            source.write_text('import casthon as sdk\nfrom casthon import export as expose\n'
                               '@sdk.export\ndef call(): pass\n@expose\ndef read(): pass\n')
             self.assertEqual(load_contract(source)[0]["exports"], ["call", "read"])
             code = lower(source)
             self.assertNotIn("@", code)
             self.assertNotIn("expose", code)
-            source.write_text('from cspr import export\n@other\n@export\ndef call(): pass\n')
+            source.write_text('from casthon import export\n@other\n@export\ndef call(): pass\n')
             with self.assertRaises(ValueError):
                 load_contract(source)
 
@@ -181,11 +181,11 @@ class BundleTests(unittest.TestCase):
             package.mkdir()
             (package / "__init__.py").write_text("")
             shared = package / "shared.py"
-            shared.write_text('from cspr import EntryPoint, U32\n'
+            shared.write_text('from casthon import EntryPoint, U32\n'
                               'ENTRY_POINTS = [EntryPoint("get", {}, U32)]\n'
                               'def get() -> None: pass\ndef helper(amount): pass\n')
             source = package / "token.py"
-            source.write_text('from cspr import EntryPoint, export\n'
+            source.write_text('from casthon import EntryPoint, export\n'
                               'from contracts.shared import ENTRY_POINTS as SHARED, get as implementation\n'
                               'ENTRY_POINTS = [*SHARED, EntryPoint("local", {})]\n'
                               'get = export(implementation)\n@export\ndef local(): pass\n')
@@ -194,13 +194,13 @@ class BundleTests(unittest.TestCase):
                 self.assertEqual(set(contract_modules(source)),
                                  {"contract.py", "contracts/shared.py", "contracts/__init__.py"})
                 # Re-exporting a function under another root binding uses an identity call.
-                source.write_text('from cspr import export\nfrom contracts import shared\n'
+                source.write_text('from casthon import export\nfrom contracts import shared\n'
                                   'read = export(shared.get)\n')
                 self.assertEqual(load_contract(source)[0]["exports"], ["read"])
                 self.assertIn("read = shared.get", lower(source))
                 self.assertNotIn("export", lower(source))
                 self.assertIn("contracts/shared.py", contract_modules(source))
-                source.write_text('from cspr import export\nfrom contracts import shared\n'
+                source.write_text('from casthon import export\nfrom contracts import shared\n'
                                   'bad = export(shared.helper)\n')
                 with self.assertRaises(ValueError):
                     load_contract(source)
@@ -208,7 +208,7 @@ class BundleTests(unittest.TestCase):
     def test_computed_metadata_is_ordinary_python_data(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "x.py"
-            source.write_text('from cspr import EntryPoint as EP, U32, export\n'
+            source.write_text('from casthon import EntryPoint as EP, U32, export\n'
                               'FIRST = (EP(name="get", args={}, returns=U32),)\n'
                               'def describe(name): return (EP(name, {"value": U32}),)\n'
                               'ENTRY_POINTS = FIRST + describe("external")\n'
@@ -237,10 +237,10 @@ class BundleTests(unittest.TestCase):
     def test_rejects_cycles_and_nonfunction_bindings(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "x.py"
-            source.write_text('from cspr import export\nA = B\nB = A\nget = export(A)\n')
+            source.write_text('from casthon import export\nA = B\nB = A\nget = export(A)\n')
             with self.assertRaisesRegex(ValueError, "Cyclic"):
                 load_contract(source)
-            source.write_text('from cspr import export\nget = export(1)\n')
+            source.write_text('from casthon import export\nget = export(1)\n')
             with self.assertRaisesRegex(ValueError, "function"):
                 load_contract(source)
 
@@ -250,7 +250,7 @@ class BundleTests(unittest.TestCase):
                          'ENTRY_POINTS[0] = EntryPoint("other", {})'):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
                 source = Path(directory) / "x.py"
-                source.write_text('from cspr import EntryPoint, export\n'
+                source.write_text('from casthon import EntryPoint, export\n'
                                   'ENTRY_POINTS = [EntryPoint("get", {})]\n'
                                   'def get(): pass\n@export\ndef call(): pass\n' + mutation + '\n')
                 self.assertEqual(load_contract(source)[0]["exports"], ["call"])
@@ -273,7 +273,7 @@ class BundleTests(unittest.TestCase):
     def test_export_accepts_clvalue_returns_and_catchable_code(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "x.py"
-            source.write_text('from cspr import CLU32, User, export\n'
+            source.write_text('from casthon import CLU32, User, export\n'
                               '@export\ndef get() -> CLU32:\n'
                               ' try:\n  raise User(1)\n except User:\n  return CLU32(7)\n')
             self.assertEqual(load_contract(source)[0]["exports"], ["get"])

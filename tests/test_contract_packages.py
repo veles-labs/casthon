@@ -2,11 +2,11 @@
 
 import unittest
 
-from cspr import ApiError, CLString, ContractHash, ContractPackageHash, MessageTopicOperation, UserError
-from cspr.contract_api import storage
-from cspr.contract_api.runtime import named_keys
-from cspr.entry_points import serialize_entry_points
-from cspr.testing import ContractHarness, MockHost, use_host
+from casthon import ApiError, CLString, ContractHash, ContractPackageHash, MessageTopicOperation, UserError
+from casthon.contract_api import storage
+from casthon.contract_api.runtime import named_keys
+from casthon.entry_points import serialize_entry_points
+from casthon.testing import ContractHarness, MockHost, use_host
 from contracts import hello
 from contracts.counter import Counter
 

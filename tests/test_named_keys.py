@@ -3,11 +3,11 @@
 import unittest
 from unittest.mock import patch
 
-import cspr
-from cspr import AccountHash, Hash, Key, URef, CLU256, U256
-from cspr.codec import encode
-from cspr.contract_api import runtime, storage
-from cspr.testing import use_host
+import casthon
+from casthon import AccountHash, Hash, Key, URef, CLU256, U256
+from casthon.codec import encode
+from casthon.contract_api import runtime, storage
+from casthon.testing import use_host
 from test_contract_api import MemoryHost
 
 
@@ -86,13 +86,13 @@ class NamedKeysTests(unittest.TestCase):
 
         def denied(key, value=None):
             calls.append(key)
-            raise cspr.ApiError(23)  # ApiError::PermissionDenied.
+            raise casthon.ApiError(23)  # ApiError::PermissionDenied.
 
         self.host.read_value = self.host.write = self.host.add = denied
         for operation in (lambda: readonly.read(U256),
                           lambda: readonly.write(CLU256(1)),
                           lambda: readonly.add(CLU256(1))):
-            with self.assertRaises(cspr.ApiError) as error:
+            with self.assertRaises(casthon.ApiError) as error:
                 operation()
             self.assertEqual(error.exception.code, 23)
         self.assertEqual(calls, [bytes(readonly)] * 3)
@@ -143,7 +143,7 @@ class NamedKeysTests(unittest.TestCase):
         for make_iterator in (self.keys.keys, self.keys.items, self.keys.values):
             iterator = make_iterator()
             next(iterator)
-            with self.assertRaises(cspr.ABIError):
+            with self.assertRaises(casthon.ABIError):
                 next(iterator)
 
     def test_named_key_decoding_checks_lengths_utf8_and_trailing_bytes(self):
@@ -159,7 +159,7 @@ class NamedKeysTests(unittest.TestCase):
             self.host.list_named_keys = lambda: data
             for operation in (lambda: list(self.keys.keys()),
                               lambda: list(self.keys.values()), runtime.list_named_keys):
-                with self.subTest(data=data), self.assertRaises(cspr.ABIError):
+                with self.subTest(data=data), self.assertRaises(casthon.ABIError):
                     operation()
 
     def test_lazy_decoder_handles_every_key_variant_in_upstream_fixtures(self):

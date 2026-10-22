@@ -2,8 +2,8 @@
 
 import ast
 from dataclasses import dataclass, field
-from cspr._contract_schema import annotation_key
-from cspr import cl_type_of, Event, Json
+from casthon._contract_schema import annotation_key
+from casthon import cl_type_of, Event, Json
 
 
 @dataclass
@@ -45,7 +45,7 @@ class EventPlanner:
     def encoder(self, path, node):
         if isinstance(node, str):
             parts = node.split('.')
-            if '.'.join(parts[:-1]) not in ('cspr', 'cspr.events'):
+            if '.'.join(parts[:-1]) not in ('casthon', 'casthon.events'):
                 return None
             name = parts[-1]
             root = (None, 'MessageEncoder')
@@ -104,7 +104,7 @@ class EventPlanner:
         parents, codecs, record_positions = [], [], []
         for index, base in enumerate(node.bases):
             owner, target = self.graph.resolve(path, base)
-            if owner is None and target in ('cspr.Event', 'cspr.events.Event'):
+            if owner is None and target in ('casthon.Event', 'casthon.events.Event'):
                 parents.append(None)
                 record_positions.append(index)
                 continue
@@ -180,7 +180,7 @@ class EventPlanner:
 
     def encoder_key(self, key):
         if key[0] is None:
-            return self.encoder(None, 'cspr.events.' + key[1])
+            return self.encoder(None, 'casthon.events.' + key[1])
         return self.encoder_plans.get(key)
 
     def order(self, key):

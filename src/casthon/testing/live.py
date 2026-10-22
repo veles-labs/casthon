@@ -39,7 +39,7 @@ class _PrintResult:
 
 class LiveNetworkTest(unittest.TestCase):
     protocol_version: ClassVar[str] = "2.2.0"
-    network_seed: ClassVar[str] = "cspr-py-tests"
+    network_seed: ClassVar[str] = "casthon-py-tests"
     node_count: ClassVar[int] = 4
     user_count: ClassVar[int] = 2
     network_timeout: ClassVar[float] = 120
@@ -60,7 +60,7 @@ class LiveNetworkTest(unittest.TestCase):
                                    binary=os.environ.get("CSPR_DEVNET_BIN", cls.binary), custom_asset=cls.custom_asset,
                                    nodes=cls.node_count, users=cls.user_count,
                                    port_offset=cls.port_offset, timeout=cls.network_timeout,
-                                   diagnostics=cls.project_root / ".cache/cspr-testing/live" /
+                                   diagnostics=cls.project_root / ".cache/casthon-testing/live" /
                                    (cls.__module__ + "." + cls.__qualname__))
         cls.addClassCleanup(cls.network.stop)
         cls.network.start()

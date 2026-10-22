@@ -2,13 +2,13 @@
 
 from typing import Any
 
-from cspr import (
+from casthon import (
     U32, URef, AccountHash, ContractHash, ContractPackageHash, Dictionary,
     InvalidArgument, export,
 )
-from cspr.contract_api import storage
-from cspr.contract_api.runtime import get_caller, named_keys
-from cspr.contracts import entry_point, export_contract
+from casthon.contract_api import storage
+from casthon.contract_api.runtime import get_caller, named_keys
+from casthon.contracts import entry_point, export_contract
 from contracts.pausable import Pausable, require_unpaused
 
 

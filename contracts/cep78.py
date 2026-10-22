@@ -8,15 +8,15 @@ and docs/cep78.md. Historical Rust storage migrations are outside this port.
 
 from typing import Any, cast
 
-from cspr import (
+from casthon import (
     AccountCaller, AccountEntity, AccountHash, ContractCaller, ContractEntity,
     ContractHash, Dictionary, DictionaryAddress, EntityCaller, Hash, Key,
     Map, MISSING, OptionalArg, PackageHash, U8, U64, URef, CLKey, CLString,
     CLU8, CLU64, CLUnit,
 )
-from cspr.contract_api import runtime, storage
-from cspr.contract_api.runtime import named_keys
-from cspr.contracts import Contract, entry_point
+from casthon.contract_api import runtime, storage
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point
 from contracts import cep78_errors as errors
 from contracts.cep78_events import (
     Approval, ApprovalForAll, ApprovalRevoked, Burn, MetadataUpdated, Migration,

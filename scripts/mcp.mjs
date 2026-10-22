@@ -53,7 +53,7 @@ export class DevnetClient {
     await this.request('initialize', {
       protocolVersion: '2024-11-05',
       capabilities: {},
-      clientInfo: { name: 'cspr-py-counter-poc', version: '0.1.0' },
+      clientInfo: { name: 'casthon-py-counter-poc', version: '0.1.0' },
     });
     this.#process.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
   }

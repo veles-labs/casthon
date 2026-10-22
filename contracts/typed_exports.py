@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from typing import Optional, cast
-from cspr import (
+from casthon import (
     U32, AccountHash, Hash, URef, CLU32, CLString, SerializedCLValue,
     EntryPoint, InvalidArgument, User, export,
     OptionalArg, MISSING,
 )
-from cspr.contract_api import runtime, storage
+from casthon.contract_api import runtime, storage
 from contracts import typed_exports_helpers
 
 NullableAmount = Optional[U32]

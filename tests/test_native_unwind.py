@@ -2,9 +2,9 @@ import contextlib
 import io
 import unittest
 
-from cspr import CLU32, Ret, Revert
-from cspr.codec import encode
-from cspr.testing import use_host
+from casthon import CLU32, Ret, Revert
+from casthon.codec import encode
+from casthon.testing import use_host
 from contracts import native_unwind
 from test_contract_api import MemoryHost
 

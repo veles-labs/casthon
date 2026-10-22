@@ -1,6 +1,6 @@
 """Check the inherited NFT ABI's return values from an ordinary Python session."""
 
-from cspr import ContractHash, Key, U64, UserError, export
+from casthon import ContractHash, Key, U64, UserError, export
 from contracts.cep78 import Cep78
 
 
