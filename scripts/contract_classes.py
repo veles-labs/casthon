@@ -8,7 +8,7 @@ from cspr.references import URefType, DictionaryType
 from cspr._contract_schema import state_key, signature_key
 
 ROOT = (None, "Contract")
-ROOT_ATTRIBUTES = {"__init__", "bind", "named_keys", "entry_points", "add_contract_version", "_cspr_schema", "event_types"}
+ROOT_ATTRIBUTES = {"__init__", "bind", "named_keys", "entry_points", "_cspr_schema", "event_types"}
 
 
 @dataclass

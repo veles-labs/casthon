@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Concatenate, Generic, Mapping, ParamSpec, Sequence, TypeVar, ClassVar, cast, overload
+from typing import Any, Callable, Concatenate, Generic, Mapping, ParamSpec, TypeVar, ClassVar, cast, overload
 
-from .enums import EntryPointAccess, EntryPointPayment, EntryPointType, MessageTopicOperation
-from .key import ContractHash, Key
+from .enums import EntryPointAccess, EntryPointPayment, EntryPointType
+from .key import Key
 from .references import Dictionary, DictionaryType, URefType, reference
 from .return_value import _validate_value, typed_value
 from .arguments import argument_in_abi, argument_type
@@ -248,11 +248,6 @@ class Contract:
     @classmethod
     def event_types(cls) -> tuple[type[Event], ...]:
         return _schema(cls).events
-
-    def add_contract_version(self, package: Key, *,
-                             message_topics: Mapping[str, MessageTopicOperation] | Sequence[str] = ()) -> tuple[ContractHash, int]:
-        from .contract_api import storage
-        return storage.add_contract_version(package, self.entry_points(), self.named_keys, message_topics)
 
 
 def export_contract(cls: type[_Contract]) -> type[_Contract]:

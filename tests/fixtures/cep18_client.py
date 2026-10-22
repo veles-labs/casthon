@@ -33,7 +33,7 @@ class TokenClient(Contract):
 def call(token: ContractHash) -> None:
     package, access = storage.create_contract_package_at_hash()
     client = TokenClient(token=token, package=package)
-    contract, version = client.add_contract_version(package)
+    contract, version = package.add_contract_version(client)
     named_keys["py_token_client"] = contract
     named_keys["py_token_client_package"] = package
     named_keys["py_token_client_access"] = access

@@ -8,7 +8,7 @@ root = Path(__file__).resolve().parent.parent
 subprocess.run([sys.executable, "-m", "mypy"], cwd=root, check=True)
 flow = root / ".cache/revert_types.py"
 flow.write_text("""from typing import Mapping, NoReturn, Optional, assert_type
-from cspr import Key, URef, U32, U256, AccountHash, ContractHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
+from cspr import Key, URef, U32, U256, AccountHash, ContractHash, ContractPackageHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
 from cspr.contract_api import runtime
 from contracts import counter
 from contracts.my_token import MyToken
@@ -67,7 +67,10 @@ def ordinary_calls() -> None:
     state = counter.Counter.bind()
     assert_type(state, counter.Counter)
     assert_type(state.named_keys, Mapping[str, Key])
-    assert_type(state.add_contract_version(ContractHash(bytes(32))), tuple[ContractHash, int])
+    package = ContractPackageHash(bytes(32))
+    assert_type(package.add_contract_version(state), tuple[ContractHash, int])
+    assert_type(package.disable_contract_version(ContractHash(bytes(32))), None)
+    assert_type(package.enable_contract_version(ContractHash(bytes(32))), None)
     assert_type(state.count.read(), int)
     assert_type(state.paused.read(), bool)
     assert_type(state.owner.read(), AccountHash)
@@ -149,7 +152,7 @@ except Ret as outcome:
 """)
 subprocess.run([sys.executable, "-m", "mypy", str(flow)], cwd=root, check=True)
 bad = root / ".cache/type_errors.py"
-bad.write_text("""from cspr import Event, Bytesrepr, Json, MessageEncoder, MessageString, MessageBytes, AccountHash, ContractHash, Dictionary, URef, U32, CLU32, CLKey, OptionalArg, emit
+bad.write_text("""from cspr import Event, Bytesrepr, Json, MessageEncoder, MessageString, MessageBytes, AccountHash, ContractHash, ContractPackageHash, Dictionary, URef, U32, CLU32, CLKey, OptionalArg, emit
 from cspr.contract_api import runtime, storage
 from contracts import counter
 from contracts.my_token import MyToken
@@ -187,7 +190,12 @@ state.increments[contract] = 1
 contract.call(counter.Counter.transfer_ownership, contract)
 counter.Counter("bad")
 counter.Counter.bind(3)
-state.add_contract_version(contract, {})
+package = runtime.named_keys.reference("package", ContractPackageHash).get()
+package.add_contract_version(state, {})
+package.add_contract_version(contract)
+package.disable_contract_version(AccountHash(bytes(32)))
+package.enable_contract_version(URef(bytes(32)))
+state.add_contract_version(package)
 MyToken(total_supply="bad")
 contract.call(MyToken.transfer, AccountHash(bytes(32)), "bad")
 wrong_balance: str = contract.call(MyToken.balance_of, AccountHash(bytes(32)))
@@ -225,5 +233,5 @@ result = subprocess.run(
     [sys.executable, "-m", "mypy", str(bad)], cwd=root, capture_output=True, text=True
 )
 print(result.stdout, end="")
-if result.returncode != 1 or result.stdout.count("error:") != 52:
-    raise SystemExit("Expected fifty-two rejected type mistakes\n" + result.stderr)
+if result.returncode != 1 or result.stdout.count("error:") != 56:
+    raise SystemExit("Expected fifty-six rejected type mistakes\n" + result.stderr)

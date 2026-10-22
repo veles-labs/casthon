@@ -82,7 +82,7 @@ def call(name: OptionalArg[str] = DEFAULT_NAME, *, symbol: OptionalArg[str] = MI
                 options[argument] = value
         token = MyToken(**options)
         package, access = storage.create_contract_package_at_hash()
-        contract, version = token.add_contract_version(package, message_topics=("events",))
+        contract, version = package.add_contract_version(token, message_topics=("events",))
         named_keys[package_name] = package
         named_keys[access_name] = access
         contract.call(MyToken.init, package_hash=package, contract_hash=contract)

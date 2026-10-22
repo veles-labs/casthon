@@ -19,7 +19,7 @@ a Casper revert at the outer invocation boundary.
 Here is [hello.py](contracts/hello.py), including its installer:
 
 ```python
-from cspr import U32, URef, UserError, export
+from cspr import ContractHash, ContractPackageHash, U32, URef, UserError, export
 from cspr.contract_api import storage
 from cspr.contract_api.runtime import named_keys
 from cspr.contracts import Contract, entry_point, export_contract
@@ -45,13 +45,18 @@ class Hello(Contract):
             print("Greeting finished")
 
 
+installed = named_keys.reference("hello", ContractHash)
+installed_package = named_keys.reference("hello_package", ContractPackageHash)
+installed_access = named_keys.reference("hello_access", URef[None])
+
+
 @export
 def call() -> None:
     package, access = storage.create_contract_package_at_hash()
-    contract, _ = Hello(calls=0).add_contract_version(package)
-    named_keys["hello"] = contract
-    named_keys["hello_package"] = package
-    named_keys["hello_access"] = access
+    contract, _ = package.add_contract_version(Hello(calls=0))
+    installed.set(contract)
+    installed_package.set(package)
+    installed_access.set(access)
 ```
 
 `greet` receives and returns a Python string. `calls` is persistent U32 state.

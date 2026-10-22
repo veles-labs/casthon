@@ -58,7 +58,7 @@ def call(initial: U32 = 0) -> None:
         raise InvalidArgument()
     counter = Counter(initial)
     package, access = storage.create_contract_package_at_hash()
-    contract, version = counter.add_contract_version(package)
+    contract, version = package.add_contract_version(counter)
     installed.set(contract)
     installed_package.set(package)
     installed_access.set(access)

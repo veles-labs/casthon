@@ -209,7 +209,7 @@ ces.emit(record, events=MyToken.event_types())
 history. Its optional `events=` argument checks an explicit registry before any
 write. `ces.initial_named_keys(events)` creates a dict of CES keys for an explicit
 installer without binding them into the account. Initialization is idempotent.
-`Contract.add_contract_version()` registers the supplied state and ABI without
+`package.add_contract_version(contract)` registers the instance's state and ABI without
 choosing an event backend; `Contract` has no `emit` method.
 
 CEP-18 declares a shared `Cep18Event(Event, Bytesrepr, JsonBytes)` base. Its module

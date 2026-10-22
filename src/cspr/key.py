@@ -1,12 +1,14 @@
 """Casper 6.1 Key bytesrepr, canonical formatting and Rust ordering."""
 
 from .errors import ABIError
-from typing import Any, Callable, Generic, Iterator, ParamSpec, TYPE_CHECKING, cast, overload
+from typing import Any, Callable, Generic, Iterator, Mapping, ParamSpec, Sequence, TYPE_CHECKING, cast, overload
 
 if TYPE_CHECKING:
     from typing_extensions import TypeVar
     from .values import CLValue
     from .references import URefType
+    from .contracts import Contract
+    from .enums import MessageTopicOperation
 
     _Value = TypeVar("_Value", default=Any)
 else:
@@ -252,6 +254,29 @@ class ContractHash(Hash):
 
 class ContractPackageHash(Hash):
     """A legacy Hash whose contract-package role is known explicitly."""
+
+    def add_contract_version(
+        self, contract: "Contract", *,
+        message_topics: "Mapping[str, MessageTopicOperation] | Sequence[str]" = (),
+    ) -> tuple[ContractHash, int]:
+        """Add an initialized contract's entrypoints and state to this package."""
+        from .contract_api import storage
+        from .contracts import Contract
+
+        if not isinstance(contract, Contract):
+            raise TypeError("Expected an initialized Contract instance")
+        return storage.add_contract_version(
+            self, contract.entry_points(), contract.named_keys, message_topics)
+
+    def disable_contract_version(self, contract: ContractHash) -> None:
+        """Disable a version belonging to this package."""
+        from .contract_api import storage
+        storage.disable_contract_version(self, contract)
+
+    def enable_contract_version(self, contract: ContractHash) -> None:
+        """Re-enable a version belonging to this package."""
+        from .contract_api import storage
+        storage.enable_contract_version(self, contract)
 
 
 class URef(Key, Generic[_Value]):

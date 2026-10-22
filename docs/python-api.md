@@ -133,13 +133,28 @@ The top-level `@export def call(initial: U32 = 0)` remains the explicit installe
 ```python
 counter = Counter(initial)
 package, access = storage.create_contract_package_at_hash()
-contract, version = counter.add_contract_version(package)
+contract, version = package.add_contract_version(counter)
 ```
 
-The instance method supplies both inherited entrypoint metadata and
-`counter.named_keys`. Package creation and account-key bindings stay explicit.
+The package method takes an initialized `Contract` instance and supplies its inherited
+entrypoint metadata and `counter.named_keys`. Package creation and account-key bindings
+stay explicit.
 Constructor arguments are ordinary Python arguments; the top-level export loads its own
 annotated named arguments from the host. `__init__` is not an entrypoint.
+
+The returned `ContractPackageHash` also owns version controls:
+
+```python
+package.disable_contract_version(contract)
+package.enable_contract_version(contract)
+```
+
+These methods preserve catchable host errors. For an upgrade that reuses existing
+state without constructing fresh state, use the explicit
+`storage.add_contract_version(package, Counter.entry_points(), {}, message_topics)` API.
+Resolve a stored package with
+`named_keys.reference("counter_package", ContractPackageHash).get()` to recover its
+package methods from the legacy hash wire representation.
 
 The dispatcher and native test harness use `Counter.bind()` for every invocation, so
 constructor logic and allocations are not repeated by dispatch. Binding uses

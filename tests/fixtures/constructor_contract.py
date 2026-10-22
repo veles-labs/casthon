@@ -61,7 +61,7 @@ def call(initial: U32) -> None:
     if created.value.read() != initial + 1:
         raise UserError(78)
     package, access = storage.create_contract_package_at_hash()
-    contract, version = created.add_contract_version(package)
+    contract, version = package.add_contract_version(created)
     named_keys["py_constructor"] = contract
 
 

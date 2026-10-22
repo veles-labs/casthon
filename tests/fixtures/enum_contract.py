@@ -58,7 +58,7 @@ def call(contract: OptionalArg[ContractHash] = MISSING) -> None:
     if contract is MISSING:
         instance = Modes()
         package, access = storage.create_contract_package_at_hash()
-        deployed, version = instance.add_contract_version(package)
+        deployed, version = package.add_contract_version(instance)
         runtime.named_keys["py_modes"] = deployed
         runtime.named_keys["py_modes_access"] = access
         return
