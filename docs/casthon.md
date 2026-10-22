@@ -97,6 +97,7 @@ casthon build hello --release
 casthon build hello --release --minify
 casthon build hello --output-dir artifacts
 casthon build hello --json
+casthon build hello --no-progress
 ```
 
 A file supplied on the command line is relative to the current directory.
@@ -107,6 +108,22 @@ cannot overwrite each other.
 
 A single-file build works without `pyproject.toml` when you pass its source path.
 The build still uses the checkout's compiler resources and supported recipe.
+
+### Build progress and logs
+
+In a terminal, each build stage has a numbered row and a progress bar. Four lines
+of compiler output scroll underneath the stages. Both stdout and stderr feed this
+area; long lines are clipped to the terminal width. Module freezing shows completed
+work out of the total. Compiler steps with no reliable total show an activity bar.
+Cache hits appear as reused artifacts.
+
+The complete output is saved to `<target>-build.log` alongside the Wasm, including
+diagnostics that have scrolled out of view. A failed build prints that log's path
+and returns the worker's failure code.
+
+Redirected output and `TERM=dumb` use plain step names and stream all compiler
+output. `--no-progress` streams the compiler output without step headings or bars.
+`--json` also disables the display and keeps its artifact manifest on stdout.
 
 ### Profiles and files
 
@@ -126,6 +143,7 @@ For a target named `hello`, the main files are:
 | `build/hello.wasm` | Debug deployment artifact |
 | `build/hello.metered.wasm` | Local gas/stack-instrumented test artifact |
 | `build/hello-build-report.json` | Hash, exports, signatures and runtime settings |
+| `build/hello-build.log` | Full compiler output from the latest CLI build |
 | `build/hello.json` | Discovered export/signature declaration |
 | `build/hello/` | Lowered Python, bytecode and generated build inputs |
 | `build/release/hello.wasm` | Release deployment artifact |
@@ -144,7 +162,7 @@ Python network API used by the live suites.
 so a caller can parse stdout without removing progress messages. The manifest
 contains `schemaVersion`, the project, MicroPython version, build profile and an
 `artifacts` list. Each item records source, deployment Wasm, metered Wasm, report
-paths and build metadata.
+paths, the build log path, and build metadata.
 
 `cspr.testing.build_contract` consumes this interface for builds on demand.
 An invocation such as `casthon build hello --json > artifacts.json` records it.

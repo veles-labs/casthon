@@ -20,6 +20,7 @@ from micropython import prepare_and_verify, verify
 from softfloat import build as build_softfloat, REVISION as SOFTFLOAT_REVISION, SHA256 as SOFTFLOAT_SHA256
 from minify import interface, minify
 from build_cache import BuildState, digest, file_hash, sync_tree, toolchain_identity, write_changed
+from build_progress import BuildProgress
 
 RECIPE = json.loads((ROOT / "native/toolchain.json").read_text())
 VERSION = RECIPE["micropython"]["version"]
@@ -37,6 +38,7 @@ def main():
     parser.add_argument("--micropython", choices=(VERSION,), default=VERSION,
                         help="MicroPython version supported by this runtime recipe")
     parser.add_argument("--casthon", type=Path, help=argparse.SUPPRESS)
+    parser.add_argument("--progress", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--project-root", type=Path, default=ROOT,
                         help="Project directory containing local contracts.* helper modules")
     parser.add_argument("--output-dir", type=Path, default=OUTPUT,
@@ -64,14 +66,17 @@ def main():
     else:
         heap_mode = heap_mode or "emmalloc-gc0"
     CACHE.mkdir(exist_ok=True)
+    progress = BuildProgress(options.progress)
+    progress.start("Preparing build")
     # The compiler sources, generated port and Emscripten cache are shared.
     # Serialize both CLI builds and legacy Python entrypoints until isolated.
     with (CACHE / "build.lock").open("a+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        build(options, heap_mode)
+        build(options, heap_mode, progress)
 
 
-def build(options, heap_mode):
+def build(options, heap_mode, progress):
+    progress.start("Analyzing and lowering Python")
     project_root = options.project_root.resolve()
     selection = options.target
     source_path = Path(selection) if selection.endswith(".py") else project_root / "contracts" / (selection + ".py")
@@ -104,11 +109,13 @@ def build(options, heap_mode):
     signatures = generated / "_cspr_exports.py"
     write_changed(signatures, generate_exports(source, declaration["exports"], project_root))
     modules["_cspr_exports.py"] = signatures
+    progress.update(0, len(modules))
     for name, path in modules.items():
         output = generated / name
         output.parent.mkdir(parents=True, exist_ok=True)
         write_changed(output, lower_enums(path) if name == "cspr/enums.py" else
                       lower(path, sdk=name.startswith(("cspr/", "_cspr_")), project_root=project_root))
+        progress.advance()
     # Removals must invalidate freezing too: make cannot detect a removed prerequisite.
     modules_changed = write_changed(generated / "modules.json", json.dumps(sorted(modules)) + "\n")
     expected_mpy = {f"module_{index}.mpy" for index in range(len(modules))}
@@ -123,6 +130,7 @@ def build(options, heap_mode):
         f'__attribute__((export_name("{name}"))) void ep_{index}(void) {{ cspr_dispatch("{name}"); }}'
         for index, name in enumerate(declaration["exports"])) + "\n")
 
+    progress.start("Preparing MicroPython runtime")
     archive = CACHE / f"micropython-v{VERSION}.tar.gz"
     if not archive.exists():
         print("Downloading pinned MicroPython", flush=True)
@@ -206,9 +214,12 @@ def build(options, heap_mode):
                        file_hash(ROOT / "tools/wasm-softfloat/Cargo.lock")])
     state = BuildState(generated / "build-cache.json")
     if state.matches(fingerprint(), outputs):
+        progress.start("Reusing cached artifacts")
         print("Using cached contract: " + str(wasm), flush=True)
+        progress.finish(cached=True)
         return
 
+    progress.start("Freezing Python modules", len(modules) + 1)
     compiler_cache = CACHE / "procedural/compiler"
     compiler_cache.mkdir(parents=True, exist_ok=True)
     compiler_source = compiler_cache / f"micropython-{VERSION}"
@@ -223,6 +234,7 @@ def build(options, heap_mode):
         write_changed(compiler_stamp, compiler_profile)
     print("Checking cached bytecode compiler and freezing changed Python modules", flush=True)
     run(["make", "-s", "-j6", "-C", compiler_source / "mpy-cross", f"PYTHON={sys.executable}"])
+    progress.advance()
     mpy_cross = compiler_source / "mpy-cross/build/mpy-cross"
     compiler_hash = file_hash(mpy_cross)
     for index, name in enumerate(sorted(modules)):
@@ -237,7 +249,9 @@ def build(options, heap_mode):
             write_changed(bytecode, temporary.read_bytes())
             temporary.unlink()
             module_state.save(module_hash, [bytecode])
+        progress.advance()
 
+    progress.start("Compiling and linking runtime")
     softfloat_library, softfloat_flags, helper_exports = build_softfloat(ROOT, CACHE, emcc, env, toolchain)
     stamp = generated / "profile.sha256"
     if build.exists() and (not stamp.exists() or stamp.read_text() != profile_hash):
@@ -255,6 +269,7 @@ def build(options, heap_mode):
          f"SOFTFLOAT_LIB={softfloat_library}", "SOFTFLOAT_FLAGS=" + shlex.join(softfloat_flags),
          "SOFTFLOAT_EXPORTS=" + shlex.join(helper_exports)], env=env)
     raw = build / "contract.raw.wasm"
+    progress.start("Optimizing WebAssembly", 3 + int(options.runtime == "asyncify") + int(options.minify))
     # Resolve the port's Asyncify control imports before final Casper validation.
     if options.casthon:
         tool = [options.casthon.resolve(), "__wasm"]
@@ -264,6 +279,7 @@ def build(options, heap_mode):
     mvp = generated / "contract.mvp.wasm"
     run([wasm_opt, raw, "-g", "--enable-bulk-memory", "--enable-sign-ext", "--enable-nontrapping-float-to-int",
          "--llvm-memory-copy-fill-lowering", "--signext-lowering", "-o", mvp])
+    progress.advance()
     unwind_input = mvp
     if options.runtime == "asyncify":
         unwind_input = generated / "contract.asyncify.wasm"
@@ -272,28 +288,38 @@ def build(options, heap_mode):
         run([wasm_opt, mvp, "--disable-bulk-memory", "--disable-sign-ext",
              "--no-inline=cspr_*", "--no-inline=dispatch_body", "-Oz", "--asyncify",
              "--pass-arg=asyncify-imports@", "-g", "-o", unwind_input])
+        progress.advance()
     # Pure integer SoftFloat helpers cannot raise Python exceptions. Lowering
     # after Asyncify also preserves the final validator's Casper-only imports.
     lowered = generated / "contract.softfloat.wasm"
     run([*tool, unwind_input, lowered])
+    progress.advance()
     optimized = generated / "contract.optimized.wasm"
     run([wasm_opt, lowered, "-Oz", "--strip-debug", "--strip-producers", "--strip-target-features", "--mvp-features", "-o", optimized])
     run([*tool, "--check", optimized])
+    progress.advance()
     minification = minify(optimized, wasm, wasm_opt, tool, generated / "minify") if options.minify else {"enabled": False}
     if not options.minify:
         shutil.copyfile(optimized, wasm)
+    else:
+        progress.advance()
+    progress.start("Validating and instrumenting artifacts", 5)
     run([*tool, "--check", wasm])
     imports = {name for module, name, signature in interface(wasm)["imports"]}
     if ("casper_print" in imports) != (options.profile == "debug"):
         raise ValueError("Wasm casper_print import does not match the selected build profile")
+    progress.advance()
     run([*tool, "--instrument", wasm, metered])
+    progress.advance()
     run([*emcc, "-Oz", "--no-entry", "-sSTANDALONE_WASM=1", "-sFILESYSTEM=0", "-sSUPPORT_LONGJMP=0", "-sINITIAL_MEMORY=4194304", "-sSTACK_SIZE=262144",
          "-I" + str(ROOT / "native"), ROOT / "native/readback.c", "-Wl,--export=call", "-o", generated / "readback.raw.wasm"], env=env)
+    progress.advance()
     readback_mvp = generated / "readback.mvp.wasm"
     run([wasm_opt, generated / "readback.raw.wasm", "--enable-bulk-memory", "--enable-sign-ext",
          "--enable-nontrapping-float-to-int", "--llvm-memory-copy-fill-lowering", "--signext-lowering",
          "-Oz", "-o", readback_mvp])
     run([*tool, readback_mvp, output_dir / "readback.wasm"])
+    progress.advance()
     metadata = {"micropython": VERSION, "archiveSha256": SHA256, "bytes": wasm.stat().st_size,
                 "sha256": hashlib.sha256(wasm.read_bytes()).hexdigest(), "profile": "procedural-softfloat-" + options.runtime,
                 "buildProfile": options.profile, "debugPrint": options.profile == "debug",
@@ -319,7 +345,10 @@ def build(options, heap_mode):
     if target == "counter":
         write_changed(output_dir / "build-report.json", json.dumps(metadata, indent=2) + "\n")
     state.save(fingerprint(), outputs)
-    print(json.dumps(metadata, indent=2))
+    progress.advance()
+    progress.finish()
+    if not options.progress:
+        print(json.dumps(metadata, indent=2))
 
 
 if __name__ == "__main__":

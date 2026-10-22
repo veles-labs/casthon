@@ -37,7 +37,7 @@ fn fake_sdk() -> TempDir {
         root.path().join("native/toolchain.json"),
     )
     .unwrap();
-    fs::write(root.path().join("scripts/build.py"), r#"import argparse, hashlib, json
+    fs::write(root.path().join("scripts/build.py"), r#"import argparse, hashlib, json, sys
 from pathlib import Path
 p=argparse.ArgumentParser()
 p.add_argument('source')
@@ -48,6 +48,7 @@ p.add_argument('--runtime')
 p.add_argument('--profile', choices=('debug','release'), default='debug')
 p.add_argument('--heap')
 p.add_argument('--casthon')
+p.add_argument('--progress', action='store_true')
 p.add_argument('--minify', action='store_true')
 a=p.parse_args()
 Path('arguments.json').write_text(json.dumps(vars(a)))
@@ -62,6 +63,7 @@ name=Path(a.source).stem
 (out/(name+'.metered.wasm')).write_bytes(data)
 (out/(name+'-build-report.json')).write_text(json.dumps({'sha256':hashlib.sha256(data).hexdigest(),'micropython':a.micropython,'buildProfile':a.profile}))
 print('worker output belongs on stderr in JSON mode')
+print('worker diagnostic on stderr', file=sys.stderr)
 "#).unwrap();
     root
 }
@@ -156,6 +158,11 @@ fn configured_build_uses_pin_and_emits_clean_json() {
             .ends_with("build/native-errors/minified/token.wasm")
     );
     assert!(String::from_utf8_lossy(&output.stderr).contains("worker output"));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("worker diagnostic"));
+    let log = Path::new(manifest["artifacts"][0]["log"].as_str().unwrap());
+    let transcript = fs::read_to_string(log).unwrap();
+    assert!(transcript.contains("worker output"));
+    assert!(transcript.contains("worker diagnostic"));
     let args: Value =
         serde_json::from_slice(&fs::read(project.path().join("arguments.json")).unwrap()).unwrap();
     assert_eq!(args["micropython"], "1.29.0");
@@ -208,6 +215,130 @@ fn release_flags_select_separate_artifacts_and_reject_conflicts() {
         .output()
         .unwrap();
     assert!(!output.status.success());
+}
+
+#[test]
+fn build_steps_and_worker_failures_are_readable_without_a_terminal() {
+    let project = tempdir().unwrap();
+    let tooling = fake_sdk();
+    fs::write(project.path().join("token.py"), "def call(): pass\n").unwrap();
+    let worker = tooling.path().join("scripts/build.py");
+    let original = fs::read_to_string(&worker).unwrap();
+    let events = r#"
+print(json.dumps({'casthon_build': 1, 'event': 'start', 'name': 'Compiling runtime'}), flush=True)
+for i in range(40): print(f'compiler line {i}', file=sys.stderr, flush=True)
+print('compiler error: example failure', file=sys.stderr, flush=True)
+raise SystemExit(23)
+"#;
+    fs::write(&worker, format!("{original}\n{events}")).unwrap();
+    for flags in [vec![], vec!["--json"], vec!["--no-progress"]] {
+        let output = command(project.path())
+            .args([
+                "--sdk-root",
+                tooling.path().to_str().unwrap(),
+                "build",
+                "token.py",
+            ])
+            .args(&flags)
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(23));
+        assert!(output.stdout.is_empty());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(stderr.contains("compiler line 0"));
+        assert!(stderr.contains("compiler line 39"));
+        assert!(stderr.contains("compiler error: example failure"));
+        assert!(stderr.contains("Build log:"));
+        assert!(!stderr.contains('\x1b'));
+        assert!(!stderr.contains("casthon_build"));
+        assert_eq!(stderr.contains("1. Compiling runtime..."), flags.is_empty());
+        let transcript = fs::read_to_string(project.path().join("build/token-build.log")).unwrap();
+        assert!(transcript.contains("compiler line 0"));
+        assert!(transcript.contains("compiler line 39"));
+        assert!(!transcript.contains("casthon_build"));
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn interactive_build_keeps_a_log_pane_and_progress_rows() {
+    let project = tempdir().unwrap();
+    let tooling = fake_sdk();
+    fs::write(project.path().join("token.py"), "def call(): pass\n").unwrap();
+    let worker = tooling.path().join("scripts/build.py");
+    let original = fs::read_to_string(&worker).unwrap();
+    fs::write(
+        &worker,
+        format!(
+            "{original}\n{}",
+            r#"
+import time
+print(json.dumps({'casthon_build': 1, 'event': 'start', 'name': 'Compiling runtime'}), flush=True)
+for i in range(40):
+    print(f'compiler line {i}', file=sys.stderr, flush=True)
+    time.sleep(0.004)
+"#
+        ),
+    )
+    .unwrap();
+    let probe = r#"
+import errno, fcntl, json, os, pty, select, struct, subprocess, sys, termios, time
+master, slave = pty.openpty()
+fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, 80, 0, 0))
+env = dict(os.environ, TERM='xterm-256color', NO_COLOR='1')
+process = subprocess.Popen([sys.argv[1], '--project-root', sys.argv[2], '--python', sys.executable,
+    '--sdk-root', sys.argv[3], 'build', 'token.py'], cwd=sys.argv[2],
+    stdout=subprocess.PIPE, stderr=slave, env=env)
+os.close(slave)
+screen = bytearray()
+deadline = time.monotonic() + 10
+try:
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0 or not select.select([master], [], [], remaining)[0]:
+            raise TimeoutError('Build display did not finish')
+        try:
+            data = os.read(master, 65536)
+        except OSError as error:
+            if error.errno == errno.EIO: break
+            raise
+        if not data: break
+        screen.extend(data)
+    stdout, _ = process.communicate(timeout=3)
+    print(json.dumps({'code': process.returncode, 'stdout': stdout.decode(), 'screen': screen.decode()}))
+finally:
+    os.close(master)
+    if process.poll() is None:
+        process.kill()
+        process.wait()
+"#;
+    let result = success(
+        Command::new("python3")
+            .args([
+                "-c",
+                probe,
+                env!("CARGO_BIN_EXE_casthon"),
+                project.path().to_str().unwrap(),
+                tooling.path().to_str().unwrap(),
+            ])
+            .output()
+            .unwrap(),
+    );
+    let result: Value = serde_json::from_slice(&result.stdout).unwrap();
+    assert_eq!(result["code"], 0);
+    assert!(result["stdout"].as_str().unwrap().starts_with("Built "));
+    let screen = result["screen"].as_str().unwrap();
+    assert!(screen.contains("Compiling runtime"), "{screen}");
+    assert!(screen.contains("Checking build report"), "{screen}");
+    assert!(screen.contains("compiler line 39"), "{screen}");
+    assert!(
+        screen.contains('\x1b'),
+        "Expected terminal redraws: {screen}"
+    );
+    assert!(!screen.contains("casthon_build"));
+    let transcript = fs::read_to_string(project.path().join("build/token-build.log")).unwrap();
+    assert!(transcript.contains("compiler line 0"));
+    assert!(transcript.contains("compiler line 39"));
 }
 
 #[test]

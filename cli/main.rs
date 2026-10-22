@@ -9,8 +9,10 @@ use std::{
     ffi::OsString,
     fs,
     path::{Path, PathBuf},
-    process::{Command, Stdio},
+    process::Command,
 };
+
+mod progress;
 
 #[derive(Parser)]
 #[command(
@@ -89,6 +91,9 @@ struct Build {
     /// Emit one artifact manifest on stdout; build logs go to stderr.
     #[arg(long)]
     json: bool,
+    /// Stream full compiler output without the interactive progress display.
+    #[arg(long)]
+    no_progress: bool,
 }
 
 #[derive(Default, Deserialize)]
@@ -311,6 +316,13 @@ fn build(project: &Project, options: Build) -> Result<i32> {
     ensure!(worker.is_file(), "SDK checkout needs scripts/build.py");
     let mut artifacts = vec![];
     for source in sources {
+        fs::create_dir_all(&folder)?;
+        let log = folder.join(format!(
+            "{}-build.log",
+            source.file_stem().unwrap().to_string_lossy()
+        ));
+        let mut output_display =
+            progress::BuildOutput::new(&source, &log, options.json, options.no_progress)?;
         let mut command = project.command()?;
         command
             .arg("-u")
@@ -327,22 +339,20 @@ fn build(project: &Project, options: Build) -> Result<i32> {
             .arg("--profile")
             .arg(profile)
             .arg("--casthon")
-            .arg(env::current_exe()?);
+            .arg(env::current_exe()?)
+            .arg("--progress");
         if let Some(heap) = &options.heap {
             command.arg("--heap").arg(heap);
         }
         if options.minify {
             command.arg("--minify");
         }
-        if options.json {
-            command.stdout(Stdio::from(std::io::stderr()));
+        let code = progress::run_worker(&mut command, &mut output_display)?;
+        if code != 0 {
+            output_display.finish(false)?;
+            return Ok(code);
         }
-        let status = command
-            .status()
-            .context("Could not start the Python build worker")?;
-        if !status.success() {
-            return Ok(status.code().unwrap_or(1));
-        }
+        output_display.start("Checking build report", None)?;
         let name = source.file_stem().unwrap().to_string_lossy();
         let wasm = folder.join(format!("{name}.wasm"));
         let report = folder.join(format!("{name}-build-report.json"));
@@ -365,7 +375,8 @@ fn build(project: &Project, options: Build) -> Result<i32> {
         );
         let metered = folder.join(format!("{name}.metered.wasm"));
         ensure!(metered.is_file(), "Builder did not produce metered Wasm");
-        artifacts.push(json!({"source": source, "wasm": wasm, "meteredWasm": metered, "report": report, "metadata": metadata}));
+        artifacts.push(json!({"source": source, "wasm": wasm, "meteredWasm": metered, "report": report, "log": log, "metadata": metadata}));
+        output_display.finish(true)?;
         if !options.json {
             println!("Built {}", wasm.display());
         }
