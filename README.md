@@ -127,6 +127,51 @@ make test-live     # Starts local Casper networks; requires casper-devnet
 `casthon test` is a pytest wrapper. Wasm and live tests are ordinary test suites,
 with the live opt-in described in the [testing guide](docs/testing.md).
 
+## Tooling benchmarks
+
+Matching [counter contracts and six tests](benchmarks/tooling/), measured on
+2026-10-22 with an Apple M1 Max (10 cores, 64 GB RAM, macOS 27.0).
+Times are **median wall-clock seconds across three runs**, including command
+startup. The comparison uses Casthon 0.1.0, Odra 2.9.1 and cargo-odra 0.1.8.
+
+| Workflow | Casthon (seconds) | Odra (seconds) |
+| --- | ---: | ---: |
+| Clean release build | 44.59 | 26.20 |
+| First unchanged build after clean | 15.98 | 0.40 |
+| Cached unchanged build | 1.19 | 0.30 |
+| Incremental build after a source edit | 5.14 | 2.57 |
+| Cold check / Clippy | 0.92 | 33.74 |
+| Cached unchanged check | 0.17 | 0.28 |
+| Incremental check after a source edit | 0.28 | 0.29 |
+| Cold tests | 0.36 | 153.20 |
+| Warm unchanged tests | 0.18 | 0.43 |
+| Tests after a source edit | 0.19 | 1.05 |
+
+Clean/cold runs clear compilation or checker caches; tool installation and
+downloads are excluded. Incremental runs change an entrypoint's return value
+from `1` to `2`. Builds use each tool's standard release pipeline; Casthon also
+produces validated, metered Wasm. Checks compare `casthon check contracts` with
+default-target `cargo clippy --locked -- -D warnings`. Tests run the six matching
+cases through Casthon's native `MockHost`/`ContractHarness` and OdraVM, including
+any required test compilation.
+
+The first unchanged Casthon build in this snapshot recompiles the runtime:
+Emscripten's one-time sanity-check message changes the compiler cache key.
+Later unchanged builds hit the cache. Other sessions were active and OS file
+caches were retained, so these figures are indicative; Odra's cold test runs
+ranged from 150 to 251 seconds.
+
+To repeat the comparison, install cargo-odra 0.1.8 and the required toolchains,
+then run the [benchmark script](scripts/benchmark_tooling.py):
+
+```sh
+.venv/bin/python scripts/benchmark_tooling.py --repeats 3
+```
+
+The runner isolates its builds and defaults to saving reports and raw logs under
+the ignored `.experiments/tooling-benchmarks/` directory. Use
+`--clippy-all-targets` to include test targets in the Clippy comparison.
+
 ## Read more
 
 | Guide | Contents |

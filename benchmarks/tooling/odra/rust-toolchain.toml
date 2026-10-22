@@ -1,0 +1,5 @@
+[toolchain]
+channel = "nightly-2026-01-01"
+profile = "minimal"
+components = ["clippy"]
+targets = ["wasm32-unknown-unknown"]

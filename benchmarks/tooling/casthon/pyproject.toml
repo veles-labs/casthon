@@ -1,0 +1,12 @@
+[tool.casthon]
+micropython = "1.29.0"
+targets = ["contracts/bench_counter.py"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["contracts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
