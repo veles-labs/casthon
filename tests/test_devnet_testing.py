@@ -231,6 +231,20 @@ class LiveLifecycleTests(unittest.TestCase):
             with self.assertRaises(unittest.SkipTest):
                 LiveNetworkTest.setUpClass()
 
+    def test_live_binary_can_be_selected_for_one_run(self):
+        class Example(LiveNetworkTest):
+            binary = "default-launcher"
+
+        with patch.dict("os.environ", {"CSPR_LIVE_TESTS": "1", "CSPR_DEVNET_BIN": "/tmp/local-casper-devnet"}), \
+                patch("cspr.testing.live.DevnetNetwork") as factory:
+            Example.setUpClass()
+            try:
+                self.assertEqual(factory.call_args.kwargs["binary"], "/tmp/local-casper-devnet")
+                factory.return_value.start.assert_called_once()
+            finally:
+                Example.doClassCleanups()
+            factory.return_value.stop.assert_called_once()
+
 
 class BuildCacheTests(unittest.TestCase):
     def test_cache_tracks_helpers_and_validates_artifacts(self):

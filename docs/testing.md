@@ -195,6 +195,10 @@ assets or startup failures fail the suite. Install `casper-devnet` and the pinne
 protocol asset; compiling source additionally requires the documented Wasm
 toolchain. Starting with prebuilt Wasm avoids the build dependency.
 
+Set `CSPR_DEVNET_BIN` to select a particular launcher build for live tests, for
+example `CSPR_DEVNET_BIN=../casper-devnet-launcher/target/debug/casper-devnet`.
+This overrides the test class's `binary` setting for that run.
+
 ```python
 from cspr import CLU32
 from cspr.testing import LiveNetworkTest
