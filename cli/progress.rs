@@ -1,3 +1,4 @@
+use super::output::Verbosity;
 use anyhow::{Context, Result};
 use console::{Term, strip_ansi_codes, truncate_str};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -18,6 +19,7 @@ use std::{
 const LOG_LINES: usize = 4;
 
 pub struct WorkflowOutput {
+    verbosity: Verbosity,
     interactive: bool,
     step: usize,
     active: Option<ProgressBar>,
@@ -56,14 +58,17 @@ pub fn display_command(command: &Command) -> String {
 }
 
 impl WorkflowOutput {
-    pub fn new(title: impl Display) -> Self {
-        let interactive = interactive_stderr();
-        if interactive {
-            eprintln!("\n{}", console::style(title).bold());
-        } else {
-            eprintln!("\n{title}");
+    pub fn new(title: impl Display, verbosity: Verbosity) -> Self {
+        let interactive = interactive_stderr() && verbosity >= Verbosity::Verbose;
+        if verbosity >= Verbosity::Normal {
+            if interactive {
+                eprintln!("\n{}", console::style(title).bold());
+            } else {
+                eprintln!("\n{title}");
+            }
         }
         Self {
+            verbosity,
             interactive,
             step: 0,
             active: None,
@@ -74,6 +79,9 @@ impl WorkflowOutput {
     }
 
     pub fn detail(&self, label: &str, value: impl Display) {
+        if self.verbosity < Verbosity::Verbose {
+            return;
+        }
         let line = if self.interactive {
             format!("  {:<10} {}", console::style(label).dim(), value)
         } else {
@@ -83,6 +91,9 @@ impl WorkflowOutput {
     }
 
     pub fn start(&mut self, name: impl Into<String>) {
+        if self.verbosity < Verbosity::Verbose {
+            return;
+        }
         self.finish(None::<&str>);
         self.step += 1;
         self.active_name = clean(&name.into());
@@ -127,10 +138,28 @@ impl WorkflowOutput {
     }
 
     pub fn note(&self, message: impl Display) {
+        if self.verbosity < Verbosity::Verbose {
+            return;
+        }
         self.println(format!("    {message}"));
     }
 
+    pub fn status(&self, message: impl Display) {
+        if self.verbosity >= Verbosity::Normal {
+            self.println(message.to_string());
+        }
+    }
+
+    pub fn debug(&self, message: impl Display) {
+        if self.verbosity >= Verbosity::Debug {
+            self.println(message.to_string());
+        }
+    }
+
     pub fn command(&self, command: &Command, captured: bool) {
+        if self.verbosity < Verbosity::Debug {
+            return;
+        }
         let disposition = if captured {
             "capturing output"
         } else {
@@ -143,6 +172,9 @@ impl WorkflowOutput {
     }
 
     pub fn passthrough_start(&mut self, name: impl Into<String>) {
+        if self.verbosity < Verbosity::Verbose {
+            return;
+        }
         self.finish(None::<&str>);
         self.step += 1;
         let name = clean(&name.into());
@@ -168,19 +200,20 @@ impl WorkflowOutput {
 
     pub fn external_start(&mut self, name: impl Into<String>, command: &Command) {
         self.passthrough_start(name);
-        self.command(command, false);
-        self.note(
-            "casper-cli now owns terminal input/output until it exits; wallet prompts appear below",
-        );
-        self.println("    ── casper-cli output ─────────────────────────────────".to_owned());
+        self.command(command, true);
+        self.debug("casper-cli reads terminal input directly; wallet prompts appear below");
+        self.debug("    ── casper-cli output ─────────────────────────────────");
     }
 
     pub fn external_finish(&mut self, success: bool) {
-        self.println("    ── end casper-cli output ─────────────────────────────".to_owned());
+        self.debug("    ── end casper-cli output ─────────────────────────────");
         self.passthrough_finish(success);
     }
 
     pub fn heartbeat(&self, description: &str, hint: &str, started: Instant) {
+        if self.verbosity < Verbosity::Verbose {
+            return;
+        }
         self.println(format!(
             "    ↳ Still {description} after {}; {hint}",
             workflow_elapsed(started)
@@ -235,6 +268,7 @@ enum Event {
 }
 
 pub struct BuildOutput {
+    quiet: bool,
     terminal: Option<MultiProgress>,
     heading: Option<ProgressBar>,
     logs: Option<ProgressBar>,
@@ -262,8 +296,19 @@ fn clean(line: &str) -> String {
 
 impl BuildOutput {
     pub fn new(source: &Path, log: &Path, machine: bool, no_progress: bool) -> Result<Self> {
+        Self::with_quiet(source, log, machine, no_progress, false)
+    }
+
+    pub fn with_quiet(
+        source: &Path,
+        log: &Path,
+        machine: bool,
+        no_progress: bool,
+        quiet: bool,
+    ) -> Result<Self> {
         let transcript = BufWriter::new(File::create(log).context("Cannot create build log")?);
-        let interactive = !machine
+        let interactive = !quiet
+            && !machine
             && !no_progress
             && io::stderr().is_terminal()
             && std::env::var("TERM").as_deref() != Ok("dumb");
@@ -280,6 +325,7 @@ impl BuildOutput {
             term.add(bar)
         });
         let output = Self {
+            quiet,
             terminal,
             heading,
             logs,
@@ -289,7 +335,7 @@ impl BuildOutput {
             tail: VecDeque::with_capacity(LOG_LINES),
             transcript,
             log_path: log.display().to_string(),
-            plain_steps: !machine && !no_progress,
+            plain_steps: !quiet && !machine && !no_progress,
             finished: false,
         };
         output.tick();
@@ -381,7 +427,7 @@ impl BuildOutput {
     fn log(&mut self, bytes: &[u8]) -> Result<()> {
         self.transcript.write_all(bytes)?;
         let text = String::from_utf8_lossy(bytes);
-        if self.terminal.is_none() {
+        if self.terminal.is_none() && !self.quiet {
             io::stderr().lock().write_all(bytes)?;
         } else {
             // A child cannot move the cursor or wrap a long diagnostic into

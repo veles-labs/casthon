@@ -1,4 +1,5 @@
-use super::{Build, Project, absolute, build, hash, progress::WorkflowOutput};
+use super::output::{CommandResult, OutputOptions, Verbosity};
+use super::{Build, Project, absolute, build_with_output, hash, progress::WorkflowOutput};
 use anyhow::{Context, Result, bail, ensure};
 use clap::Args;
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,7 @@ use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
-    io::Read,
+    io::{Read, Write},
     path::{Path, PathBuf},
     process::{Child, Command, ExitStatus, Output, Stdio},
     thread,
@@ -50,17 +51,66 @@ fn wait_with_progress(
     }
 }
 
-fn status_with_progress(
+fn terminal_output(
     command: &mut Command,
-    description: &str,
-    waiting_hint: &str,
-    workflow: &WorkflowOutput,
-) -> Result<ExitStatus> {
+    action: &str,
+    workflow: &mut WorkflowOutput,
+) -> Result<Output> {
+    command
+        .stdin(Stdio::inherit())
+        .stderr(Stdio::piped())
+        .stdout(Stdio::piped());
+    workflow.external_start(action, command);
     let started = Instant::now();
     let mut child = command
         .spawn()
-        .with_context(|| format!("Could not start {description}"))?;
-    wait_with_progress(&mut child, description, waiting_hint, started, workflow)
+        .with_context(|| format!("Could not start {action}"))?;
+    let mut stdout = child
+        .stdout
+        .take()
+        .context("Could not capture casper-cli output")?;
+    let reader = thread::spawn(move || {
+        let mut bytes = Vec::new();
+        stdout.read_to_end(&mut bytes).map(|_| bytes)
+    });
+    let mut stderr = child
+        .stderr
+        .take()
+        .context("Could not capture casper-cli diagnostics")?;
+    let diagnostics = thread::spawn(move || -> std::io::Result<Vec<u8>> {
+        let mut captured = Vec::new();
+        let mut buffer = [0_u8; 4096];
+        loop {
+            let size = stderr.read(&mut buffer)?;
+            if size == 0 {
+                break;
+            }
+            // Stream prompts immediately, including prompts without a newline.
+            std::io::stderr().write_all(&buffer[..size])?;
+            captured.extend_from_slice(&buffer[..size]);
+        }
+        Ok(captured)
+    });
+    let status = wait_with_progress(
+        &mut child,
+        action,
+        "casper-cli may be waiting for wallet unlock, an RPC response or local execution",
+        started,
+        workflow,
+    )?;
+    let stdout = reader
+        .join()
+        .map_err(|_| anyhow::anyhow!("casper-cli output reader panicked"))??;
+    let stderr = diagnostics
+        .join()
+        .map_err(|_| anyhow::anyhow!("casper-cli diagnostic reader panicked"))??;
+    workflow.debug(String::from_utf8_lossy(&stdout));
+    workflow.external_finish(status.success());
+    Ok(Output {
+        status,
+        stdout,
+        stderr,
+    })
 }
 
 fn output_with_progress(
@@ -147,6 +197,8 @@ pub struct Deploy {
     no_build: bool,
     #[command(flatten)]
     wait: ExecutionWait,
+    #[command(flatten)]
+    output: OutputOptions,
 }
 
 #[derive(Args)]
@@ -178,6 +230,26 @@ pub struct Call {
     simulate: bool,
     #[command(flatten)]
     wait: ExecutionWait,
+    #[command(flatten)]
+    output: OutputOptions,
+}
+
+impl Call {
+    pub fn presentation(&self) -> (OutputOptions, CommandResult) {
+        let mut result = CommandResult::new("call", self.broadcast, self.simulate);
+        result.deployment = Some(self.deployment.clone());
+        result.entry_point = Some(self.entry_point.clone());
+        result.network = self.network.clone();
+        (self.output, result)
+    }
+}
+
+impl Deploy {
+    pub fn presentation(&self) -> (OutputOptions, CommandResult) {
+        let mut result = CommandResult::new("deploy", self.broadcast, self.simulate);
+        result.network = Some(self.network.clone());
+        (self.output, result)
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -479,36 +551,15 @@ fn submitted_hash(
     action: &str,
     workflow: &mut WorkflowOutput,
 ) -> Result<String> {
-    command
-        .arg("--raw")
-        .stdin(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::piped());
-    workflow.external_start(action, command);
-    let started = Instant::now();
-    let mut child = command
-        .spawn()
-        .context("Could not run casper-cli transaction submission")?;
-    let mut stdout = child
-        .stdout
-        .take()
-        .context("Could not capture casper-cli transaction hash")?;
-    let stdout_reader = thread::spawn(move || {
-        let mut text = String::new();
-        stdout.read_to_string(&mut text).map(|_| text)
-    });
-    let status = wait_with_progress(
-        &mut child,
-        action,
-        "casper-cli may be waiting for wallet unlock or an RPC response",
-        started,
-        workflow,
-    )?;
-    let stdout = stdout_reader
-        .join()
-        .map_err(|_| anyhow::anyhow!("casper-cli transaction hash reader panicked"))??;
-    workflow.external_finish(status.success());
-    ensure!(status.success(), "casper-cli transaction submission failed");
+    command.arg("--raw");
+    let output = terminal_output(command, action, workflow)?;
+    ensure!(
+        output.status.success(),
+        "casper-cli transaction submission failed: {}",
+        String::from_utf8_lossy(&output.stderr).trim()
+    );
+    let stdout = String::from_utf8(output.stdout)
+        .context("casper-cli returned non-UTF-8 transaction hash")?;
     let value = stdout.trim();
     ensure!(
         value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()),
@@ -518,6 +569,44 @@ fn submitted_hash(
         "transaction-v1-hash-{}",
         value.to_ascii_lowercase()
     ))
+}
+
+fn preview(
+    command: &mut Command,
+    action: &str,
+    workflow: &mut WorkflowOutput,
+    report: &mut CommandResult,
+) -> Result<i32> {
+    command.arg("--raw");
+    let output = terminal_output(command, action, workflow)?;
+    if output.stdout.is_empty() && !output.status.success() {
+        bail!(
+            "casper-cli execution failed (status {}): {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+    }
+    let result: Value = serde_json::from_slice(&output.stdout).context(
+        "casper-cli did not return structured execution JSON; rebuild Veles casper-cli with --simulate --raw support"
+    )?;
+    ensure!(
+        result.is_object(),
+        "casper-cli execution result must be a JSON object"
+    );
+    report.error = result
+        .get("error")
+        .and_then(Value::as_str)
+        .or_else(|| {
+            result
+                .pointer("/execution_result/error")
+                .and_then(Value::as_str)
+        })
+        .map(str::to_owned);
+    let failed =
+        report.error.is_some() || result.get("success").and_then(Value::as_bool) == Some(false);
+    report.preview(result);
+    let code = output.status.code().unwrap_or(1);
+    Ok(if failed && code == 0 { 1 } else { code })
 }
 
 fn execution_error(execution: &Value) -> Result<Option<String>> {
@@ -700,7 +789,7 @@ fn wait_for_execution(
     timeout: Duration,
     workflow: &mut WorkflowOutput,
 ) -> Result<Value> {
-    println!("Waiting for execution...");
+    workflow.note("Waiting for execution...");
     workflow.start("Waiting for transaction execution");
     let started = Instant::now();
     let mut attempt = 1_u64;
@@ -894,10 +983,17 @@ fn call_target_kind(kind: &CallTargetKind) -> &'static str {
     }
 }
 
-pub fn call(project: &Project, casper_cli: &Path, options: Call) -> Result<i32> {
+pub fn call(
+    project: &Project,
+    casper_cli: &Path,
+    options: Call,
+    report: &mut CommandResult,
+) -> Result<i32> {
     let (manifest_path, manifest) =
         read_manifest(project, &options.deployment, options.network.as_deref())?;
     let record = callable_record(&manifest)?;
+    report.network = Some(manifest.network_profile.clone());
+    report.manifest = Some(manifest_path.clone());
     ensure!(
         record.network_profile == manifest.network_profile
             && record.chain_name == manifest.chain_name,
@@ -938,10 +1034,10 @@ pub fn call(project: &Project, casper_cli: &Path, options: Call) -> Result<i32> 
         "node speculative execution — no submission"
     };
 
-    let mut workflow = WorkflowOutput::new(format!(
-        "Calling {}::{}",
-        options.deployment, options.entry_point
-    ));
+    let mut workflow = WorkflowOutput::new(
+        format!("Calling {}::{}", options.deployment, options.entry_point),
+        options.output.verbosity(),
+    );
     workflow.detail("Manifest", relative(project, &manifest_path).display());
     workflow.detail(
         "Target",
@@ -1013,7 +1109,9 @@ pub fn call(project: &Project, casper_cli: &Path, options: Call) -> Result<i32> 
             "Signing and submitting contract call",
             &mut workflow,
         )?;
-        println!("Submitted {transaction_hash}");
+        report.transaction_hash = Some(transaction_hash.clone());
+        report.status = "submitted".to_owned();
+        workflow.status(format!("Submitted {transaction_hash}"));
         if options.wait.no_wait {
             return Ok(0);
         }
@@ -1024,42 +1122,38 @@ pub fn call(project: &Project, casper_cli: &Path, options: Call) -> Result<i32> 
             Duration::from_secs(options.wait.wait_timeout),
             &mut workflow,
         )?;
+        report.block_height = execution["block_height"].as_u64();
+        report.gas_consumed = gas_consumed(&execution);
+        report.result = Some(execution.clone());
         if let Some(error) = execution_error(&execution)? {
             bail!("Transaction {transaction_hash} failed: {error}");
         }
-        println!("Executed in block {}", execution_block(&execution));
+        report.status = "executed".to_owned();
         return Ok(0);
     }
-    let (action, waiting_hint) = if options.simulate {
+    let action = if options.simulate {
         command.arg("--simulate");
-        (
-            "Simulating contract call locally",
-            "casper-cli may be waiting for wallet access, an RPC state query, or local execution",
-        )
+        "Simulating contract call locally"
     } else {
         command.arg("--speculative");
-        (
-            "Speculatively executing contract call",
-            "casper-cli may be waiting for wallet access or an RPC response",
-        )
+        "Speculatively executing contract call"
     };
-    command
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit());
-    println!("{action}; pass --broadcast to submit it.");
-    workflow.external_start(action, &command);
-    let status = status_with_progress(&mut command, action, waiting_hint, &workflow)?;
-    workflow.external_finish(status.success());
-    Ok(status.code().unwrap_or(1))
+    workflow.note(format!("{action}; pass --broadcast to submit it."));
+    preview(&mut command, action, &mut workflow, report)
 }
 
-pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i32> {
+pub fn deploy(
+    project: &Project,
+    casper_cli: &Path,
+    options: Deploy,
+    report: &mut CommandResult,
+) -> Result<i32> {
     let source = select_source(project, options.target.as_deref())?;
     let name = source
         .file_stem()
         .and_then(|name| name.to_str())
         .context("Contract source needs a UTF-8 filename")?;
+    report.deployment = Some(name.to_owned());
     let mode = if options.broadcast {
         "broadcast — signs and submits to the network"
     } else if options.simulate {
@@ -1067,7 +1161,7 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
     } else {
         "node speculative execution — no submission"
     };
-    let mut workflow = WorkflowOutput::new(format!("Deploying {name}"));
+    let mut workflow = WorkflowOutput::new(format!("Deploying {name}"), options.output.verbosity());
     workflow.detail("Contract", relative(project, &source).display());
     workflow.detail("Network", &options.network);
     workflow.detail("Mode", mode);
@@ -1091,7 +1185,8 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
         workflow.passthrough_start("Building release artifact with Casthon");
         workflow.note(format!("Source: {}", source.display()));
         workflow.note("Nested Casthon build progress follows");
-        let code = build(
+        workflow.status("Building release artifact...");
+        let code = build_with_output(
             project,
             Build {
                 targets: options.target.clone().into_iter().collect(),
@@ -1105,9 +1200,18 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
                 json: false,
                 no_progress: false,
             },
+            false,
+            options.output.verbosity() < Verbosity::Verbose,
         )?;
         workflow.passthrough_finish(code == 0);
         if code != 0 {
+            report.error = Some(format!(
+                "Release build failed (exit status {code}); see {}",
+                project
+                    .root
+                    .join(format!("build/release/{name}-build.log"))
+                    .display()
+            ));
             return Ok(code);
         }
     } else {
@@ -1126,48 +1230,36 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
 
     workflow.start(format!("Selecting casper-cli network {}", options.network));
     let (network, chain_name) = select_network(casper_cli, &options.network, &workflow)?;
+    report.network = Some(network.clone());
     workflow.finish(Some(format!("{network} ({chain_name})")));
-    println!("Network: {network} ({chain_name})");
-    println!(
+    workflow.note(format!("Network: {network} ({chain_name})"));
+    workflow.note(format!(
         "Artifact: {} ({})",
         artifact.wasm.display(),
         artifact.sha256
-    );
+    ));
 
     let mut command = put_command(casper_cli, project, &options, &artifact);
     if !options.broadcast {
-        let (flag, action, waiting_hint) = if options.simulate {
-            (
-                "--simulate",
-                "Simulating installation locally",
-                "casper-cli may be waiting for wallet access, an RPC state query, or local execution",
-            )
+        let (flag, action) = if options.simulate {
+            ("--simulate", "Simulating installation locally")
         } else {
-            (
-                "--speculative",
-                "Speculatively executing installation",
-                "casper-cli may be waiting for wallet access or an RPC response",
-            )
+            ("--speculative", "Speculatively executing installation")
         };
-        println!("{action}; pass --broadcast to submit it.");
-        command
-            .arg(flag)
-            .stdin(Stdio::inherit())
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit());
-        workflow.external_start(action, &command);
-        let status = status_with_progress(&mut command, action, waiting_hint, &workflow)?;
-        workflow.external_finish(status.success());
-        return Ok(status.code().unwrap_or(1));
+        workflow.note(format!("{action}; pass --broadcast to submit it."));
+        command.arg(flag);
+        return preview(&mut command, action, &mut workflow, report);
     }
 
-    println!("Submitting installation from {}...", options.from);
+    workflow.note(format!("Submitting installation from {}...", options.from));
     let transaction_hash = submitted_hash(
         &mut command,
         "Signing and submitting installation",
         &mut workflow,
     )?;
-    println!("Submitted {transaction_hash}");
+    report.transaction_hash = Some(transaction_hash.clone());
+    report.status = "submitted".to_owned();
+    workflow.status(format!("Submitted {transaction_hash}"));
     let mut record = DeploymentRecord {
         status: "submitted".to_owned(),
         network_profile: network.clone(),
@@ -1191,9 +1283,10 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
     };
     workflow.start("Recording submitted deployment");
     let mut path = write_manifest(project, name, &network, &chain_name, record.clone())?;
+    report.manifest = Some(path.clone());
+    report.result = Some(serde_json::to_value(&record)?);
     workflow.finish(Some(path.display()));
     if options.wait.no_wait {
-        println!("Recorded {}", path.display());
         return Ok(0);
     }
 
@@ -1207,6 +1300,8 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
     record.block_hash = execution["block_hash"].as_str().map(str::to_owned);
     record.block_height = execution["block_height"].as_u64();
     record.gas_consumed = gas_consumed(&execution);
+    report.block_height = record.block_height;
+    report.gas_consumed = record.gas_consumed.clone();
     record.addresses = addresses(&execution);
     record.error = execution_error(&execution)?;
     record.status = if record.error.is_some() {
@@ -1219,6 +1314,7 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
     }
     workflow.start("Updating deployment manifest");
     path = write_manifest(project, name, &network, &chain_name, record.clone())?;
+    report.result = Some(serde_json::to_value(&record)?);
     workflow.finish(Some(path.display()));
     if let Some(error) = &record.error {
         bail!(
@@ -1226,18 +1322,17 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
             path.display()
         );
     }
-    println!("Executed in block {}", execution_block(&execution));
-    println!("Recorded {}", path.display());
+    report.status = "executed".to_owned();
     if let Some(target) = &record.call_target {
-        println!(
+        workflow.note(format!(
             "Call target: {} {}",
             call_target_kind(&target.kind),
             target.hash
-        );
+        ));
         if record.abi.entry_points.is_empty() {
             workflow.note("No stored entry points were declared by this artifact");
         } else {
-            println!(
+            workflow.note(format!(
                 "Callable entry points: {}",
                 record
                     .abi
@@ -1246,8 +1341,8 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
                     .cloned()
                     .collect::<Vec<_>>()
                     .join(", ")
-            );
-            println!("Next: casthon call {name} <entry-point>");
+            ));
+            workflow.note(format!("Next: casthon call {name} <entry-point>"));
         }
     } else {
         workflow.note(

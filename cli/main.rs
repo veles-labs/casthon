@@ -14,6 +14,7 @@ use std::{
 
 mod deployment;
 mod doctor;
+mod output;
 mod progress;
 mod templates;
 
@@ -258,6 +259,15 @@ fn hash(bytes: &[u8]) -> String {
 }
 
 fn build(project: &Project, options: Build) -> Result<i32> {
+    build_with_output(project, options, true, false)
+}
+
+fn build_with_output(
+    project: &Project,
+    options: Build,
+    announce: bool,
+    quiet: bool,
+) -> Result<i32> {
     let pin = project.pin(options.micropython.as_deref())?;
     let profile = if options.release {
         "release"
@@ -331,8 +341,17 @@ fn build(project: &Project, options: Build) -> Result<i32> {
             "{}-build.log",
             source.file_stem().unwrap().to_string_lossy()
         ));
-        let mut output_display =
-            progress::BuildOutput::new(&source, &log, options.json, options.no_progress)?;
+        let mut output_display = if quiet {
+            progress::BuildOutput::with_quiet(
+                &source,
+                &log,
+                options.json,
+                options.no_progress,
+                true,
+            )?
+        } else {
+            progress::BuildOutput::new(&source, &log, options.json, options.no_progress)?
+        };
         let mut command = project.command()?;
         command
             .arg("-u")
@@ -387,11 +406,11 @@ fn build(project: &Project, options: Build) -> Result<i32> {
         ensure!(metered.is_file(), "Builder did not produce metered Wasm");
         artifacts.push(json!({"source": source, "wasm": wasm, "meteredWasm": metered, "report": report, "log": log, "metadata": metadata}));
         output_display.finish(true)?;
-        if !options.json {
+        if announce && !options.json {
             println!("Built {}", wasm.display());
         }
     }
-    if options.json {
+    if announce && options.json {
         println!(
             "{}",
             serde_json::to_string(
@@ -572,6 +591,21 @@ fn new_project(project: &Project, directory: &Path, template: &str) -> Result<i3
 }
 
 fn run(cli: Cli) -> Result<i32> {
+    let presentation = match &cli.command {
+        Action::Call(options) => Some(options.presentation()),
+        Action::Deploy(options) => Some(options.presentation()),
+        _ => None,
+    };
+    let mut report = presentation.as_ref().map(|(_, report)| report.clone());
+    let outcome = run_command(cli, report.as_mut());
+    if let Some((output, _)) = presentation {
+        output.finish(report.expect("network command has result"), outcome)
+    } else {
+        outcome
+    }
+}
+
+fn run_command(cli: Cli, report: Option<&mut output::CommandResult>) -> Result<i32> {
     if let Action::Wasm(arguments) = &cli.command {
         wasm_softfloat::run_tool(
             arguments
@@ -594,8 +628,15 @@ fn run(cli: Cli) -> Result<i32> {
         Action::Check(args) => project.forward("mypy", &args.args),
         Action::Inspect { wasm, json } => inspect(&project, &wasm, json),
         Action::Doctor => doctor::run(&project, &casper_cli),
-        Action::Deploy(options) => deployment::deploy(&project, &casper_cli, options),
-        Action::Call(options) => deployment::call(&project, &casper_cli, options),
+        Action::Deploy(options) => deployment::deploy(
+            &project,
+            &casper_cli,
+            options,
+            report.expect("deploy result"),
+        ),
+        Action::Call(options) => {
+            deployment::call(&project, &casper_cli, options, report.expect("call result"))
+        }
         Action::New {
             directory,
             template,

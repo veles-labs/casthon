@@ -89,14 +89,14 @@ elif [ "$1 $2" = "network list" ]; then
   printf '| Name | Chain | Active | RPC |\n| testnet | casper-test | yes | https://rpc |\n'
 elif [ "$1 $2" = "transaction put" ]; then
   case " $* " in
-    *' --simulate '*) printf 'Simulation result on testnet\nExecution succeeded.\n' ;;
-    *' --speculative '*) printf 'Speculative execution result on testnet\nExecution succeeded.\n' ;;
+    *' --simulate '*) printf '%s\n' '{{"schemaVersion":1,"success":true,"blockHeight":42,"gasConsumed":"137","returnValue":null,"error":null}}' ;;
+    *' --speculative '*) printf '%s\n' '{{"execution_result":{{"consumed":"137","error":null}}}}' ;;
     *) printf 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n' ;;
   esac
 elif [ "$1 $2" = "transaction call" ]; then
   case " $* " in
-    *' --simulate '*) printf 'Call simulation result on testnet\nReturn Bool: true\n' ;;
-    *' --speculative '*) printf 'Call speculative result on testnet\nReturn Bool: true\n' ;;
+    *' --simulate '*) printf '%s\n' '{{"schemaVersion":1,"success":true,"blockHeight":42,"gasConsumed":"137","returnValue":{{"cl_type":"Bool","bytes":"01","parsed":true}},"error":null}}' ;;
+    *' --speculative '*) printf '%s\n' '{{"execution_result":{{"consumed":"137","error":null}}}}' ;;
     *' --raw '*) printf 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n' ;;
     *) printf 'Contract call submitted to testnet: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n' ;;
   esac
@@ -138,6 +138,8 @@ fn deployed_call_project() -> TempDir {
             "artifact": artifact,
             "abi": {"artifactSha256": "artifact-hash", "entryPoints": {
                 "flip": {"args": [], "returns": "Unit", "access": "public",
+                         "entryPointType": "called", "payment": "caller"},
+                "get": {"args": [], "returns": "Bool", "access": "public",
                          "entryPointType": "called", "payment": "caller"}
             }},
             "signer": "wallet:account-0", "arguments": [], "paymentAmountCspr": "800",
@@ -169,17 +171,17 @@ fn call_broadcast_waits_through_pending_execution_and_reports_success() {
         command(project.path())
             .arg("--casper-cli")
             .arg(&casper_cli)
-            .args(["call", "flipper", "flip", "--broadcast"])
+            .args(["call", "flipper", "flip", "--broadcast", "-vv"])
             .output()
             .unwrap(),
     );
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stdout.contains("Submitted transaction-v1-hash-bbbb"),
+        stdout.contains("Transaction: transaction-v1-hash-bbbb"),
         "{stdout}"
     );
-    assert!(stdout.contains("Waiting for execution"), "{stdout}");
+    assert!(stderr.contains("Waiting for execution"), "{stderr}");
     assert!(stdout.contains("Executed in block 43"), "{stdout}");
     assert!(
         stderr.contains("Signing and submitting contract call"),
@@ -298,6 +300,39 @@ fn call_broadcast_timeout_reports_the_submitted_hash() {
 }
 
 #[test]
+#[cfg(unix)]
+fn call_text_verbosity_controls_diagnostics_without_changing_results() {
+    let project = deployed_call_project();
+    let (casper_cli, _) = fake_casper_cli(project.path(), "null");
+    for level in [None, Some("-q"), Some("-v"), Some("-vv")] {
+        let mut call = command(project.path());
+        call.arg("--casper-cli")
+            .arg(&casper_cli)
+            .args(["call", "flipper", "get", "--simulate"]);
+        if let Some(level) = level {
+            call.arg(level);
+        }
+        let output = success(call.output().unwrap());
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if level == Some("-q") {
+            assert_eq!(stdout, "true\n");
+            assert!(stderr.is_empty(), "{stderr}");
+        } else {
+            assert!(stdout.contains("Return Bool: true"), "{stdout}");
+            assert!(stdout.contains("Gas consumed: 137"), "{stdout}");
+            assert!(stderr.contains("Calling flipper::get"), "{stderr}");
+        }
+        assert_eq!(
+            stderr.contains("Checking Veles Labs casper-cli"),
+            matches!(level, Some("-v" | "-vv"))
+        );
+        assert_eq!(stderr.contains("Shelling out"), level == Some("-vv"));
+        assert!(!stdout.contains("Shelling out"), "{stdout}");
+    }
+}
+
+#[test]
 fn test_delegates_arguments_working_directory_and_exit_code() {
     let project = tempdir().unwrap();
     fs::write(project.path().join("pytest.py"), "import json,os,sys\nprint(json.dumps({'args':sys.argv[1:],'cwd':os.getcwd()}))\nraise SystemExit(7)\n").unwrap();
@@ -375,16 +410,17 @@ fn deploy_builds_release_and_speculatively_executes_without_a_manifest() {
                 "wallet:account-0",
                 "--arg",
                 "initial:Bool=false",
+                "-vv",
             ])
             .output()
             .unwrap(),
     );
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stdout.contains("Built "), "{stdout}");
+    assert!(!stdout.contains("Built "), "{stdout}");
     assert!(
-        stdout.contains("Speculatively executing installation"),
-        "{stdout}"
+        stderr.contains("Speculatively executing installation"),
+        "{stderr}"
     );
     assert!(stdout.contains("Execution succeeded"), "{stdout}");
     assert!(
@@ -396,11 +432,11 @@ fn deploy_builds_release_and_speculatively_executes_without_a_manifest() {
         "{stderr}"
     );
     assert!(
-        stderr.contains("casper-cli now owns terminal input/output"),
+        stderr.contains("casper-cli reads terminal input directly"),
         "{stderr}"
     );
     assert!(
-        stderr.contains("Shelling out (terminal handoff):")
+        stderr.contains("Shelling out (capturing output):")
             && stderr.contains("transaction put build/release/flipper.wasm")
             && stderr.contains("--speculative"),
         "{stderr}"
@@ -436,6 +472,7 @@ fn deploy_builds_release_and_speculatively_executes_without_a_manifest() {
                 "initial:Bool=false",
                 "--no-build",
                 "--simulate",
+                "-vv",
             ])
             .output()
             .unwrap(),
@@ -443,10 +480,10 @@ fn deploy_builds_release_and_speculatively_executes_without_a_manifest() {
     let stdout = String::from_utf8_lossy(&simulated.stdout);
     let stderr = String::from_utf8_lossy(&simulated.stderr);
     assert!(
-        stdout.contains("Simulating installation locally"),
-        "{stdout}"
+        stderr.contains("Simulating installation locally"),
+        "{stderr}"
     );
-    assert!(stdout.contains("Simulation result on testnet"), "{stdout}");
+    assert!(stdout.contains("Execution succeeded"), "{stdout}");
     assert!(
         stderr.contains("Simulating installation locally finished after"),
         "{stderr}"
@@ -490,6 +527,7 @@ fn deploy_broadcast_waits_and_records_an_executed_manifest() {
                 "--payment-amount",
                 "23.5",
                 "--broadcast",
+                "-vv",
             ])
             .output()
             .unwrap(),
@@ -497,14 +535,14 @@ fn deploy_broadcast_waits_and_records_an_executed_manifest() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stdout.contains("Submitted transaction-v1-hash-aaaa"),
-        "{stdout}"
+        stderr.contains("Submitted transaction-v1-hash-aaaa"),
+        "{stderr}"
     );
     assert!(stdout.contains("Executed in block 42"), "{stdout}");
     assert!(
-        stdout.contains("Callable entry points: flip, get, set")
-            && stdout.contains("Next: casthon call flipper <entry-point>"),
-        "{stdout}"
+        stderr.contains("Callable entry points: flip, get, set")
+            && stderr.contains("Next: casthon call flipper <entry-point>"),
+        "{stderr}"
     );
     assert!(
         stderr.contains("Signing and submitting installation"),
@@ -562,13 +600,13 @@ fn deploy_broadcast_waits_and_records_an_executed_manifest() {
         command(project.path())
             .arg("--casper-cli")
             .arg(&casper_cli)
-            .args(["call", "flipper", "set", "--arg", "value=true"])
+            .args(["call", "flipper", "set", "--arg", "value=true", "-vv"])
             .output()
             .unwrap(),
     );
     let stdout = String::from_utf8_lossy(&called.stdout);
     let stderr = String::from_utf8_lossy(&called.stderr);
-    assert!(stdout.contains("Call speculative result"), "{stdout}");
+    assert!(stdout.contains("Execution succeeded"), "{stdout}");
     assert!(stderr.contains("Calling flipper::set"), "{stderr}");
     assert!(stderr.contains("package package-111"), "{stderr}");
     assert!(stderr.contains("Returns    Unit"), "{stderr}");

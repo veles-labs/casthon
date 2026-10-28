@@ -207,13 +207,10 @@ Broadcast deployments and calls use the same wait options.
 an error and includes the submitted transaction hash; the transaction may still
 execute on the network.
 
-During network operations Casthon shows a deployment summary and numbered
-phases. Every external invocation is identified as a captured command or a
-terminal handoff, with a copyable command line and clear boundaries around
-`casper-cli` output. If a command takes more than five seconds, a heartbeat
-identifies whether it is still waiting for wallet unlock, an RPC response, or
-transaction execution. Wallet passwords are entered directly into
-`casper-cli`; Casthon does not read or log them.
+Network commands print a compact result by default. `-v` shows the deployment
+summary, numbered phases and five-second heartbeats. `-vv` also shows copyable
+external commands and backend output. Diagnostics use stderr. Wallet passwords
+are entered directly into `casper-cli`; Casthon does not read or log them.
 
 Successful submissions are written atomically to
 `deployments/<network>/<target>.json`. The current record contains the source
@@ -271,6 +268,24 @@ Use `--casper-cli /path/to/casper-cli` to select a non-default executable.
 put`, `transaction call`, install/upgrade, package targeting, public-RPC local
 simulation, speculative execution and raw transaction output) so an older or
 unrelated executable with the same name is rejected.
+
+### Network verbosity
+
+`call` and `deploy` print a compact text result by default. Their diagnostic
+verbosity can be selected independently:
+
+| Option | Output |
+| --- | --- |
+| default | Compact text result with a short heading on stderr |
+| `-q`, `--quiet` | Result only; a simulation returning Bool prints `true` or `false` |
+| `-v`, `--verbose` | Workflow details, phases and polling progress on stderr |
+| `-vv` | Also show commands and backend diagnostics on stderr |
+
+```sh
+casthon call flipper get --simulate
+casthon call flipper get --simulate -q
+casthon call flipper get --simulate -vv
+```
 
 ### JSON output
 
