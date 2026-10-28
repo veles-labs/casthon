@@ -299,7 +299,9 @@ The result schema uses `schemaVersion: 1`. It includes `command`, `deployment`,
 `entryPoint`, `network`, `mode`, `status`, `success`, `exitCode`,
 `transactionHash`, `blockHeight`, `gasConsumed`, `returnValue`, `manifest`,
 `result` and `error`. Unavailable fields are `null`. Gas quantities preserve the
-backend's exact value, normally a decimal string. `returnValue` is the complete
+backend's exact value, normally a decimal string. Human-readable gas amounts
+are displayed in CSPR with nine decimal places (1 CSPR = 1,000,000,000 motes).
+`returnValue` is the complete
 CLValue, with `cl_type`, encoded `bytes`, and native JSON `parsed` data. Node
 speculative execution and broadcast receipts do not provide return values;
 use `--simulate` to inspect a return value. `result` retains the complete

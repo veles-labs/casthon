@@ -4,6 +4,21 @@ use serde::Serialize;
 use serde_json::Value;
 use std::path::PathBuf;
 
+fn format_gas_cspr(gas: &Value) -> String {
+    let raw = gas
+        .as_str()
+        .map(str::to_owned)
+        .unwrap_or_else(|| gas.to_string());
+    if raw.is_empty() || !raw.bytes().all(|byte| byte.is_ascii_digit()) {
+        return raw;
+    }
+    // Shift the decimal point without floating-point rounding or integer limits.
+    let digits = raw.trim_start_matches('0');
+    let padded = format!("{digits:0>10}");
+    let (whole, fractional) = padded.split_at(padded.len() - 9);
+    format!("{whole}.{fractional} CSPR")
+}
+
 #[derive(Clone, Copy, Default, ValueEnum)]
 pub enum Format {
     #[default]
@@ -190,18 +205,37 @@ impl CommandResult {
                 println!("Transaction: {hash}");
             }
             if let Some(gas) = &self.gas_consumed {
-                println!(
-                    "Gas consumed: {}",
-                    gas.as_str()
-                        .map(str::to_owned)
-                        .unwrap_or_else(|| gas.to_string())
-                );
+                println!("Gas consumed: {}", format_gas_cspr(gas));
             }
             if let Some(path) = &self.manifest
                 && self.command == "deploy"
             {
                 println!("Recorded {}", path.display());
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_gas_cspr;
+    use serde_json::json;
+
+    #[test]
+    fn gas_display_preserves_nine_decimal_places_for_small_and_large_amounts() {
+        for (gas, expected) in [
+            (json!("0"), "0.000000000 CSPR"),
+            (json!(1), "0.000000001 CSPR"),
+            (json!("999999999"), "0.999999999 CSPR"),
+            (json!("1000000000"), "1.000000000 CSPR"),
+            (json!("19250329205"), "19.250329205 CSPR"),
+            (json!(u64::MAX), "18446744073.709551615 CSPR"),
+            (
+                json!("1000000000000000000000000001"),
+                "1000000000000000000.000000001 CSPR",
+            ),
+        ] {
+            assert_eq!(format_gas_cspr(&gas), expected);
         }
     }
 }

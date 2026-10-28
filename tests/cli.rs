@@ -332,7 +332,10 @@ fn call_text_verbosity_controls_diagnostics_without_changing_results() {
             assert!(stderr.is_empty(), "{stderr}");
         } else {
             assert!(stdout.contains("Return Bool: true"), "{stdout}");
-            assert!(stdout.contains("Gas consumed: 137"), "{stdout}");
+            assert!(
+                stdout.contains("Gas consumed: 0.000000137 CSPR"),
+                "{stdout}"
+            );
             assert!(stderr.contains("Calling flipper::get"), "{stderr}");
         }
         assert_eq!(
