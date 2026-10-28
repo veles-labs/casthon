@@ -497,12 +497,49 @@ class Base(Contract):
     def test_session_imports_class_abi_without_reexporting_it(self):
         declaration, source = load_contract(ROOT / 'contracts/counter_session.py')
         self.assertEqual(declaration['exports'], ['call'])
+        self.assertEqual(declaration['entryPoints'], {})
         metadata = {}
         exec(generate_exports(source, ['call']), metadata)
         self.assertEqual(metadata['BINDINGS'], {})
         schema = next(row for row in metadata['CLASS_SCHEMAS'] if row[:2] == ('contracts.counter', 'Counter'))
         self.assertIn('pause', [entry[0] for entry in schema[3]])
         self.assertIn('owner', schema[2])
+
+    def test_declaration_separates_callable_contract_abi_from_installer(self):
+        declaration, _ = load_contract(ROOT / 'contracts/counter.py')
+        self.assertIn('call', declaration['signatures'])
+        self.assertNotIn('call', declaration['entryPoints'])
+        self.assertEqual(set(declaration['entryPoints']),
+                         {'increment', 'increment_by', 'get', 'get_increments',
+                          'pause', 'unpause', 'is_paused', 'get_owner',
+                          'transfer_ownership'})
+        self.assertEqual(declaration['entryPoints']['increment_by']['args'], [
+            {'name': 'amount', 'type': 'U32', 'hasDefault': False}
+        ])
+        self.assertEqual(declaration['entryPoints']['increment_by']['access'], 'public')
+        self.assertEqual(declaration['entryPoints']['increment_by']['entryPointType'], 'called')
+        self.assertEqual(declaration['entryPoints']['increment_by']['payment'], 'caller')
+
+    def test_declaration_preserves_restricted_entrypoint_metadata(self):
+        source = '''from casthon import U32, EntryPointAccess
+from casthon.contracts import Contract, entry_point, export_contract
+@export_contract
+class Example(Contract):
+    @entry_point(access=EntryPointAccess.GROUPS, groups=("admins",))
+    def set(self, value: U32) -> None: pass
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'restricted.py'
+            path.write_text(source)
+            declaration, _ = load_contract(path)
+            self.assertEqual(declaration['entryPoints']['set'], {
+                'args': [{'name': 'value', 'type': 'U32', 'hasDefault': False}],
+                'returns': 'Unit',
+                'access': 'groups',
+                'groups': ['admins'],
+                'entryPointType': 'called',
+                'payment': 'caller',
+            })
 
     def test_unknown_helpers_and_class_abi_references_are_not_local_calls(self):
         with self.assertRaises(TypeError):

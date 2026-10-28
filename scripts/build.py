@@ -325,6 +325,7 @@ def build(options, heap_mode, progress):
                 "jumpBufferBytes": 4096 if options.runtime == "asyncify" else 0,
                 "exceptionMapping": "outer-c-dispatcher", "returnMapping": "typed-boundary-and-explicit-cl-values",
                 "signatures": declaration["signatures"],
+                "entryPoints": declaration["entryPoints"],
                 "pythonFloatBits": 64, "wasmFloatInstructions": False,
                 "heap": {"mode": heap_mode,
                          "allocator": "emmalloc", "automaticCollection": False,

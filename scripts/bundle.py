@@ -763,7 +763,18 @@ def load_contract(path, project_root=None):
                                    for arg, annotation, default in parameters],
                            "returns": casthon.wire_type(returns) if typed else None}
                     for name, (parameters, typed, returns) in signatures.items()}
-    return {"source": source.name, "exports": exports, "signatures": descriptions}, source
+    entry_points = {}
+    for name, (_, method) in bindings.items():
+        access, groups, entry_point_type, payment = method.options
+        entry_points[name] = {
+            **descriptions[name],
+            "access": casthon.EntryPointAccess(access).name.lower(),
+            "groups": list(groups),
+            "entryPointType": casthon.EntryPointType(entry_point_type).name.lower(),
+            "payment": casthon.EntryPointPayment(payment).name.lower(),
+        }
+    return {"source": source.name, "exports": exports, "signatures": descriptions,
+            "entryPoints": entry_points}, source
 
 
 def contract_modules(source, project_root=None):
