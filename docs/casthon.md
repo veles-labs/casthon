@@ -269,10 +269,9 @@ put`, `transaction call`, install/upgrade, package targeting, public-RPC local
 simulation, speculative execution and raw transaction output) so an older or
 unrelated executable with the same name is rejected.
 
-### Network verbosity
+### Network output and verbosity
 
-`call` and `deploy` print a compact text result by default. Their diagnostic
-verbosity can be selected independently:
+`call` and `deploy` have independent format and verbosity controls:
 
 | Option | Output |
 | --- | --- |
@@ -280,14 +279,40 @@ verbosity can be selected independently:
 | `-q`, `--quiet` | Result only; a simulation returning Bool prints `true` or `false` |
 | `-v`, `--verbose` | Workflow details, phases and polling progress on stderr |
 | `-vv` | Also show commands and backend diagnostics on stderr |
+| `--format text` | Human-readable results (default) |
+| `--format json`, `--json` | One JSON result on stdout |
 
 ```sh
 casthon call flipper get --simulate
 casthon call flipper get --simulate -q
-casthon call flipper get --simulate -vv
+casthon call flipper get --simulate --format json | jq '.returnValue.parsed'
+casthon call flipper get --simulate --json -v
+casthon deploy --network testnet --from mywallet:account-0 --json
 ```
 
-### JSON output
+JSON mode suppresses progress by default; add `-v` or `-vv` to enable stderr
+diagnostics without changing the stdout document. Wallet prompts also use
+stderr and read terminal input directly. Nested build output is retained in
+the build log and cannot enter the result stream.
+
+The result schema uses `schemaVersion: 1`. It includes `command`, `deployment`,
+`entryPoint`, `network`, `mode`, `status`, `success`, `exitCode`,
+`transactionHash`, `blockHeight`, `gasConsumed`, `returnValue`, `manifest`,
+`result` and `error`. Unavailable fields are `null`. Gas quantities preserve the
+backend's exact value, normally a decimal string. `returnValue` is the complete
+CLValue, with `cl_type`, encoded `bytes`, and native JSON `parsed` data. Node
+speculative execution and broadcast receipts do not provide return values;
+use `--simulate` to inspect a return value. `result` retains the complete
+backend execution data or deployment record.
+
+Successful statuses are `simulated`, `speculated`, `submitted` and `executed`.
+With `--broadcast --no-wait`, `submitted` confirms admission only. Operational
+failures, including invalid project/ABI configuration, execution errors and
+timeouts, emit the same schema with `success: false`, `status: "failed"` and
+an error message, and exit nonzero. A timeout retains the submitted hash so it
+can be queried later. CLI syntax errors use the normal usage message on stderr.
+
+### Build JSON output
 
 `--json` writes one artifact manifest to stdout. Compiler logs go to stderr,
 so a caller can parse stdout without removing progress messages. The manifest

@@ -119,11 +119,14 @@ Pass `--network` when the same target is deployed to more than one network, or
 `--from` to use a different caller.
 Calls and deployments print a compact result by default. Add `-q` for only the
 result, `-v` for workflow progress and five-second heartbeats, or `-vv` for
-commands and backend diagnostics. Progress and wallet prompts use stderr:
+commands and backend diagnostics. `--format json` (or `--json`) writes one
+versioned result object to stdout, including typed return values, transaction
+metadata and operational errors. Progress and wallet prompts stay on stderr:
 
 ```sh
 casthon call flipper get --simulate -q
-casthon call flipper get --simulate -vv
+casthon call flipper get --simulate --format json | jq '.returnValue.parsed'
+casthon call flipper get --simulate --json -vv
 ```
 
 ## A few more examples

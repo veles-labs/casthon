@@ -1,8 +1,15 @@
 use anyhow::Result;
-use clap::{ArgAction, Args};
+use clap::{ArgAction, Args, ValueEnum};
 use serde::Serialize;
 use serde_json::Value;
 use std::path::PathBuf;
+
+#[derive(Clone, Copy, Default, ValueEnum)]
+pub enum Format {
+    #[default]
+    Text,
+    Json,
+}
 
 #[derive(Clone, Copy, PartialEq, PartialOrd)]
 pub enum Verbosity {
@@ -14,6 +21,12 @@ pub enum Verbosity {
 
 #[derive(Args, Clone, Copy, Default)]
 pub struct OutputOptions {
+    /// Result format; JSON emits one result object on stdout, including on failure.
+    #[arg(long, value_enum, default_value = "text", conflicts_with = "json")]
+    format: Format,
+    /// Shorthand for --format json.
+    #[arg(long, conflicts_with = "format")]
+    json: bool,
     /// Show workflow progress; repeat (-vv) for commands and backend diagnostics.
     #[arg(short, long, action = ArgAction::Count, conflicts_with = "quiet")]
     verbose: u8,
@@ -23,11 +36,16 @@ pub struct OutputOptions {
 }
 
 impl OutputOptions {
+    pub fn is_json(self) -> bool {
+        self.json || matches!(self.format, Format::Json)
+    }
+
     pub fn verbosity(self) -> Verbosity {
         match (self.quiet, self.verbose) {
             (true, _) => Verbosity::Quiet,
             (_, 2..) => Verbosity::Debug,
             (_, 1) => Verbosity::Verbose,
+            _ if self.is_json() => Verbosity::Quiet,
             _ => Verbosity::Normal,
         }
     }
@@ -48,7 +66,9 @@ impl OutputOptions {
                 .error
                 .get_or_insert_with(|| format!("Command exited with status {code}"));
         }
-        if let Some(error) = &report.error {
+        if self.is_json() {
+            println!("{}", serde_json::to_string(&report)?);
+        } else if let Some(error) = &report.error {
             eprintln!("error: {error}");
         } else {
             report.print_text(self.quiet);

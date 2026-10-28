@@ -77,6 +77,7 @@ fn fake_casper_cli(directory: &Path, execution: &str) -> (PathBuf, PathBuf) {
     let body = format!(
         r#"#!/bin/sh
 printf '%s\n' "$*" >> '{}'
+fixture_dir='{}'
 if [ "$1" = "--version" ]; then
   printf 'casper-cli 0.4.0\n'
 elif [ "$1 $2 $3" = "transaction put --help" ]; then
@@ -94,6 +95,16 @@ elif [ "$1 $2" = "transaction put" ]; then
     *) printf 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n' ;;
   esac
 elif [ "$1 $2" = "transaction call" ]; then
+  if [ -f "$fixture_dir/need-input" ]; then
+    printf 'Wallet unlock: ' >&2
+    IFS= read -r answer
+    if [ "$answer" != 'test-password' ]; then exit 9; fi
+  fi
+  if [ -f "$fixture_dir/preview.json" ]; then
+    cat "$fixture_dir/preview.json"
+    if [ -f "$fixture_dir/preview-failed" ]; then exit 7; fi
+    exit 0
+  fi
   case " $* " in
     *' --simulate '*) printf '%s\n' '{{"schemaVersion":1,"success":true,"blockHeight":42,"gasConsumed":"137","returnValue":{{"cl_type":"Bool","bytes":"01","parsed":true}},"error":null}}' ;;
     *' --speculative '*) printf '%s\n' '{{"execution_result":{{"consumed":"137","error":null}}}}' ;;
@@ -113,6 +124,7 @@ else
 fi
 "#,
         log.display(),
+        directory.display(),
         directory.join("execution-pending").display(),
         directory.join("execution-pending").display(),
         execution.replace('\'', "'\\''")
@@ -330,6 +342,320 @@ fn call_text_verbosity_controls_diagnostics_without_changing_results() {
         assert_eq!(stderr.contains("Shelling out"), level == Some("-vv"));
         assert!(!stdout.contains("Shelling out"), "{stdout}");
     }
+}
+
+#[test]
+#[cfg(unix)]
+fn call_json_is_one_typed_document_at_every_verbosity() {
+    let project = deployed_call_project();
+    let (casper_cli, _) = fake_casper_cli(project.path(), "null");
+    for format in [vec!["--json"], vec!["--format", "json"]] {
+        for level in [None, Some("-q"), Some("-v"), Some("-vv")] {
+            let mut call = command(project.path());
+            call.arg("--casper-cli")
+                .arg(&casper_cli)
+                .args(["call", "flipper", "get", "--simulate"])
+                .args(&format);
+            if let Some(level) = level {
+                call.arg(level);
+            }
+            let output = success(call.output().unwrap());
+            let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(result["schemaVersion"], 1);
+            assert_eq!(result["command"], "call");
+            assert_eq!(result["deployment"], "flipper");
+            assert_eq!(result["entryPoint"], "get");
+            assert_eq!(result["network"], "testnet");
+            assert_eq!(result["mode"], "simulation");
+            assert_eq!(result["status"], "simulated");
+            assert_eq!(result["success"], true);
+            assert_eq!(result["exitCode"], 0);
+            assert_eq!(result["returnValue"]["cl_type"], "Bool");
+            assert_eq!(result["returnValue"]["parsed"], true);
+            assert_eq!(result["gasConsumed"], "137");
+            assert_eq!(result["blockHeight"], 42);
+            assert!(result["error"].is_null());
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            if matches!(level, None | Some("-q")) {
+                assert!(stderr.is_empty(), "{stderr}");
+            } else {
+                assert!(
+                    stderr.contains("Checking Veles Labs casper-cli"),
+                    "{stderr}"
+                );
+                assert_eq!(stderr.contains("Shelling out"), level == Some("-vv"));
+            }
+        }
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn json_errors_cover_project_validation_and_backend_execution() {
+    for broken_project in [false, true] {
+        let project = deployed_call_project();
+        if broken_project {
+            fs::write(project.path().join("pyproject.toml"), "invalid = [").unwrap();
+        }
+        let output = command(project.path())
+            .args(["call", "flipper", "missing", "--json"])
+            .output()
+            .unwrap();
+        assert!(!output.status.success());
+        let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(result["status"], "failed");
+        assert_eq!(result["success"], false);
+        let expected = if broken_project {
+            "Invalid configuration"
+        } else {
+            "Unknown entry point"
+        };
+        assert!(
+            result["error"].as_str().unwrap().contains(expected),
+            "{result}"
+        );
+    }
+    let project = deployed_call_project();
+    let (casper_cli, _) = fake_casper_cli(project.path(), "null");
+    fs::write(project.path().join("preview.json"),
+        r#"{"success":false,"error":"Revert: User(1)","blockHeight":42,"gasConsumed":"19","returnValue":null}"#).unwrap();
+    fs::write(project.path().join("preview-failed"), "").unwrap();
+    let output = command(project.path())
+        .arg("--casper-cli")
+        .arg(&casper_cli)
+        .args(["call", "flipper", "get", "--simulate", "--json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(7));
+    let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(result["error"], "Revert: User(1)");
+    assert_eq!(result["status"], "failed");
+    assert_eq!(result["gasConsumed"], "19");
+    assert_eq!(result["exitCode"], 7);
+}
+
+#[test]
+#[cfg(unix)]
+fn broadcast_json_preserves_receipts_errors_and_submission_hashes() {
+    for (execution, no_wait, expected_status) in [
+        (
+            r#"{"block_height":43,"execution_result":{"Version2":{"error_message":null,"consumed":"137"}}}"#,
+            false,
+            "executed",
+        ),
+        (
+            r#"{"block_height":43,"execution_result":{"Version2":{"error_message":"Out of gas error","consumed":"137"}}}"#,
+            false,
+            "failed",
+        ),
+        ("null", true, "submitted"),
+        ("null", false, "failed"),
+    ] {
+        let project = deployed_call_project();
+        let (casper_cli, _) = fake_casper_cli(project.path(), execution);
+        let mut call = command(project.path());
+        call.arg("--casper-cli").arg(&casper_cli).args([
+            "call",
+            "flipper",
+            "flip",
+            "--broadcast",
+            "--wait-timeout",
+            "0",
+            "--json",
+            "-vv",
+        ]);
+        if no_wait {
+            call.arg("--no-wait");
+        }
+        let output = call.output().unwrap();
+        let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(result["status"], expected_status);
+        assert!(
+            result["transactionHash"]
+                .as_str()
+                .unwrap()
+                .starts_with("transaction-v1-hash-bbbb")
+        );
+        assert_eq!(output.status.success(), expected_status != "failed");
+        if execution != "null" {
+            assert_eq!(result["blockHeight"], 43);
+            assert_eq!(result["gasConsumed"], "137");
+            assert!(result["result"]["execution_result"].is_object());
+        }
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn deployment_json_captures_nested_builds_and_preview_or_broadcast_outcomes() {
+    for (flags, expected_status) in [
+        (vec![], "speculated"),
+        (vec!["--simulate"], "simulated"),
+        (vec!["--broadcast"], "executed"),
+        (vec!["--broadcast", "--no-wait"], "submitted"),
+    ] {
+        let project = tempdir().unwrap();
+        let tooling = fake_sdk();
+        fs::create_dir(project.path().join("contracts")).unwrap();
+        fs::write(
+            project.path().join("contracts/flipper.py"),
+            "def call(): pass\n",
+        )
+        .unwrap();
+        fs::write(
+            project.path().join("pyproject.toml"),
+            "[tool.casthon]\nmicropython='1.29.0'\ntargets=['contracts/flipper.py']\n",
+        )
+        .unwrap();
+        let execution = r#"{"block_height":43,"execution_result":{"Version2":{"error_message":null,"consumed":"137","effects":[{"key":"package-111"}]}}}"#;
+        let (casper_cli, _) = fake_casper_cli(project.path(), execution);
+        let output = success(
+            command(project.path())
+                .arg("--sdk-root")
+                .arg(tooling.path())
+                .arg("--casper-cli")
+                .arg(&casper_cli)
+                .args([
+                    "deploy",
+                    "--network",
+                    "testnet",
+                    "--from",
+                    "wallet:account-0",
+                    "--format",
+                    "json",
+                ])
+                .args(flags)
+                .output()
+                .unwrap(),
+        );
+        let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(result["command"], "deploy");
+        assert_eq!(result["status"], expected_status);
+        assert!(
+            output.stderr.is_empty(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        if matches!(expected_status, "executed" | "submitted") {
+            assert!(Path::new(result["manifest"].as_str().unwrap()).is_file());
+        }
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn json_keeps_wallet_prompts_on_stderr_and_passes_input_to_backend() {
+    use std::io::Write;
+    use std::process::Stdio;
+    let project = deployed_call_project();
+    let (casper_cli, _) = fake_casper_cli(project.path(), "null");
+    fs::write(project.path().join("need-input"), "").unwrap();
+    let mut child = command(project.path())
+        .arg("--casper-cli")
+        .arg(&casper_cli)
+        .args(["call", "flipper", "get", "--simulate", "--json"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(b"test-password\n")
+        .unwrap();
+    let output = success(child.wait_with_output().unwrap());
+    let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(result["returnValue"]["parsed"], true);
+    assert_eq!(String::from_utf8(output.stderr).unwrap(), "Wallet unlock: ");
+    assert!(
+        !String::from_utf8(output.stdout)
+            .unwrap()
+            .contains("test-password")
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn json_build_failure_emits_one_error_result_and_preserves_exit_code() {
+    let project = tempdir().unwrap();
+    let tooling = fake_sdk();
+    fs::create_dir(project.path().join("contracts")).unwrap();
+    fs::write(
+        project.path().join("contracts/flipper.py"),
+        "def call(): pass\n",
+    )
+    .unwrap();
+    fs::write(
+        project.path().join("pyproject.toml"),
+        "[tool.casthon]\nmicropython='1.29.0'\ntargets=['contracts/flipper.py']\n",
+    )
+    .unwrap();
+    fs::write(tooling.path().join("scripts/build.py"),
+        "import sys\nprint('compiler diagnostic on stdout')\nprint('compiler error on stderr', file=sys.stderr)\nsys.exit(9)\n").unwrap();
+    let (casper_cli, log) = fake_casper_cli(project.path(), "null");
+    let output = command(project.path())
+        .arg("--sdk-root")
+        .arg(tooling.path())
+        .arg("--casper-cli")
+        .arg(&casper_cli)
+        .args([
+            "deploy",
+            "--network",
+            "testnet",
+            "--from",
+            "wallet:account-0",
+            "--json",
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(9));
+    let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(result["success"], false);
+    assert_eq!(result["exitCode"], 9);
+    assert!(
+        result["error"]
+            .as_str()
+            .unwrap()
+            .contains("Release build failed")
+    );
+    assert!(
+        !fs::read_to_string(log)
+            .unwrap()
+            .contains("transaction put build/")
+    );
+    let build_log =
+        fs::read_to_string(project.path().join("build/release/flipper-build.log")).unwrap();
+    assert!(build_log.contains("compiler diagnostic on stdout"));
+    assert!(build_log.contains("compiler error on stderr"));
+}
+
+#[test]
+#[cfg(unix)]
+fn malformed_backend_output_is_a_json_error_instead_of_leaking_stdout() {
+    let project = deployed_call_project();
+    let (casper_cli, _) = fake_casper_cli(project.path(), "null");
+    fs::write(
+        project.path().join("preview.json"),
+        "Simulation result in an older CLI format\n",
+    )
+    .unwrap();
+    let output = command(project.path())
+        .arg("--casper-cli")
+        .arg(&casper_cli)
+        .args(["call", "flipper", "get", "--simulate", "--json", "-vv"])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(result["status"], "failed");
+    assert!(
+        result["error"]
+            .as_str()
+            .unwrap()
+            .contains("structured execution JSON")
+    );
 }
 
 #[test]
