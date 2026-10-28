@@ -4,16 +4,211 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::Deserialize;
 use std::{
     collections::VecDeque,
+    ffi::OsStr,
+    fmt::Display,
     fs::File,
     io::{self, BufRead, BufReader, BufWriter, IsTerminal, Read, Write},
     path::Path,
     process::{Command, Stdio},
     sync::mpsc::{self, RecvTimeoutError},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 const LOG_LINES: usize = 4;
+
+pub struct WorkflowOutput {
+    interactive: bool,
+    step: usize,
+    active: Option<ProgressBar>,
+    active_name: String,
+    active_started: Option<Instant>,
+    passthrough: Option<(String, Instant)>,
+}
+
+fn interactive_stderr() -> bool {
+    io::stderr().is_terminal() && std::env::var("TERM").as_deref() != Ok("dumb")
+}
+
+fn workflow_elapsed(started: Instant) -> String {
+    format!("{:.1}s", started.elapsed().as_secs_f64())
+}
+
+fn display_argument(argument: &OsStr) -> String {
+    let value = clean(&argument.to_string_lossy());
+    if !value.is_empty()
+        && value
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || "_./:@%+=,-".contains(character))
+    {
+        value
+    } else {
+        format!("'{}'", value.replace('\'', "'\"'\"'"))
+    }
+}
+
+pub fn display_command(command: &Command) -> String {
+    std::iter::once(command.get_program())
+        .chain(command.get_args())
+        .map(display_argument)
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+impl WorkflowOutput {
+    pub fn new(title: impl Display) -> Self {
+        let interactive = interactive_stderr();
+        if interactive {
+            eprintln!("\n{}", console::style(title).bold());
+        } else {
+            eprintln!("\n{title}");
+        }
+        Self {
+            interactive,
+            step: 0,
+            active: None,
+            active_name: String::new(),
+            active_started: None,
+            passthrough: None,
+        }
+    }
+
+    pub fn detail(&self, label: &str, value: impl Display) {
+        let line = if self.interactive {
+            format!("  {:<10} {}", console::style(label).dim(), value)
+        } else {
+            format!("  {label:<10} {value}")
+        };
+        self.println(line);
+    }
+
+    pub fn start(&mut self, name: impl Into<String>) {
+        self.finish(None::<&str>);
+        self.step += 1;
+        self.active_name = clean(&name.into());
+        self.active_started = Some(Instant::now());
+        if self.interactive {
+            let bar = ProgressBar::new_spinner();
+            bar.set_style(
+                style("{prefix:>2}. {spinner:.cyan} {wide_msg} {elapsed_precise:.dim}")
+                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+            );
+            bar.set_prefix(self.step.to_string());
+            bar.set_message(self.active_name.clone());
+            bar.enable_steady_tick(Duration::from_millis(80));
+            self.active = Some(bar);
+        } else {
+            eprintln!("{:>2}. {}...", self.step, self.active_name);
+        }
+    }
+
+    pub fn finish(&mut self, detail: Option<impl Display>) {
+        let Some(started) = self.active_started.take() else {
+            return;
+        };
+        let suffix = detail
+            .map(|value| format!(" — {value}"))
+            .unwrap_or_default();
+        let message = format!(
+            "{} finished after {}{}",
+            self.active_name,
+            workflow_elapsed(started),
+            suffix
+        );
+        if let Some(bar) = self.active.take() {
+            bar.disable_steady_tick();
+            bar.set_style(style("{prefix:>2}. {wide_msg}"));
+            bar.set_prefix(console::style("✓").green().to_string());
+            bar.finish_with_message(message);
+        } else {
+            eprintln!("    {message}");
+        }
+        self.active_name.clear();
+    }
+
+    pub fn note(&self, message: impl Display) {
+        self.println(format!("    {message}"));
+    }
+
+    pub fn command(&self, command: &Command, captured: bool) {
+        let disposition = if captured {
+            "capturing output"
+        } else {
+            "terminal handoff"
+        };
+        self.note(format!(
+            "Shelling out ({disposition}): $ {}",
+            display_command(command)
+        ));
+    }
+
+    pub fn passthrough_start(&mut self, name: impl Into<String>) {
+        self.finish(None::<&str>);
+        self.step += 1;
+        let name = clean(&name.into());
+        let line = if self.interactive {
+            format!("{:>2}. {}", self.step, console::style(&name).bold())
+        } else {
+            format!("{:>2}. {name}", self.step)
+        };
+        self.println(line);
+        self.passthrough = Some((name, Instant::now()));
+    }
+
+    pub fn passthrough_finish(&mut self, success: bool) {
+        let Some((name, started)) = self.passthrough.take() else {
+            return;
+        };
+        let result = if success { "finished" } else { "failed" };
+        self.println(format!(
+            "    {name} {result} after {}",
+            workflow_elapsed(started)
+        ));
+    }
+
+    pub fn external_start(&mut self, name: impl Into<String>, command: &Command) {
+        self.passthrough_start(name);
+        self.command(command, false);
+        self.note(
+            "casper-cli now owns terminal input/output until it exits; wallet prompts appear below",
+        );
+        self.println("    ── casper-cli output ─────────────────────────────────".to_owned());
+    }
+
+    pub fn external_finish(&mut self, success: bool) {
+        self.println("    ── end casper-cli output ─────────────────────────────".to_owned());
+        self.passthrough_finish(success);
+    }
+
+    pub fn heartbeat(&self, description: &str, hint: &str, started: Instant) {
+        self.println(format!(
+            "    ↳ Still {description} after {}; {hint}",
+            workflow_elapsed(started)
+        ));
+    }
+
+    fn println(&self, line: String) {
+        if let Some(bar) = &self.active {
+            bar.println(line);
+        } else {
+            eprintln!("{line}");
+        }
+    }
+}
+
+impl Drop for WorkflowOutput {
+    fn drop(&mut self) {
+        if let Some(bar) = self.active.take() {
+            bar.disable_steady_tick();
+            bar.set_style(style("{prefix:>2}. {wide_msg}"));
+            bar.set_prefix(console::style("×").red().to_string());
+            bar.abandon_with_message(format!("{} failed", self.active_name));
+        }
+        if self.passthrough.is_some() {
+            self.passthrough_finish(false);
+        }
+    }
+}
 
 #[derive(Deserialize)]
 struct WorkerEvent {
@@ -315,6 +510,22 @@ pub fn run_worker(command: &mut Command, output: &mut BuildOutput) -> Result<i32
 mod tests {
     use super::*;
     use indicatif::ProgressDrawTarget;
+
+    #[test]
+    fn displayed_external_commands_are_copyable_and_shell_quoted() {
+        let mut command = Command::new("casper-cli");
+        command.args([
+            "transaction",
+            "put",
+            "build/release/my contract.wasm",
+            "--arg",
+            "greeting:String=it's ready",
+        ]);
+        assert_eq!(
+            display_command(&command),
+            "casper-cli transaction put 'build/release/my contract.wasm' --arg 'greeting:String=it'\"'\"'s ready'"
+        );
+    }
 
     #[test]
     fn log_pane_is_bounded_sanitized_and_keeps_the_full_transcript() {

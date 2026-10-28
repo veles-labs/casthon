@@ -1,4 +1,4 @@
-use super::Project;
+use super::{Project, deployment};
 use anyhow::Result;
 use console::{strip_ansi_codes, style};
 use serde::Deserialize;
@@ -237,7 +237,7 @@ fn install_python_tools(project: &Project, python: &PythonInfo, missing: &[&str]
     }
 }
 
-pub fn run(project: &Project) -> Result<i32> {
+pub fn run(project: &Project, casper_cli: &Path) -> Result<i32> {
     println!(
         "{}",
         style(format!(
@@ -360,11 +360,29 @@ pub fn run(project: &Project) -> Result<i32> {
         hint("Then download node assets: casper-devnet assets pull");
         hint("Setup: https://github.com/veles-labs/casper-devnet#quick-start");
     }
+    println!("\n{}", style("Deployment tools").bold());
+    let deployment_ready = match deployment::probe(casper_cli) {
+        Ok(version) => {
+            row(true, true, "Veles casper-cli", &version);
+            true
+        }
+        Err(error) => {
+            row(false, true, "Veles casper-cli", &format!("{error:#}"));
+            hint(
+                "Install: cargo install --git https://github.com/veles-labs/casper-cli casper-cli --locked",
+            );
+            hint("Setup: https://github.com/veles-labs/casper-cli");
+            false
+        }
+    };
     println!();
     if healthy {
         println!("✅ Build environment is ready.");
         if !optional_ready {
             println!("⚠️  Optional test tools need attention.");
+        }
+        if !deployment_ready {
+            println!("⚠️  Deployment tooling needs attention.");
         }
     } else {
         println!("❌ Fix the build dependencies above, then run casthon doctor again.");

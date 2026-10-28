@@ -96,6 +96,30 @@ That writes `build/release/hello.wasm` and removes the `casper_print` import.
 See [CLI usage](docs/casthon.md) for project configuration, templates, caching
 and minification.
 
+For a public network, Casthon builds release Wasm and delegates node-side
+speculative execution, wallet access and signing to the Veles Labs `casper-cli`.
+Speculative execution is the default; submission requires `--broadcast`:
+
+```sh
+casthon deploy hello --network testnet --from mywallet:account-0
+casthon deploy hello --network testnet --from mywallet:account-0 --simulate
+casthon deploy hello --network testnet --from mywallet:account-0 --broadcast
+casthon call hello greet --arg name=Casper
+```
+
+Executed deployments are recorded under `deployments/<network>/` with their
+artifact-bound callable ABI, transaction metadata and canonical package/entity
+target. `casthon call` resolves that manifest, validates the entry point and
+arguments, infers omitted CLTypes, and reuses the recorded signer and network.
+As with deployment, calls are speculative by default and require `--broadcast`
+for submission. Pass `--network` when the same target is deployed to more than
+one network, or `--from` to use a different caller.
+Long-running wallet and RPC operations print five-second heartbeats, so an
+interactive network operation remains visibly active without exposing wallet
+secrets. The workflow view labels captured subprocesses and terminal handoffs,
+prints the copyable `casper-cli` command, and keeps external output in a distinct
+block.
+
 ## A few more examples
 
 - [Counter](contracts/counter.py) composes ownership and pause controls, with a

@@ -21,6 +21,7 @@ For a Wasm build, have these tools available:
 | Emscripten (`emcc`) | Compiling and linking the Wasm interpreter/adapter |
 | Binaryen (`wasm-opt`) | Asyncify and Wasm optimization |
 | `casper-devnet` | Live-network tests only |
+| Veles Labs `casper-cli` | Wallets, speculative execution, signing and network deployment |
 
 The current builders use POSIX paths and `fcntl` file locks. Python-only tests
 can run without the Wasm compiler tools. `make setup` installs Python development
@@ -51,6 +52,8 @@ available: its location is the default `--sdk-root` embedded in this preview.
 | `casthon test -q` | Run pytest with the project's configuration |
 | `casthon check contracts` | Run mypy on the contract sources |
 | `casthon inspect build/hello.wasm` | Inspect the built Wasm |
+| `casthon deploy hello --network testnet --from wallet:account-0` | Build and speculatively execute deployment |
+| `casthon call hello greet --arg name=Casper` | Validate and speculatively call a deployed contract |
 | `casthon doctor` | Report the selected environment and missing tools |
 
 Use `casthon --help` or `casthon build --help` for the parser's full option list.
@@ -155,6 +158,109 @@ A custom `--output-dir` replaces the `build/` prefix.
 The command compiles Wasm. Installers run only when that Wasm is submitted as a
 transaction. See the [testing guide](testing.md#live-network-tests) for the
 Python network API used by the live suites.
+
+## Deploying to a network
+
+Casthon delegates wallet storage, network configuration, node-side speculative
+execution and signing to the [Veles Labs `casper-cli`](https://github.com/veles-labs/casper-cli).
+Install it and select or configure its networks and wallets before deploying:
+
+```sh
+cargo install --git https://github.com/veles-labs/casper-cli casper-cli --locked
+casper-cli network list
+casthon doctor
+```
+
+Deployment builds canonical release Wasm and asks the selected network RPC to
+speculatively execute an install/upgrade transaction by default. Nothing is
+submitted. A network is always selected explicitly:
+
+```sh
+casthon deploy hello \
+  --network testnet \
+  --from mywallet:account-0
+```
+
+Review the speculative execution result, then repeat with `--broadcast` to
+submit and wait for execution:
+
+```sh
+casthon deploy hello \
+  --network testnet \
+  --from mywallet:account-0 \
+  --broadcast
+```
+
+Use `--simulate` instead of the default speculative preflight to run Veles
+`casper-cli`'s local execution engine. Its experimental public-node mode fetches
+and verifies state proofs through ordinary RPC queries, so it does not require
+a binary-port endpoint. `--simulate` and `--broadcast` are mutually exclusive.
+
+`--payment-amount` is a CSPR allowance and defaults to `800` for the current
+MicroPython runtime. `--gas-price-tolerance` defaults to `1`. Use `--no-build`
+only when an already validated `build/release/<target>.wasm` and matching build
+report should be submitted. Use `--no-wait` to return immediately after node
+admission; the manifest then remains in `submitted` state.
+
+During network operations Casthon shows a deployment summary and numbered
+phases. Every external invocation is identified as a captured command or a
+terminal handoff, with a copyable command line and clear boundaries around
+`casper-cli` output. If a command takes more than five seconds, a heartbeat
+identifies whether it is still waiting for wallet unlock, an RPC response, or
+transaction execution. Wallet passwords are entered directly into
+`casper-cli`; Casthon does not read or log them.
+
+Successful submissions are written atomically to
+`deployments/<network>/<target>.json`. The current record contains the source
+and artifact hash, build profile, artifact-bound callable entry-point ABI
+(arguments, return type, access/groups, kind and payment policy), signer
+reference, public runtime arguments, payment settings, transaction and
+block hashes, execution status, gas, any package/entity/bytecode addresses
+found in the execution effects, and an unambiguous canonical call target when
+one can be derived. Redeploying preserves the previous current record in
+`history`.
+
+Call an executed deployment by its manifest name and entry point:
+
+```sh
+casthon call hello greet --arg name=Casper
+```
+
+`casthon call` selects the manifest automatically when the name exists on one
+network. Pass `--network testnet` when it exists on several. It uses the most
+recent successfully executed record, so a pending or failed upgrade does not
+hide the prior working deployment. The recorded signer is the default caller;
+override it with `--from another-wallet:account-0`.
+
+Argument names and entry points are validated against the snapshotted ABI.
+`--arg name=Casper` becomes `name:String=Casper` before the handoff to
+`casper-cli`; an explicitly supplied CLType must match. Registered stored-call
+arguments must be present even when the Python method has a default, because
+Casper validates the registered ABI before invoking Python. Dynamic
+`OptionalArg` parameters may be omitted.
+Package targets call the latest package version, which is the stable target
+across Casthon upgrades. The ABI snapshot is tied to the deployment artifact's
+SHA-256 hash.
+
+Calls use node-side speculative execution by default. `--simulate` selects the
+local public-RPC execution engine and `--broadcast` explicitly submits the
+call. Payment defaults to `2.5` CSPR and gas-price tolerance to `1`:
+
+```sh
+casthon call hello greet --arg name=Casper --simulate
+casthon call hello greet --arg name=Casper --broadcast
+```
+
+Commit manifests for shared public networks. They contain no private keys or
+wallet material. Temporary local-network manifests normally stay untracked.
+The chain remains authoritative; transaction hashes and artifact hashes make the
+records independently verifiable.
+
+Use `--casper-cli /path/to/casper-cli` to select a non-default executable.
+`deploy`, `call` and `doctor` verify the Veles command surface (`transaction
+put`, `transaction call`, install/upgrade, package targeting, public-RPC local
+simulation, speculative execution and raw transaction output) so an older or
+unrelated executable with the same name is rejected.
 
 ### JSON output
 

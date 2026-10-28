@@ -37,6 +37,10 @@ impl DoctorFixture {
                 "printf 'test version 1.0\\n'",
             );
         }
+        script(
+            &fixture.binaries.path().join("casper-cli"),
+            "if [ \"$1\" = --version ]; then printf 'casper-cli 0.4.0\\n'; exit 0; fi\nif [ \"$1 $2 $3\" = 'transaction put --help' ]; then printf '%s\\n' 'Build a session transaction from Wasm' '--install-upgrade --simulate --speculative --raw' 'Simulate execution locally using state queries to the network RPC'; exit 0; fi\nif [ \"$1 $2 $3\" = 'transaction call --help' ]; then printf '%s\\n' 'Call a stored contract by hash' '--package --simulate --speculative --raw'; exit 0; fi\nexit 2",
+        );
         fixture
     }
 
@@ -95,6 +99,8 @@ fn healthy_doctor_is_grouped_and_shows_status_and_versions() {
         "✅ Emscripten",
         "✅ Binaryen",
         "✅ casper-devnet",
+        "✅ Veles casper-cli",
+        "casper-cli 0.4.0",
         "✅ Build environment is ready.",
     ] {
         assert!(text.contains(expected), "Missing {expected}: {text}");
@@ -102,6 +108,29 @@ fn healthy_doctor_is_grouped_and_shows_status_and_versions() {
     assert!(!text.contains("❌"));
     assert!(!text.contains("Install:"));
     assert!(!text.contains('\x1b'));
+}
+
+#[test]
+fn wrong_casper_cli_is_reported_with_veles_installation_help() {
+    let fixture = DoctorFixture::new();
+    script(
+        &fixture.binaries.path().join("casper-cli"),
+        "if [ \"$1\" = --version ]; then printf 'casper-cli 99.0.0\\n'; exit 0; fi\nprintf 'some unrelated interface\\n'",
+    );
+    let output = fixture.command().output().unwrap();
+    let text = String::from_utf8_lossy(&output.stdout);
+    assert!(output.status.success(), "{text}");
+    assert!(text.contains("⚠️ Veles casper-cli"), "{text}");
+    assert!(text.contains("incompatible casper-cli"), "{text}");
+    assert!(
+        text.contains("cargo install --git https://github.com/veles-labs/casper-cli"),
+        "{text}"
+    );
+    assert!(text.contains("github.com/veles-labs/casper-cli"), "{text}");
+    assert!(
+        text.contains("Deployment tooling needs attention"),
+        "{text}"
+    );
 }
 
 #[test]

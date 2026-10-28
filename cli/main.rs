@@ -12,6 +12,7 @@ use std::{
     process::Command,
 };
 
+mod deployment;
 mod doctor;
 mod progress;
 
@@ -31,6 +32,9 @@ struct Cli {
     /// SDK/tooling checkout (the proof of concept keeps Python sources here).
     #[arg(long, global = true, default_value = env!("CARGO_MANIFEST_DIR"))]
     sdk_root: PathBuf,
+    /// Veles Labs Casper CLI used for network deployment.
+    #[arg(long, global = true, default_value = "casper-cli")]
+    casper_cli: PathBuf,
     #[command(subcommand)]
     command: Action,
 }
@@ -53,6 +57,10 @@ enum Action {
     },
     /// Check the configured runtime and installed build tools.
     Doctor,
+    /// Build, speculatively execute and optionally submit release Wasm through casper-cli.
+    Deploy(deployment::Deploy),
+    /// Call a deployed contract using its recorded address and typed ABI.
+    Call(deployment::Call),
     /// Create a counter or CEP-18 project using this checkout's examples.
     New {
         directory: PathBuf,
@@ -542,12 +550,15 @@ fn run(cli: Cli) -> Result<i32> {
         return Ok(0);
     }
     let project = Project::load(&cli)?;
+    let casper_cli = cli.casper_cli.clone();
     match cli.command {
         Action::Build(options) => build(&project, options),
         Action::Test(args) => project.forward("pytest", &args.args),
         Action::Check(args) => project.forward("mypy", &args.args),
         Action::Inspect { wasm, json } => inspect(&project, &wasm, json),
-        Action::Doctor => doctor::run(&project),
+        Action::Doctor => doctor::run(&project, &casper_cli),
+        Action::Deploy(options) => deployment::deploy(&project, &casper_cli, options),
+        Action::Call(options) => deployment::call(&project, &casper_cli, options),
         Action::New {
             directory,
             template,

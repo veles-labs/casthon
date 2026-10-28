@@ -1,4 +1,6 @@
 use serde_json::Value;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -61,11 +63,55 @@ data=b'\0asm\1\0\0\0'
 name=Path(a.source).stem
 (out/(name+'.wasm')).write_bytes(data)
 (out/(name+'.metered.wasm')).write_bytes(data)
-(out/(name+'-build-report.json')).write_text(json.dumps({'sha256':hashlib.sha256(data).hexdigest(),'micropython':a.micropython,'buildProfile':a.profile}))
+(out/(name+'-build-report.json')).write_text(json.dumps({'sha256':hashlib.sha256(data).hexdigest(),'micropython':a.micropython,'buildProfile':a.profile,'entryPoints':{'flip':{'args':[],'returns':'Unit','access':'public','groups':[],'entryPointType':'called','payment':'caller'},'get':{'args':[],'returns':'Bool','access':'public','groups':[],'entryPointType':'called','payment':'caller'},'set':{'args':[{'name':'value','type':'Bool','hasDefault':False}],'returns':'Unit','access':'public','groups':[],'entryPointType':'called','payment':'caller'}}}))
 print('worker output belongs on stderr in JSON mode')
 print('worker diagnostic on stderr', file=sys.stderr)
 "#).unwrap();
     root
+}
+
+#[cfg(unix)]
+fn fake_casper_cli(directory: &Path, execution: &str) -> (PathBuf, PathBuf) {
+    let binary = directory.join("casper-cli");
+    let log = directory.join("casper-cli.log");
+    let body = format!(
+        r#"#!/bin/sh
+printf '%s\n' "$*" >> '{}'
+if [ "$1" = "--version" ]; then
+  printf 'casper-cli 0.4.0\n'
+elif [ "$1 $2 $3" = "transaction put --help" ]; then
+  printf '%s\n' 'Build a session transaction from Wasm' '--install-upgrade --simulate --speculative --raw' 'Simulate execution locally using state queries to the network RPC'
+elif [ "$1 $2 $3" = "transaction call --help" ]; then
+  printf '%s\n' 'Call a stored contract by hash' '--package --simulate --speculative --raw'
+elif [ "$1 $2 $3" = "network use testnet" ]; then
+  printf 'Active network: testnet\n'
+elif [ "$1 $2" = "network list" ]; then
+  printf '| Name | Chain | Active | RPC |\n| testnet | casper-test | yes | https://rpc |\n'
+elif [ "$1 $2" = "transaction put" ]; then
+  case " $* " in
+    *' --simulate '*) printf 'Simulation result on testnet\nExecution succeeded.\n' ;;
+    *' --speculative '*) printf 'Speculative execution result on testnet\nExecution succeeded.\n' ;;
+    *) printf 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n' ;;
+  esac
+elif [ "$1 $2" = "transaction call" ]; then
+  case " $* " in
+    *' --simulate '*) printf 'Call simulation result on testnet\nReturn Bool: true\n' ;;
+    *' --speculative '*) printf 'Call speculative result on testnet\nReturn Bool: true\n' ;;
+    *) printf 'Contract call submitted to testnet: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n' ;;
+  esac
+elif [ "$1 $2" = "transaction get" ]; then
+  printf '%s\n' '{}'
+else
+  printf 'unexpected invocation: %s\n' "$*" >&2
+  exit 9
+fi
+"#,
+        log.display(),
+        execution.replace('\'', "'\\''")
+    );
+    fs::write(&binary, body).unwrap();
+    fs::set_permissions(&binary, fs::Permissions::from_mode(0o755)).unwrap();
+    (binary, log)
 }
 
 #[test]
@@ -114,6 +160,243 @@ fn check_is_a_thin_mypy_command() {
         serde_json::from_slice::<Value>(&output.stdout).unwrap(),
         serde_json::json!(["contracts", "--strict"])
     );
+}
+
+#[test]
+#[cfg(unix)]
+fn deploy_builds_release_and_speculatively_executes_without_a_manifest() {
+    let project = tempdir().unwrap();
+    let tooling = fake_sdk();
+    fs::create_dir(project.path().join("contracts")).unwrap();
+    fs::write(
+        project.path().join("contracts/flipper.py"),
+        "def call(): pass\n",
+    )
+    .unwrap();
+    fs::write(
+        project.path().join("pyproject.toml"),
+        "[tool.casthon]\nmicropython='1.29.0'\ntargets=['contracts/flipper.py']\n",
+    )
+    .unwrap();
+    let (casper_cli, log) = fake_casper_cli(project.path(), "null");
+    let output = success(
+        command(project.path())
+            .args(["--sdk-root", tooling.path().to_str().unwrap()])
+            .arg("--casper-cli")
+            .arg(&casper_cli)
+            .args([
+                "deploy",
+                "--network",
+                "testnet",
+                "--from",
+                "wallet:account-0",
+                "--arg",
+                "initial:Bool=false",
+            ])
+            .output()
+            .unwrap(),
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stdout.contains("Built "), "{stdout}");
+    assert!(
+        stdout.contains("Speculatively executing installation"),
+        "{stdout}"
+    );
+    assert!(stdout.contains("Execution succeeded"), "{stdout}");
+    assert!(
+        stderr.contains("Checking Veles Labs casper-cli"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("Selecting casper-cli network testnet"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("casper-cli now owns terminal input/output"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("Shelling out (terminal handoff):")
+            && stderr.contains("transaction put build/release/flipper.wasm")
+            && stderr.contains("--speculative"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("── casper-cli output"), "{stderr}");
+    assert!(
+        stderr.contains("Speculatively executing installation finished after"),
+        "{stderr}"
+    );
+    assert!(project.path().join("build/release/flipper.wasm").is_file());
+    assert!(!project.path().join("deployments").exists());
+    let calls = fs::read_to_string(&log).unwrap();
+    assert!(calls.contains("network use testnet"), "{calls}");
+    assert!(
+        calls.contains("transaction put build/release/flipper.wasm"),
+        "{calls}"
+    );
+    assert!(calls.contains("--install-upgrade"), "{calls}");
+    assert!(calls.contains("--arg initial:Bool=false"), "{calls}");
+    assert!(calls.contains("--speculative"), "{calls}");
+
+    let simulated = success(
+        command(project.path())
+            .arg("--casper-cli")
+            .arg(&casper_cli)
+            .args([
+                "deploy",
+                "--network",
+                "testnet",
+                "--from",
+                "wallet:account-0",
+                "--arg",
+                "initial:Bool=false",
+                "--no-build",
+                "--simulate",
+            ])
+            .output()
+            .unwrap(),
+    );
+    let stdout = String::from_utf8_lossy(&simulated.stdout);
+    let stderr = String::from_utf8_lossy(&simulated.stderr);
+    assert!(
+        stdout.contains("Simulating installation locally"),
+        "{stdout}"
+    );
+    assert!(stdout.contains("Simulation result on testnet"), "{stdout}");
+    assert!(
+        stderr.contains("Simulating installation locally finished after"),
+        "{stderr}"
+    );
+    let calls = fs::read_to_string(&log).unwrap();
+    assert!(calls.contains("--simulate"), "{calls}");
+    assert!(!calls.contains("transaction get"), "{calls}");
+}
+
+#[test]
+#[cfg(unix)]
+fn deploy_broadcast_waits_and_records_an_executed_manifest() {
+    let project = tempdir().unwrap();
+    let tooling = fake_sdk();
+    fs::create_dir(project.path().join("contracts")).unwrap();
+    fs::write(
+        project.path().join("contracts/flipper.py"),
+        "def call(): pass\n",
+    )
+    .unwrap();
+    fs::write(
+        project.path().join("pyproject.toml"),
+        "[tool.casthon]\nmicropython='1.29.0'\ntargets=['contracts/flipper.py']\n",
+    )
+    .unwrap();
+    let execution = r#"{"block_hash":"block-123","block_height":42,"execution_result":{"Version2":{"error_message":null,"consumed":"137","effects":[{"key":"package-111"},{"key":"addressable-entity-222"},{"value":"byte-code-333"}]}}}"#;
+    let (casper_cli, log) = fake_casper_cli(project.path(), execution);
+    let output = success(
+        command(project.path())
+            .args(["--sdk-root", tooling.path().to_str().unwrap()])
+            .arg("--casper-cli")
+            .arg(&casper_cli)
+            .args([
+                "deploy",
+                "--network",
+                "testnet",
+                "--from",
+                "wallet:account-0",
+                "--arg",
+                "initial:Bool=true",
+                "--payment-amount",
+                "23.5",
+                "--broadcast",
+            ])
+            .output()
+            .unwrap(),
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stdout.contains("Submitted transaction-v1-hash-aaaa"),
+        "{stdout}"
+    );
+    assert!(stdout.contains("Executed in block 42"), "{stdout}");
+    assert!(
+        stdout.contains("Callable entry points: flip, get, set")
+            && stdout.contains("Next: casthon call flipper <entry-point>"),
+        "{stdout}"
+    );
+    assert!(
+        stderr.contains("Signing and submitting installation"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("Checking execution status (attempt 1)"),
+        "{stderr}"
+    );
+    let path = project.path().join("deployments/testnet/flipper.json");
+    let manifest: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    assert_eq!(manifest["schemaVersion"], 1);
+    assert_eq!(manifest["networkProfile"], "testnet");
+    assert_eq!(manifest["chainName"], "casper-test");
+    assert_eq!(manifest["current"]["status"], "executed");
+    assert_eq!(manifest["current"]["blockHeight"], 42);
+    assert_eq!(manifest["current"]["gasConsumed"], "137");
+    assert_eq!(manifest["current"]["paymentAmountCspr"], "23.5");
+    assert_eq!(manifest["current"]["artifact"]["buildProfile"], "release");
+    assert_eq!(
+        manifest["current"]["abi"]["artifactSha256"],
+        manifest["current"]["artifact"]["sha256"]
+    );
+    assert_eq!(
+        manifest["current"]["abi"]["entryPoints"]["set"]["args"][0]["type"],
+        "Bool"
+    );
+    assert_eq!(
+        manifest["current"]["abi"]["entryPoints"]["set"]["access"],
+        "public"
+    );
+    assert_eq!(manifest["current"]["callTarget"]["kind"], "package");
+    assert_eq!(manifest["current"]["callTarget"]["hash"], "package-111");
+    assert_eq!(
+        manifest["current"]["addresses"]["packages"][0],
+        "package-111"
+    );
+    assert_eq!(
+        manifest["current"]["addresses"]["entities"][0],
+        "addressable-entity-222"
+    );
+    assert_eq!(
+        manifest["current"]["addresses"]["bytecodes"][0],
+        "byte-code-333"
+    );
+    assert_eq!(manifest["history"], serde_json::json!([]));
+    let calls = fs::read_to_string(&log).unwrap();
+    assert!(calls.contains("--raw"), "{calls}");
+    assert!(
+        calls.contains("transaction get transaction-v1-hash-aaaa"),
+        "{calls}"
+    );
+
+    let called = success(
+        command(project.path())
+            .arg("--casper-cli")
+            .arg(&casper_cli)
+            .args(["call", "flipper", "set", "--arg", "value=true"])
+            .output()
+            .unwrap(),
+    );
+    let stdout = String::from_utf8_lossy(&called.stdout);
+    let stderr = String::from_utf8_lossy(&called.stderr);
+    assert!(stdout.contains("Call speculative result"), "{stdout}");
+    assert!(stderr.contains("Calling flipper::set"), "{stderr}");
+    assert!(stderr.contains("package package-111"), "{stderr}");
+    assert!(stderr.contains("Returns    Unit"), "{stderr}");
+    let calls = fs::read_to_string(&log).unwrap();
+    assert!(
+        calls.contains("transaction call package-111 set --from wallet:account-0"),
+        "{calls}"
+    );
+    assert!(calls.contains("--package"), "{calls}");
+    assert!(calls.contains("--arg value:Bool=true"), "{calls}");
+    assert!(calls.contains("--speculative"), "{calls}");
 }
 
 #[test]
