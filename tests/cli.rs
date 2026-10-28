@@ -944,7 +944,7 @@ fn lowering_hides_initializer_but_preserves_constructor_calls() {
 #[test]
 fn new_creates_templates_and_refuses_existing_directories() {
     let project = tempdir().unwrap();
-    for template in ["counter", "cep18"] {
+    for template in ["flipper", "counter", "cep18"] {
         success(
             command(project.path())
                 .args(["new", template, "--template", template])
@@ -973,21 +973,37 @@ fn new_creates_templates_and_refuses_existing_directories() {
             manifest["project"]["dependencies"][0].as_str().unwrap(),
             "casthon-sdk==0.1.0a1"
         );
-        assert!(
-            project
-                .path()
-                .join(template)
-                .join("tests/test_contract.py")
-                .is_file()
-        );
-        assert!(
-            fs::read_to_string(project.path().join(template).join("tests/test_contract.py"))
-                .unwrap()
-                .contains("from casthon.testing import MockHost, use_host")
-        );
+        let test = if template == "flipper" {
+            "tests/test_flipper.py"
+        } else {
+            "tests/test_contract.py"
+        };
+        let test_source = fs::read_to_string(project.path().join(template).join(test)).unwrap();
+        assert!(test_source.contains("from casthon.testing import"));
+        assert!(test_source.contains("MockHost"));
         let readme = fs::read_to_string(project.path().join(template).join("README.md")).unwrap();
         assert!(readme.contains("uv sync"));
         assert!(!readme.contains(sdk().to_string_lossy().as_ref()));
+        if template == "flipper" {
+            assert_eq!(
+                fs::read(project.path().join(template).join("contracts/flipper.py")).unwrap(),
+                fs::read(sdk().join("templates/flipper/contracts/flipper.py")).unwrap()
+            );
+            assert!(
+                fs::read_to_string(
+                    project
+                        .path()
+                        .join(template)
+                        .join("tests/live/test_flipper.py")
+                )
+                .unwrap()
+                .contains("LiveNetworkTest")
+            );
+            assert_eq!(
+                manifest["tool"]["casthon"]["targets"][0].as_str().unwrap(),
+                "contracts/flipper.py"
+            );
+        }
         let output = command(project.path())
             .args(["new", template])
             .output()
@@ -998,6 +1014,19 @@ fn new_creates_templates_and_refuses_existing_directories() {
         project
             .path()
             .join("cep18/reference/cep18/LICENSE")
+            .is_file()
+    );
+
+    success(
+        command(project.path())
+            .args(["new", "default-flipper"])
+            .output()
+            .unwrap(),
+    );
+    assert!(
+        project
+            .path()
+            .join("default-flipper/contracts/flipper.py")
             .is_file()
     );
 }

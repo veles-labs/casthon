@@ -46,7 +46,8 @@ available: its location is the default `--sdk-root` embedded in this preview.
 
 | Command | Use |
 | --- | --- |
-| `casthon new my-counter` | Create a Counter project and a native test |
+| `casthon new my-flipper` | Create the bundled Flipper project with native and live tests |
+| `casthon new my-counter --template counter` | Create the legacy Counter project |
 | `casthon new my-token --template cep18` | Create a CEP-18 project |
 | `casthon build hello` | Build `contracts/hello.py` |
 | `casthon test -q` | Run pytest with the project's configuration |
@@ -341,24 +342,28 @@ mock state, invocation rollback and network setup/cleanup.
 ## Creating a project
 
 ```sh
-casthon new my-counter
+casthon new my-flipper
+casthon new my-counter --template counter
 casthon new my-token --template cep18
 ```
 
-Each template creates `contracts/`, a native test, `pyproject.toml`, `.gitignore`
-and setup instructions. The Counter template includes ownership and pause
-mixins. CEP-18 includes its reusable base, events, errors and upstream license.
-Existing destinations are refused.
+The default Flipper scaffold is maintained as a complete project under
+`templates/flipper/` and embedded in the CLI at compile time. It includes native
+unit tests and an opt-in live-network test that deploys, flips and queries the
+contract on an isolated Casper network. The legacy Counter template includes
+ownership and pause mixins. CEP-18 includes its reusable base, events, errors
+and upstream license. Existing destinations are refused.
 
 The generated project pins the compatible `casthon-sdk` alpha and its development
 tools. Install them into the project environment with `uv`:
 
 ```sh
-cd my-counter
+cd my-flipper
 uv sync
 casthon test
 casthon check contracts
 casthon build
+CSPR_LIVE_TESTS=1 casthon test tests/live
 ```
 
 The template's SDK version is taken from the Casthon checkout's Python package

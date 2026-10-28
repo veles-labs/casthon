@@ -15,6 +15,7 @@ use std::{
 mod deployment;
 mod doctor;
 mod progress;
+mod templates;
 
 #[derive(Parser)]
 #[command(
@@ -61,10 +62,10 @@ enum Action {
     Deploy(deployment::Deploy),
     /// Call a deployed contract using its recorded address and typed ABI.
     Call(deployment::Call),
-    /// Create a counter or CEP-18 project using this checkout's examples.
+    /// Create a project from a bundled starter template.
     New {
         directory: PathBuf,
-        #[arg(long, default_value = "counter", value_parser = ["counter", "cep18"])]
+        #[arg(long, default_value = "flipper", value_parser = ["flipper", "counter", "cep18"])]
         template: String,
     },
     #[command(name = "__wasm", hide = true, disable_help_flag = true)]
@@ -434,6 +435,31 @@ fn inspect(project: &Project, path: &Path, machine: bool) -> Result<i32> {
     Ok(0)
 }
 
+fn write_embedded_template(
+    directory: &Path,
+    files: &[templates::TemplateFile],
+    name: &str,
+    dependency: &str,
+    micropython: &str,
+) -> Result<()> {
+    for file in files {
+        let source = std::str::from_utf8(file.contents)
+            .with_context(|| format!("Template file {} is not UTF-8", file.path))?;
+        let rendered = source
+            .replace("{{PROJECT_NAME}}", name)
+            .replace("{{SDK_DEPENDENCY}}", dependency)
+            .replace("{{MICROPYTHON_VERSION}}", micropython);
+        let destination = directory.join(file.path);
+        fs::create_dir_all(
+            destination
+                .parent()
+                .context("Template file has no parent")?,
+        )?;
+        fs::write(destination, rendered)?;
+    }
+    Ok(())
+}
+
 fn new_project(project: &Project, directory: &Path, template: &str) -> Result<i32> {
     let directory = absolute(&project.cwd, directory);
     ensure!(
@@ -450,6 +476,28 @@ fn new_project(project: &Project, directory: &Path, template: &str) -> Result<i3
         !name.is_empty() && name.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-'),
         "Use letters, digits and hyphens in the project name"
     );
+    let sdk_manifest: toml::Value =
+        toml::from_str(&fs::read_to_string(project.sdk.join("pyproject.toml"))?)?;
+    let dependency = format!(
+        "{}=={}",
+        sdk_manifest["project"]["name"]
+            .as_str()
+            .context("SDK has no package name")?,
+        sdk_manifest["project"]["version"]
+            .as_str()
+            .context("SDK has no package version")?
+    );
+    if template == "flipper" {
+        write_embedded_template(
+            &directory,
+            templates::FLIPPER,
+            &name,
+            &dependency,
+            &project.supported,
+        )?;
+        println!("Created {} ({template})", directory.display());
+        return Ok(0);
+    }
     let files = if template == "cep18" {
         vec![
             "cep18.py",
@@ -466,17 +514,6 @@ fn new_project(project: &Project, directory: &Path, template: &str) -> Result<i3
             "Template source {file} is missing"
         );
     }
-    let sdk_manifest: toml::Value =
-        toml::from_str(&fs::read_to_string(project.sdk.join("pyproject.toml"))?)?;
-    let dependency = format!(
-        "{}=={}",
-        sdk_manifest["project"]["name"]
-            .as_str()
-            .context("SDK has no package name")?,
-        sdk_manifest["project"]["version"]
-            .as_str()
-            .context("SDK has no package version")?
-    );
     if template == "cep18" {
         ensure!(
             project.sdk.join("reference/cep18/LICENSE").is_file(),

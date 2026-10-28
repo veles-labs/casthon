@@ -1,0 +1,16 @@
+[project]
+name = "{{PROJECT_NAME}}"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["{{SDK_DEPENDENCY}}"]
+
+[dependency-groups]
+dev = ["mypy==1.19.1", "pytest==9.1.1", "wasmtime==49.0.0"]
+
+[tool.casthon]
+micropython = "{{MICROPYTHON_VERSION}}"
+targets = ["contracts/flipper.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib"]
