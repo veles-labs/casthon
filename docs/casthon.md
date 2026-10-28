@@ -201,6 +201,10 @@ MicroPython runtime. `--gas-price-tolerance` defaults to `1`. Use `--no-build`
 only when an already validated `build/release/<target>.wasm` and matching build
 report should be submitted. Use `--no-wait` to return immediately after node
 admission; the manifest then remains in `submitted` state.
+Broadcast deployments and calls use the same wait options.
+`--wait-timeout <seconds>` defaults to `600`. A timeout exits with
+an error and includes the submitted transaction hash; the transaction may still
+execute on the network.
 
 During network operations Casthon shows a deployment summary and numbered
 phases. Every external invocation is identified as a captured command or a
@@ -244,11 +248,16 @@ SHA-256 hash.
 
 Calls use node-side speculative execution by default. `--simulate` selects the
 local public-RPC execution engine and `--broadcast` explicitly submits the
-call. Payment defaults to `2.5` CSPR and gas-price tolerance to `1`:
+call and waits for its execution result. A successful call reports the block
+height; a failed call prints the transaction hash and execution error and exits
+nonzero. `--no-wait` returns immediately after submission, and `--wait-timeout`
+sets the wait in seconds. Payment defaults to `2.5` CSPR and gas-price tolerance
+to `1`:
 
 ```sh
 casthon call hello greet --arg name=Casper --simulate
 casthon call hello greet --arg name=Casper --broadcast
+casthon call hello greet --arg name=Casper --broadcast --wait-timeout 120
 ```
 
 Commit manifests for shared public networks. They contain no private keys or

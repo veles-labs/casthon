@@ -17,6 +17,16 @@ const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(200);
 const PROCESS_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const DEPLOYMENT_SCHEMA_VERSION: u8 = 1;
 
+#[derive(Args)]
+struct ExecutionWait {
+    /// Return after submission instead of waiting for execution.
+    #[arg(long)]
+    no_wait: bool,
+    /// Maximum number of seconds to wait for execution.
+    #[arg(long, default_value_t = 600)]
+    wait_timeout: u64,
+}
+
 fn wait_with_progress(
     child: &mut Child,
     description: &str,
@@ -135,12 +145,8 @@ pub struct Deploy {
     /// Use an existing build/release artifact instead of rebuilding it.
     #[arg(long)]
     no_build: bool,
-    /// Return after submission instead of waiting for execution.
-    #[arg(long)]
-    no_wait: bool,
-    /// Maximum number of seconds to wait for execution.
-    #[arg(long, default_value_t = 600)]
-    wait_timeout: u64,
+    #[command(flatten)]
+    wait: ExecutionWait,
 }
 
 #[derive(Args)]
@@ -170,6 +176,8 @@ pub struct Call {
     /// Use casper-cli's local execution engine with state queried from the public RPC.
     #[arg(long, conflicts_with = "broadcast")]
     simulate: bool,
+    #[command(flatten)]
+    wait: ExecutionWait,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -466,17 +474,21 @@ fn put_command(
     command
 }
 
-fn submitted_hash(command: &mut Command, workflow: &mut WorkflowOutput) -> Result<String> {
+fn submitted_hash(
+    command: &mut Command,
+    action: &str,
+    workflow: &mut WorkflowOutput,
+) -> Result<String> {
     command
         .arg("--raw")
         .stdin(Stdio::inherit())
         .stderr(Stdio::inherit())
         .stdout(Stdio::piped());
-    workflow.external_start("Signing and submitting installation", command);
+    workflow.external_start(action, command);
     let started = Instant::now();
     let mut child = command
         .spawn()
-        .context("Could not run casper-cli transaction put")?;
+        .context("Could not run casper-cli transaction submission")?;
     let mut stdout = child
         .stdout
         .take()
@@ -487,7 +499,7 @@ fn submitted_hash(command: &mut Command, workflow: &mut WorkflowOutput) -> Resul
     });
     let status = wait_with_progress(
         &mut child,
-        "signing and submitting installation",
+        action,
         "casper-cli may be waiting for wallet unlock or an RPC response",
         started,
         workflow,
@@ -496,7 +508,7 @@ fn submitted_hash(command: &mut Command, workflow: &mut WorkflowOutput) -> Resul
         .join()
         .map_err(|_| anyhow::anyhow!("casper-cli transaction hash reader panicked"))??;
     workflow.external_finish(status.success());
-    ensure!(status.success(), "casper-cli transaction put failed");
+    ensure!(status.success(), "casper-cli transaction submission failed");
     let value = stdout.trim();
     ensure!(
         value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()),
@@ -686,8 +698,10 @@ fn wait_for_execution(
     project: &Project,
     transaction_hash: &str,
     timeout: Duration,
-    workflow: &WorkflowOutput,
+    workflow: &mut WorkflowOutput,
 ) -> Result<Value> {
+    println!("Waiting for execution...");
+    workflow.start("Waiting for transaction execution");
     let started = Instant::now();
     let mut attempt = 1_u64;
     loop {
@@ -705,19 +719,26 @@ fn wait_for_execution(
         let value: Value = serde_json::from_slice(&result.stdout)
             .context("casper-cli transaction get returned invalid JSON")?;
         if !value.is_null() && !value["execution_result"].is_null() {
+            workflow.finish(Some(format!("block {}", execution_block(&value))));
             return Ok(value);
         }
         ensure!(
             started.elapsed() < timeout,
-            "Timed out waiting for {transaction_hash}; the submitted transaction remains recorded"
+            "Timed out waiting for {transaction_hash}; the transaction was already submitted and may still execute"
         );
         workflow.note(format!(
             "Transaction is pending; checking again in 5s (timeout: {}s)",
             timeout.as_secs()
         ));
-        thread::sleep(Duration::from_secs(5));
+        thread::sleep(Duration::from_secs(5).min(timeout.saturating_sub(started.elapsed())));
         attempt += 1;
     }
+}
+
+fn execution_block(execution: &Value) -> String {
+    execution["block_height"]
+        .as_u64()
+        .map_or_else(|| "unknown".to_owned(), |height| height.to_string())
 }
 
 fn safe_path_component(value: &str, description: &str) -> Result<()> {
@@ -986,12 +1007,30 @@ pub fn call(project: &Project, casper_cli: &Path, options: Call) -> Result<i32> 
     for argument in arguments {
         command.arg("--arg").arg(argument);
     }
-    let (action, waiting_hint) = if options.broadcast {
-        (
+    if options.broadcast {
+        let transaction_hash = submitted_hash(
+            &mut command,
             "Signing and submitting contract call",
-            "casper-cli may be waiting for wallet unlock or an RPC response",
-        )
-    } else if options.simulate {
+            &mut workflow,
+        )?;
+        println!("Submitted {transaction_hash}");
+        if options.wait.no_wait {
+            return Ok(0);
+        }
+        let execution = wait_for_execution(
+            casper_cli,
+            project,
+            &transaction_hash,
+            Duration::from_secs(options.wait.wait_timeout),
+            &mut workflow,
+        )?;
+        if let Some(error) = execution_error(&execution)? {
+            bail!("Transaction {transaction_hash} failed: {error}");
+        }
+        println!("Executed in block {}", execution_block(&execution));
+        return Ok(0);
+    }
+    let (action, waiting_hint) = if options.simulate {
         command.arg("--simulate");
         (
             "Simulating contract call locally",
@@ -1008,9 +1047,7 @@ pub fn call(project: &Project, casper_cli: &Path, options: Call) -> Result<i32> 
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
-    if !options.broadcast {
-        println!("{action}; pass --broadcast to submit it.");
-    }
+    println!("{action}; pass --broadcast to submit it.");
     workflow.external_start(action, &command);
     let status = status_with_progress(&mut command, action, waiting_hint, &workflow)?;
     workflow.external_finish(status.success());
@@ -1125,7 +1162,11 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
     }
 
     println!("Submitting installation from {}...", options.from);
-    let transaction_hash = submitted_hash(&mut command, &mut workflow)?;
+    let transaction_hash = submitted_hash(
+        &mut command,
+        "Signing and submitting installation",
+        &mut workflow,
+    )?;
     println!("Submitted {transaction_hash}");
     let mut record = DeploymentRecord {
         status: "submitted".to_owned(),
@@ -1151,26 +1192,18 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
     workflow.start("Recording submitted deployment");
     let mut path = write_manifest(project, name, &network, &chain_name, record.clone())?;
     workflow.finish(Some(path.display()));
-    if options.no_wait {
+    if options.wait.no_wait {
         println!("Recorded {}", path.display());
         return Ok(0);
     }
 
-    println!("Waiting for execution...");
-    workflow.start("Waiting for transaction execution");
     let execution = wait_for_execution(
         casper_cli,
         project,
         &transaction_hash,
-        Duration::from_secs(options.wait_timeout),
-        &workflow,
+        Duration::from_secs(options.wait.wait_timeout),
+        &mut workflow,
     )?;
-    workflow.finish(Some(format!(
-        "block {}",
-        execution["block_height"]
-            .as_u64()
-            .map_or_else(|| "unknown".to_owned(), |height| height.to_string())
-    )));
     record.block_hash = execution["block_hash"].as_str().map(str::to_owned);
     record.block_height = execution["block_height"].as_u64();
     record.gas_consumed = gas_consumed(&execution);
@@ -1193,12 +1226,7 @@ pub fn deploy(project: &Project, casper_cli: &Path, options: Deploy) -> Result<i
             path.display()
         );
     }
-    println!(
-        "Executed in block {}",
-        record
-            .block_height
-            .map_or_else(|| "unknown".to_owned(), |height| height.to_string())
-    );
+    println!("Executed in block {}", execution_block(&execution));
     println!("Recorded {}", path.display());
     if let Some(target) = &record.call_target {
         println!(

@@ -97,21 +97,204 @@ elif [ "$1 $2" = "transaction call" ]; then
   case " $* " in
     *' --simulate '*) printf 'Call simulation result on testnet\nReturn Bool: true\n' ;;
     *' --speculative '*) printf 'Call speculative result on testnet\nReturn Bool: true\n' ;;
+    *' --raw '*) printf 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n' ;;
     *) printf 'Contract call submitted to testnet: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n' ;;
   esac
 elif [ "$1 $2" = "transaction get" ]; then
-  printf '%s\n' '{}'
+  if [ -f '{}' ]; then
+    printf 'null\n'
+    rm '{}'
+  else
+    printf '%s\n' '{}'
+  fi
 else
   printf 'unexpected invocation: %s\n' "$*" >&2
   exit 9
 fi
 "#,
         log.display(),
+        directory.join("execution-pending").display(),
+        directory.join("execution-pending").display(),
         execution.replace('\'', "'\\''")
     );
     fs::write(&binary, body).unwrap();
     fs::set_permissions(&binary, fs::Permissions::from_mode(0o755)).unwrap();
     (binary, log)
+}
+
+#[cfg(unix)]
+fn deployed_call_project() -> TempDir {
+    let project = tempdir().unwrap();
+    let artifact = serde_json::json!({
+        "source": "contracts/flipper.py", "wasm": "build/release/flipper.wasm",
+        "buildReport": "build/release/flipper-build-report.json", "sha256": "artifact-hash",
+        "micropython": "1.29.0", "buildProfile": "release"
+    });
+    let manifest = serde_json::json!({
+        "schemaVersion": 1, "name": "flipper", "networkProfile": "testnet",
+        "chainName": "casper-test", "history": [],
+        "current": {
+            "status": "executed", "networkProfile": "testnet", "chainName": "casper-test",
+            "artifact": artifact,
+            "abi": {"artifactSha256": "artifact-hash", "entryPoints": {
+                "flip": {"args": [], "returns": "Unit", "access": "public",
+                         "entryPointType": "called", "payment": "caller"}
+            }},
+            "signer": "wallet:account-0", "arguments": [], "paymentAmountCspr": "800",
+            "gasPriceTolerance": 1, "transactionHash": "transaction-v1-hash-original",
+            "submittedAtUnix": 1, "casthonVersion": "0.1.0", "casperCliVersion": "0.4.0",
+            "callTarget": {"kind": "package", "hash": "package-111"}
+        }
+    });
+    fs::create_dir_all(project.path().join("deployments/testnet")).unwrap();
+    fs::write(
+        project.path().join("deployments/testnet/flipper.json"),
+        serde_json::to_vec(&manifest).unwrap(),
+    )
+    .unwrap();
+    project
+}
+
+#[test]
+#[cfg(unix)]
+fn call_broadcast_waits_through_pending_execution_and_reports_success() {
+    let project = deployed_call_project();
+    let manifest_path = project.path().join("deployments/testnet/flipper.json");
+    let manifest_before = fs::read(&manifest_path).unwrap();
+    let execution = r#"{"block_height":43,"execution_result":{"Version2":{"error_message":null}}}"#;
+    let (casper_cli, log) = fake_casper_cli(project.path(), execution);
+    fs::write(project.path().join("execution-pending"), "").unwrap();
+
+    let output = success(
+        command(project.path())
+            .arg("--casper-cli")
+            .arg(&casper_cli)
+            .args(["call", "flipper", "flip", "--broadcast"])
+            .output()
+            .unwrap(),
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stdout.contains("Submitted transaction-v1-hash-bbbb"),
+        "{stdout}"
+    );
+    assert!(stdout.contains("Waiting for execution"), "{stdout}");
+    assert!(stdout.contains("Executed in block 43"), "{stdout}");
+    assert!(
+        stderr.contains("Signing and submitting contract call"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("Transaction is pending"), "{stderr}");
+    assert!(
+        stderr.contains("Checking execution status (attempt 2)"),
+        "{stderr}"
+    );
+    let calls = fs::read_to_string(log).unwrap();
+    let submissions: Vec<_> = calls
+        .lines()
+        .filter(|line| line.starts_with("transaction call package-111 "))
+        .collect();
+    assert_eq!(submissions.len(), 1, "{calls}");
+    assert!(submissions[0].ends_with("--package --raw"), "{calls}");
+    assert_eq!(
+        calls
+            .matches("transaction get transaction-v1-hash-bbbb")
+            .count(),
+        2,
+        "{calls}"
+    );
+    assert_eq!(fs::read(&manifest_path).unwrap(), manifest_before);
+}
+
+#[test]
+#[cfg(unix)]
+fn call_broadcast_reports_execution_failures() {
+    for execution in [
+        r#"{"block_height":43,"execution_result":{"Version2":{"error_message":"Out of gas error"}}}"#,
+        r#"{"block_height":43,"execution_result":{"Version1":{"Failure":{"error_message":"Out of gas error"}}}}"#,
+    ] {
+        let project = deployed_call_project();
+        let (casper_cli, log) = fake_casper_cli(project.path(), execution);
+        let output = command(project.path())
+            .arg("--casper-cli")
+            .arg(&casper_cli)
+            .args(["call", "flipper", "flip", "--broadcast"])
+            .output()
+            .unwrap();
+        assert!(!output.status.success());
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(stderr.contains("failed: Out of gas error"), "{stderr}");
+        assert!(
+            stderr.contains("Transaction transaction-v1-hash-bbbb"),
+            "{stderr}"
+        );
+        assert!(!stdout.contains("Executed in block"), "{stdout}");
+        let calls = fs::read_to_string(log).unwrap();
+        assert_eq!(
+            calls
+                .lines()
+                .filter(|line| line.starts_with("transaction call package-111 "))
+                .count(),
+            1,
+            "{calls}"
+        );
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn call_broadcast_no_wait_returns_without_querying_execution() {
+    let project = deployed_call_project();
+    let (casper_cli, log) = fake_casper_cli(project.path(), "null");
+    let output = success(
+        command(project.path())
+            .arg("--casper-cli")
+            .arg(&casper_cli)
+            .args(["call", "flipper", "flip", "--broadcast", "--no-wait"])
+            .output()
+            .unwrap(),
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("Submitted transaction-v1-hash-bbbb"),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("Waiting for execution"), "{stdout}");
+    assert!(!fs::read_to_string(log).unwrap().contains("transaction get"));
+}
+
+#[test]
+#[cfg(unix)]
+fn call_broadcast_timeout_reports_the_submitted_hash() {
+    let project = deployed_call_project();
+    let (casper_cli, log) = fake_casper_cli(project.path(), "null");
+    let output = command(project.path())
+        .arg("--casper-cli")
+        .arg(&casper_cli)
+        .args([
+            "call",
+            "flipper",
+            "flip",
+            "--broadcast",
+            "--wait-timeout",
+            "0",
+        ])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Timed out waiting for transaction-v1-hash-bbbb"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("already submitted and may still execute"),
+        "{stderr}"
+    );
+    let calls = fs::read_to_string(log).unwrap();
+    assert_eq!(calls.matches("transaction get ").count(), 1, "{calls}");
 }
 
 #[test]

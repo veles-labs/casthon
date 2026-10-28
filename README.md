@@ -112,8 +112,11 @@ artifact-bound callable ABI, transaction metadata and canonical package/entity
 target. `casthon call` resolves that manifest, validates the entry point and
 arguments, infers omitted CLTypes, and reuses the recorded signer and network.
 As with deployment, calls are speculative by default and require `--broadcast`
-for submission. Pass `--network` when the same target is deployed to more than
-one network, or `--from` to use a different caller.
+for submission. Both commands wait for execution after broadcasting and exit
+with an error if the transaction fails. Use `--no-wait` to return after
+submission, or `--wait-timeout <seconds>` to change the default 600-second wait.
+Pass `--network` when the same target is deployed to more than one network, or
+`--from` to use a different caller.
 Long-running wallet and RPC operations print five-second heartbeats, so an
 interactive network operation remains visibly active without exposing wallet
 secrets. The workflow view labels captured subprocesses and terminal handoffs,
