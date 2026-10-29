@@ -203,12 +203,16 @@ def build(options, heap_mode, progress):
         outputs.append(output_dir / "build-report.json")
     tool_binary = options.casthon.resolve() if options.casthon else ROOT / "tools/wasm-softfloat/target/release/wasm-softfloat"
     def fingerprint():
+        tool_sources = [] if options.casthon else [
+            {str(path.relative_to(ROOT)): file_hash(path)
+             for path in sorted((ROOT / "tools/wasm-softfloat").glob("src/**/*.rs"))},
+            file_hash(ROOT / "tools/wasm-softfloat/Cargo.toml"),
+            file_hash(ROOT / "tools/wasm-softfloat/Cargo.lock"),
+        ]
         return digest([profile_hash, scripts, options.minify, str(project_root), declaration,
                        {name: file_hash(generated / name) for name in sorted(modules)},
                        str(tool_binary), file_hash(tool_binary) if tool_binary.exists() else None,
-                       {str(path.relative_to(ROOT)): file_hash(path) for path in sorted((ROOT / "tools/wasm-softfloat").glob("src/**/*.rs"))},
-                       file_hash(ROOT / "tools/wasm-softfloat/Cargo.toml"),
-                       file_hash(ROOT / "tools/wasm-softfloat/Cargo.lock")])
+                       tool_sources])
     state = BuildState(generated / "build-cache.json")
     if state.matches(fingerprint(), outputs):
         progress.start("Reusing cached artifacts")

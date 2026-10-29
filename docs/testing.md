@@ -311,10 +311,12 @@ session calls, transfers, errors, deterministic keys and Optional values.
 
 `build_contract()` and `LiveNetworkTest.build()` cache artifacts by source,
 helper modules, SDK/compiler/runtime inputs and build flags. They verify cached
-artifact hashes and coordinate concurrent builders. The bundled build helper
-currently requires a casthon-py source checkout; an explicit builder `command=` or
-prebuilt Wasm can be used elsewhere. The build CLI also supports `--project-root`
-and `--output-dir` for external projects using `contracts.*` helper modules.
+artifact hashes and coordinate concurrent builders. With an installed SDK,
+the helper uses the `casthon` CLI and its bundled compiler resources. A source
+checkout can still supply live resources through `--sdk-root`; an explicit
+builder `command=` or prebuilt Wasm can also be used. The build CLI supports
+`--project-root` and `--output-dir` for external projects using `contracts.*`
+helper modules.
 
 Class configuration includes `network_seed`, `node_count`, `user_count`,
 `network_timeout`, `port_offset`, `project_root`, `runtime`, `profile`, `binary`

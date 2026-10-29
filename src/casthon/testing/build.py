@@ -39,11 +39,14 @@ def build_contract(source: str | Path, *, project_root: str | Path | None = None
     source = (project / source).resolve()
     sdk = Path(__file__).resolve().parents[3]
     builder = sdk / "scripts/build.py"
+    checkout = builder.is_file() and (sdk / "native/toolchain.json").is_file()
     casthon = _casthon(sdk) if command is None else None
-    if command is None and not casthon and not builder.is_file():
-        raise RuntimeError("Building requires the casthon-py source checkout; pass command= or deploy prebuilt Wasm")
+    if command is None and not casthon and not checkout:
+        raise RuntimeError("Building requires the casthon CLI; install it with cargo install casthon")
     driver = list(command) if command is not None else (
-        [casthon, "--project-root", str(project), "--sdk-root", str(sdk), "--python", sys.executable, "build"]
+        [casthon, "--project-root", str(project),
+         *(["--sdk-root", str(sdk)] if checkout else []),
+         "--python", sys.executable, "build"]
         if casthon else [sys.executable, str(builder)])
     inputs = {source}
     inputs.update(Path(arg).resolve() for arg in command or () if Path(arg).is_file())

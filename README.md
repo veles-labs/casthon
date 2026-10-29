@@ -73,29 +73,31 @@ explicitly. [The Python API guide](docs/python-api.md) explains the boundaries.
 
 ## Try it
 
-This developer preview builds from a source checkout. You need Python 3.11+,
+Install the CLI with Cargo, then use a generated project. You need Python 3.11+,
 `uv`, Rust/Cargo, Node, Make, a host C compiler, Emscripten and Binaryen.
 The [CLI guide](docs/casthon.md#requirements) covers the build requirements.
 
 ```sh
-make setup
-make cli
-./target/release/casthon doctor
-./target/release/casthon test -- -q
-./target/release/casthon build hello
-./target/release/casthon inspect build/hello.wasm
+cargo install casthon --locked
+casthon new my-flipper
+cd my-flipper
+uv sync
+casthon doctor
+casthon test -- -q
+casthon build
+casthon inspect build/flipper.wasm
 ```
 
-The build produces `build/hello.wasm`, its metered test counterpart, and a build
+The build produces `build/flipper.wasm`, its metered test counterpart, and a build
 report. It compiles the contract; deployment is a separate transaction.
 
 Debug builds keep `print()` and exception tracebacks. For a release build:
 
 ```sh
-./target/release/casthon build hello --release
+casthon build --release
 ```
 
-That writes `build/release/hello.wasm` and removes the `casper_print` import.
+That writes `build/release/flipper.wasm` and removes the `casper_print` import.
 See [CLI usage](docs/casthon.md) for project configuration, templates, caching
 and minification.
 
@@ -104,10 +106,10 @@ speculative execution, wallet access and signing to the Veles Labs `casper-cli`.
 Speculative execution is the default; submission requires `--broadcast`:
 
 ```sh
-casthon deploy hello --network testnet --from mywallet:account-0
-casthon deploy hello --network testnet --from mywallet:account-0 --simulate
-casthon deploy hello --network testnet --from mywallet:account-0 --broadcast
-casthon call hello greet --arg name=Casper
+casthon deploy --network testnet --from mywallet:account-0 --arg initial:Bool=false
+casthon deploy --network testnet --from mywallet:account-0 --arg initial:Bool=false --simulate
+casthon deploy --network testnet --from mywallet:account-0 --arg initial:Bool=false --broadcast
+casthon call flipper get
 ```
 
 Executed deployments are recorded under `deployments/<network>/` with their
@@ -225,9 +227,8 @@ the ignored `.experiments/tooling-benchmarks/` directory. Use
 
 ## Status
 
-Casthon is a developer preview. The CLI and SDK live in one repository; the CLI
-still needs this checkout's compiler and runtime resources. Standalone packaging
-and selecting an installed project SDK are the next release work.
+Casthon is a developer preview. The CLI bundles its compiler and runtime
+resources. Generated projects pin the matching Python SDK, installed by `uv`.
 
 The default runtime is pristine MicroPython 1.29.0 with Asyncify, software binary64
 floats, and fixed 4 MiB linear memory with GC compiled out. The preserved `native-errors`

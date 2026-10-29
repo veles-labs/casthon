@@ -64,7 +64,7 @@
               <a class="button button-primary" href="#tutorial">Start the tutorial <span aria-hidden="true">↗</span></a>
               <a class="button button-text" href="https://github.com/veles-labs/casthon/tree/main/contracts" target="_blank" rel="noopener noreferrer">Explore examples <span aria-hidden="true">↗</span></a>
             </div>
-            <div class="hero-footnote"><span class="status-dot"></span> Follow along from a source checkout · Python 3.11+</div>
+            <div class="hero-footnote"><span class="status-dot"></span> Install with Cargo · Python 3.11+</div>
           </div>
           <div class="hero-art" aria-label="A quick look at the Casthon workflow">
             <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
@@ -107,29 +107,25 @@
               <article class="step-card" id="step-setup" aria-labelledby="setup-title">
                 <div class="step-top"><span class="step-number">01</span><span class="step-label">PREPARE YOUR MACHINE</span></div>
                 <h3 id="setup-title">Set up the toolchain.</h3>
-                <p>The current developer preview builds from a source checkout. Install Python 3.11+, <code>uv</code>, Rust/Cargo, Node, Make, a C compiler, Emscripten, and Binaryen first. Then set up Casthon and let <code>doctor</code> check your environment.</p>
-                <div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy setup commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">git clone https://github.com/veles-labs/casthon.git
-cd casthon
-make setup
-make cli
-cargo install --path . --locked
+                <p>Install Python 3.11+, <code>uv</code>, Rust/Cargo, Node, Make, a C compiler, Emscripten, and Binaryen first. Install Casthon from crates.io, then let <code>doctor</code> check your environment.</p>
+                <div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy setup commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">cargo install casthon --locked
 casthon doctor</code></pre></div>
-                <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>versions vary</small></figcaption><pre><code>Casthon 0.1.0 — environment check
+                <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>versions vary</small></figcaption><pre><code>Installed package `casthon v0.1.0` (executable `casthon`)
+Casthon 0.1.0 — environment check
 Build dependencies
   ✅ MicroPython runtime      1.29.0 (pinned)
   ✅ Python                   3.14.2
   ✅ Emscripten (emcc)        6.0.10-git
   ✅ Binaryen (wasm-opt)      wasm-opt version 109
 ✅ Build environment is ready.</code></pre></figure>
-                <div class="step-note"><span aria-hidden="true">↳</span><p>Keep this checkout available: the preview CLI loads its compiler and SDK resources from it. <a href="https://github.com/veles-labs/casthon/blob/main/docs/casthon.md#requirements">See all requirements ↗</a></p></div>
+                <div class="step-note"><span aria-hidden="true">↳</span><p>The CLI includes its compiler and SDK resources and keeps a versioned copy in your cache. <a href="https://github.com/veles-labs/casthon/blob/main/docs/casthon.md#requirements">See all requirements ↗</a></p></div>
               </article>
 
               <article class="step-card" id="step-scaffold" aria-labelledby="scaffold-title">
                 <div class="step-top"><span class="step-number">02</span><span class="step-label">CREATE A PROJECT</span></div>
                 <h3 id="scaffold-title">Start with Flipper.</h3>
-                <p>From the checkout's parent directory, generate a small contract that stores a boolean, plus native and optional live-network tests. The project pins its compatible SDK version.</p>
-                <div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy project commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">cd ..
-casthon new my-flipper
+                <p>In the directory where you keep projects, generate a small contract that stores a boolean, plus native and optional live-network tests. The project pins its compatible SDK version.</p>
+                <div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy project commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">casthon new my-flipper
 cd my-flipper
 uv sync</code></pre></div>
                 <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>path varies</small></figcaption><pre><code>Created .../my-flipper (flipper)</code></pre></figure>

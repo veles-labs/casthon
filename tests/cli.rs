@@ -1419,7 +1419,7 @@ fn new_creates_templates_and_refuses_existing_directories() {
         );
         assert_eq!(
             manifest["project"]["dependencies"][0].as_str().unwrap(),
-            "casthon-sdk==0.1.0a1"
+            "casthon-sdk==0.1.0a2"
         );
         let test = if template == "flipper" {
             "tests/test_flipper.py"

@@ -16,6 +16,7 @@ mod deployment;
 mod doctor;
 mod output;
 mod progress;
+mod resources;
 mod templates;
 mod testing;
 
@@ -32,9 +33,9 @@ struct Cli {
     /// Python interpreter; otherwise use the active or project virtualenv.
     #[arg(long, global = true)]
     python: Option<PathBuf>,
-    /// SDK/tooling checkout (the proof of concept keeps Python sources here).
-    #[arg(long, global = true, default_value = env!("CARGO_MANIFEST_DIR"))]
-    sdk_root: PathBuf,
+    /// Compiler and SDK resources; defaults to the bundle installed with this CLI.
+    #[arg(long, global = true)]
+    sdk_root: Option<PathBuf>,
     /// Veles Labs Casper CLI used for network deployment.
     #[arg(long, global = true, default_value = "casper-cli")]
     casper_cli: PathBuf,
@@ -162,9 +163,13 @@ impl Project {
             .unwrap_or_else(|| find_root(&cwd))
             .canonicalize()
             .context("Project directory does not exist")?;
-        let sdk = absolute(&cwd, &cli.sdk_root)
+        let source = match &cli.sdk_root {
+            Some(path) => absolute(&cwd, path),
+            None => resources::sdk_root()?,
+        };
+        let sdk = source
             .canonicalize()
-            .context("SDK checkout does not exist")?;
+            .context("Compiler resource directory does not exist")?;
         let manifest = root.join("pyproject.toml");
         let config = if manifest.exists() {
             toml::from_str::<Document>(&fs::read_to_string(&manifest)?)
@@ -176,7 +181,7 @@ impl Project {
         };
         let recipe: Value = serde_json::from_slice(
             &fs::read(sdk.join("native/toolchain.json"))
-                .context("SDK checkout needs native/toolchain.json; use --sdk-root")?,
+                .context("Compiler resources need native/toolchain.json; use --sdk-root")?,
         )?;
         let supported = recipe["micropython"]["version"]
             .as_str()
@@ -229,7 +234,7 @@ impl Project {
     fn command(&self) -> Result<Command> {
         let mut command = Command::new(&self.python);
         command.current_dir(&self.root);
-        // This checkout remains the SDK source until Python packaging is split.
+        // Keep the project Python environment separate from bundled compiler sources.
         let mut paths = vec![self.sdk.join("src")];
         paths.extend(env::split_paths(
             &env::var_os("PYTHONPATH").unwrap_or_default(),
@@ -333,7 +338,7 @@ fn build_with_output(
         folder.push("minified");
     }
     let worker = project.sdk.join("scripts/build.py");
-    ensure!(worker.is_file(), "SDK checkout needs scripts/build.py");
+    ensure!(worker.is_file(), "Compiler resources need scripts/build.py");
     let mut artifacts = vec![];
     for source in sources {
         fs::create_dir_all(&folder)?;
@@ -536,7 +541,7 @@ fn new_project(project: &Project, directory: &Path, template: &str) -> Result<i3
     if template == "cep18" {
         ensure!(
             project.sdk.join("reference/cep18/LICENSE").is_file(),
-            "CEP-18 license is missing from the SDK checkout"
+            "CEP-18 license is missing from the compiler resources"
         );
     }
     fs::create_dir_all(directory.join("contracts"))?;

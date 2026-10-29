@@ -31,9 +31,10 @@ and deploys when website files or its link checker change on `main`, or on
 manual runs. The repository's Pages source is **GitHub Actions**. The site
 links to source and documentation in the same public repository.
 
-The deployment tutorial installs `casper-cli` from crates.io. Run
-`casthon doctor` after installation; it probes the CLI features needed for
-speculative execution, RPC-backed simulation, and stored calls.
+The setup tutorial installs `casthon` from crates.io. The deployment tutorial
+installs `casper-cli` from crates.io. Run `casthon doctor` after installation;
+it probes the CLI features needed for speculative execution, RPC-backed
+simulation, and stored calls.
 
 The guides reflect the developer-preview workflow described in the Markdown
 references and the maintained Flipper scaffold in `templates/flipper/`. Update

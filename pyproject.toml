@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "casthon-sdk"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Python SDK for writing Casper smart contracts with Casthon"
+license = "Apache-2.0"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["typing_extensions>=4.12; python_version<'3.12'"]

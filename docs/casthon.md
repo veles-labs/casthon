@@ -3,9 +3,9 @@
 `casthon` is the Rust command for building Python contracts. It also creates
 projects, inspects Wasm and runs your Python test/type-checking tools.
 
-The current version works from a source checkout. Its compiler, native port and
-SDK are still loaded from that checkout; standalone distribution is work for the
-0.1 release. The [architecture guide](architecture.md) describes that boundary.
+The CLI bundles the compiler, native port, and matching SDK resources in its
+Cargo package. On first run it extracts a versioned copy to the user cache.
+The [architecture guide](architecture.md) describes the build boundary.
 
 ## Requirements
 
@@ -14,9 +14,9 @@ For a Wasm build, have these tools available:
 | Tool | Used for |
 | --- | --- |
 | Python 3.11+ | SDK, source analysis and build worker |
-| `uv` | The checkout's environment setup |
-| Rust/Cargo | Building the CLI; Wasm processing is then built into the executable |
-| Node | Emscripten and the checkout's JavaScript tools |
+| `uv` | Installing the generated project's Python environment |
+| Rust/Cargo | Installing the CLI; Wasm processing is built into the executable |
+| Node | Emscripten and optional JavaScript tooling |
 | Make and a host C compiler | Building MicroPython's bytecode compiler and runtime |
 | Emscripten (`emcc`) | Compiling and linking the Wasm interpreter/adapter |
 | Binaryen (`wasm-opt`) | Asyncify and Wasm optimization |
@@ -24,23 +24,26 @@ For a Wasm build, have these tools available:
 | Veles Labs `casper-cli` | Wallets, speculative execution, signing and network deployment |
 
 The current builders use POSIX paths and `fcntl` file locks. Python-only tests
-can run without the Wasm compiler tools. `make setup` installs Python development
-packages and locked npm dependencies; install the external tools separately.
+can run without the Wasm compiler tools. Install the external tools separately.
 
-From this checkout:
+Install the CLI from crates.io, then create a project:
 
 ```sh
-make setup
-make cli
-./target/release/casthon doctor
-./target/release/casthon build hello
-./target/release/casthon inspect build/hello.wasm
+cargo install casthon --locked
+casthon new my-flipper
+cd my-flipper
+uv sync
+casthon doctor
+casthon test -- -q
+casthon build
+casthon inspect build/flipper.wasm
 ```
 
-The compiled command lives at `target/release/casthon`. To install it on your
-Cargo executable path, run `cargo install --path . --locked` from the checkout.
-The remaining examples use that installed `casthon` command. Keep the checkout
-available: its location is the default `--sdk-root` embedded in this preview.
+The remaining examples use the installed `casthon` command. For development
+from a source checkout, run `make setup`, `make cli`, and
+`./target/release/casthon --sdk-root . doctor` from the repository root.
+The explicit `--sdk-root` selects live checkout files instead of the bundled
+resources.
 
 ## Commands at a glance
 
@@ -49,12 +52,12 @@ available: its location is the default `--sdk-root` embedded in this preview.
 | `casthon new my-flipper` | Create the bundled Flipper project with native and live tests |
 | `casthon new my-counter --template counter` | Create the legacy Counter project |
 | `casthon new my-token --template cep18` | Create a CEP-18 project |
-| `casthon build hello` | Build `contracts/hello.py` |
+| `casthon build` | Build the project's configured target, such as Flipper |
 | `casthon test -- -q` | Run pytest with the project's configuration |
 | `casthon check contracts` | Run mypy on the contract sources |
-| `casthon inspect build/hello.wasm` | Inspect the built Wasm |
-| `casthon deploy hello --network testnet --from wallet:account-0` | Build and speculatively execute deployment |
-| `casthon call hello greet --arg name=Casper` | Validate and speculatively call a deployed contract |
+| `casthon inspect build/flipper.wasm` | Inspect the built Wasm |
+| `casthon deploy --network testnet --from wallet:account-0` | Build and speculatively execute deployment |
+| `casthon call flipper get` | Validate and speculatively call a deployed contract |
 | `casthon doctor` | Report the selected environment and missing tools |
 
 Use `casthon --help` or `casthon build --help` for the parser's full option list.
@@ -87,9 +90,10 @@ Python is selected in this order:
 4. The project's `.venv/bin/python`.
 5. `python3` on PATH.
 
-The SDK still comes from the checkout selected by `--sdk-root`, even when Python
-comes from a project virtualenv. This is an intentional description of the
-current preview; installed-SDK resolution remains release work.
+The CLI's compiler resources come from its versioned cache by default, even
+when Python comes from a project virtualenv. `--sdk-root` selects a source
+checkout for contributors. The generated project's `uv sync` installs its
+pinned Python SDK into that project's environment.
 
 ## Building contracts
 
@@ -111,7 +115,7 @@ configured list. Multiple targets need distinct filenames so their outputs
 cannot overwrite each other.
 
 A single-file build works without `pyproject.toml` when you pass its source path.
-The build still uses the checkout's compiler resources and supported recipe.
+The build uses the bundled compiler resources and supported recipe.
 
 ### Build progress and logs
 
@@ -459,7 +463,7 @@ casthon build
 casthon test --live
 ```
 
-The template's SDK version is taken from the Casthon checkout's Python package
+The template's SDK version is taken from the CLI's bundled Python package
 metadata, keeping generated projects on the SDK alpha paired with that CLI.
 
 ## Inspection and environment checks
@@ -492,8 +496,8 @@ The command exits with status 1 when a required build check fails; missing
 optional test tools leave its status at 0. Version checks establish tool
 availability; contract builds still validate the resulting Casper Wasm.
 
-All normal commands currently load checkout metadata, including `inspect`.
-Use `--sdk-root /path/to/casthon` if the CLI's compiled-in default has moved.
+All normal commands use the bundled compiler resources. Use
+`--sdk-root /path/to/casthon` to work against a source checkout instead.
 
 ## Build caching
 
@@ -503,7 +507,8 @@ modules and relink against cached runtime objects. Removed modules and altered
 artifacts also invalidate their relevant cache entries.
 
 Reusable Asyncify runtime objects, the bytecode compiler and downloads live in
-this checkout's `.cache/`. The runtime key includes interpreter sources, native
+the resource cache's `.cache/`. With `--sdk-root`, they live in the selected
+checkout's `.cache/`. The runtime key includes interpreter sources, native
 code, build profile, heap, compiler identity and relevant flags. Generated
 contract inputs and their complete-build cache live beneath `build/<target>/`.
 The preserved native-errors backend keeps its runtime objects local to each

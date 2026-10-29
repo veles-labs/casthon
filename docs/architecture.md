@@ -34,25 +34,29 @@ would make schema changes harder without resolving the packaging problem.
 
 The remaining coupling is in how these components find and select each other:
 
-- `cli/main.rs` defaults `--sdk-root` to its compile-time checkout path. Its
-  Python commands prepend that checkout's `src/` to `PYTHONPATH`, including tests.
-- `scripts/build.py` freezes the checkout SDK, reads compiler/runtime files
-  relative to that checkout, and writes caches there.
+- `cli/main.rs` defaults `--sdk-root` to a versioned cache of resources embedded
+  in the CLI. Its Python commands prepend those resources' `src/` to
+  `PYTHONPATH`, including tests. Contributors can select a checkout explicitly.
+- `scripts/build.py` freezes the bundled SDK, reads compiler/runtime files
+  relative to the resource root, and writes caches there.
 - The freezer imports SDK schema helpers. `runtime/` supplies corresponding
   frozen implementations, so compiler and SDK versions must be compatible.
-- `casthon.testing.build_contract` also locates the SDK checkout. It is useful
-  today, but that lookup will need an installed-resource boundary.
+- `casthon.testing.build_contract` uses the installed CLI and its bundled
+  resources when the SDK is installed in a project virtualenv. In a source
+  checkout it can select live resources through `--sdk-root`.
 - `contracts/` contains both teaching examples and exhaustive FFI probes.
   The README links the teaching examples; the probes serve the regression suite.
 
-For distribution, the SDK should be its own Python package. The CLI release
-should carry versioned compiler/runtime resources and build against the SDK in
-the project's selected Python environment. A known compatible version pair is
-enough for 0.1. Separate repositories are unnecessary for that arrangement.
+For distribution, the SDK is its own Python package. The CLI carries versioned
+compiler/runtime resources and builds with the project's selected Python
+environment. Generated projects pin a compatible SDK alpha. Separate
+repositories are unnecessary for that arrangement.
 
 The Python SDK is distributed as `casthon-sdk`; its public import package is
-`casthon`. The Rust package still has `publish = false`, and the project needs a
-top-level license and a release pipeline before a stable release.
+`casthon`. The Rust CLI packages its compiler resources for a crates.io
+installation. Both packages use Apache-2.0. A release pipeline and an explicit
+compatibility check between CLI and SDK versions remain useful before a stable
+release.
 
 ## From Python to Wasm
 
@@ -75,8 +79,7 @@ top-level license and a release pipeline before a stable release.
    The build also writes a gas/500-slot-stack-instrumented test artifact and a
    report containing hashes, exports, signatures and runtime settings.
 
-The CLI packages this workflow. The next step is giving the existing Python
-frontend a distributable, versioned resource bundle.
+The CLI packages this workflow with a versioned compiler resource bundle.
 
 ## One invocation
 
@@ -127,12 +130,10 @@ cover that separately.
 
 ## What remains for 0.1
 
-- Install the CLI, SDK and compiler resources without a source checkout.
-- Resolve the project SDK consistently for native tests and Wasm builds.
-- Check supported external compiler versions and use a writable user cache.
+- Check supported external compiler versions against release packages.
 - Run release-package smoke tests outside the repository, including a live
   deployment and exception/rollback checks.
-- Finish package names, licensing, installation instructions and release CI.
+- Add a release pipeline and an explicit CLI/SDK compatibility check.
 
 The existing pytest interface can stay. Automatic compiler installation,
 parallel build workspaces and more interpreter recipes can follow this release.

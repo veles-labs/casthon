@@ -2,7 +2,7 @@
 
 > Casthon is a developer-preview Python SDK and CLI for writing Casper smart contracts and building them into Casper-compatible WebAssembly.
 
-The CLI currently needs a Casthon source checkout for its compiler and SDK resources. The website guides are short learning paths; the linked repository Markdown files are the detailed references. Network deploy and call commands preview execution by default. Submission requires --broadcast.
+Install the CLI with `cargo install casthon --locked`; its compiler resources are bundled and cached on first run. The website guides are short learning paths; the linked repository Markdown files are the detailed references. Network deploy and call commands preview execution by default. Submission requires --broadcast.
 
 ## Website guides
 
