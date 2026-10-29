@@ -55,7 +55,7 @@ class LiveNetworkTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         if os.environ.get("CSPR_LIVE_TESTS") != "1":
-            raise unittest.SkipTest("Live tests require CSPR_LIVE_TESTS=1 (or make test-live)")
+            raise unittest.SkipTest("Live tests require casthon test --live, CSPR_LIVE_TESTS=1, or make test-live")
         cls.network = DevnetNetwork(protocol_version=cls.protocol_version, seed=cls.network_seed,
                                    binary=os.environ.get("CSPR_DEVNET_BIN", cls.binary), custom_asset=cls.custom_asset,
                                    nodes=cls.node_count, users=cls.user_count,

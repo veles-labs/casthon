@@ -189,8 +189,11 @@ class cleanup before startup. Subclass setup failure still triggers cleanup.
 The same `DevnetNetwork` owner can be used directly as a context manager or in a
 pytest fixture. There is no JavaScript dependency for live testing.
 
-Live tests are opt-in: set `CSPR_LIVE_TESTS=1`, or use `make test-live`. Without
-that setting the base class skips. When explicitly requested, missing tools,
+Live tests are opt-in: run `casthon test --live`, set `CSPR_LIVE_TESTS=1` when
+invoking Python directly, or use `make test-live`. Without the opt-in the base class skips.
+`casthon test --live` selects `tests/live` by default. Pass pytest arguments after
+`--`, for example `casthon test --live -- -q -k counter` or
+`casthon test --live -- tests/live/test_counter.py -x`. When explicitly requested, missing tools,
 assets or startup failures fail the suite. Install `casper-devnet` and the pinned
 protocol asset; compiling source additionally requires the documented Wasm
 toolchain. Starting with prebuilt Wasm avoids the build dependency.

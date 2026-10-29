@@ -1,4 +1,4 @@
-"""Run explicitly with CSPR_LIVE_TESTS=1 casthon test tests/live."""
+"""Run explicitly with casthon test --live."""
 
 from casthon import CLBool
 from casthon.testing import LiveNetworkTest

@@ -36,5 +36,5 @@ calls `flip`, and queries the resulting state. It is opt-in because it requires
 `casper-devnet` and the Casthon Wasm toolchain:
 
 ```sh
-CSPR_LIVE_TESTS=1 casthon test tests/live
+casthon test --live -- -q
 ```

@@ -202,7 +202,7 @@ def main() -> None:
             return base + {
                 "build": ["build", "--release", "--no-progress"],
                 "check": ["check", "contracts"],
-                "test": ["test", "-q", "-p", "no:cacheprovider"],
+                "test": ["test", "--", "-q", "-p", "no:cacheprovider"],
             }[operation]
         return {
             "build": ["cargo", "odra", "build"],

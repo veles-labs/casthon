@@ -17,6 +17,7 @@ mod doctor;
 mod output;
 mod progress;
 mod templates;
+mod testing;
 
 #[derive(Parser)]
 #[command(
@@ -45,9 +46,8 @@ struct Cli {
 enum Action {
     /// Compile source using the existing MicroPython/Casper pipeline.
     Build(Build),
-    /// Run python -m pytest, forwarding arguments and the exit code.
-    #[command(disable_help_flag = true)]
-    Test(Forward),
+    /// Run pytest; pass Python runner arguments after --.
+    Test(testing::Test),
     /// Run python -m mypy with the project's configuration.
     #[command(disable_help_flag = true)]
     Check(Forward),
@@ -624,7 +624,7 @@ fn run_command(cli: Cli, report: Option<&mut output::CommandResult>) -> Result<i
     let casper_cli = cli.casper_cli.clone();
     match cli.command {
         Action::Build(options) => build(&project, options),
-        Action::Test(args) => project.forward("pytest", &args.args),
+        Action::Test(options) => testing::run(&project, options),
         Action::Check(args) => project.forward("mypy", &args.args),
         Action::Inspect { wasm, json } => inspect(&project, &wasm, json),
         Action::Doctor => doctor::run(&project, &casper_cli),

@@ -50,7 +50,7 @@ available: its location is the default `--sdk-root` embedded in this preview.
 | `casthon new my-counter --template counter` | Create the legacy Counter project |
 | `casthon new my-token --template cep18` | Create a CEP-18 project |
 | `casthon build hello` | Build `contracts/hello.py` |
-| `casthon test -q` | Run pytest with the project's configuration |
+| `casthon test -- -q` | Run pytest with the project's configuration |
 | `casthon check contracts` | Run mypy on the contract sources |
 | `casthon inspect build/hello.wasm` | Inspect the built Wasm |
 | `casthon deploy hello --network testnet --from wallet:account-0` | Build and speculatively execute deployment |
@@ -359,7 +359,7 @@ running tests. The [native port guide](../native/README.md) explains the choices
 
 ```sh
 casthon test
-casthon test tests/test_contract.py -k greeting
+casthon test -- tests/test_contract.py -k greeting
 casthon check contracts
 ```
 
@@ -368,18 +368,32 @@ These run `python -m pytest` and `python -m mypy` in the selected project.
 this checkout supplies them. The richer `make typecheck` also checks positive
 SDK usage and deliberate type mistakes.
 
-In this checkout, pytest defaults to the fast native suite. For compiled and live
-suites, select their directories explicitly:
+In this checkout, pytest defaults to the fast native suite. Select compiled and live
+suites with Casthon options:
 
 ```sh
 make build
-casthon test tests/wasm
-CSPR_LIVE_TESTS=1 casthon test tests/live
+casthon test --wasm
+casthon test --live
 ```
 
-The live opt-in starts local networks. `test` has no separate Wasm or live mode;
-these remain ordinary Python suites. See [testing contracts](testing.md) for
-mock state, invocation rollback and network setup/cleanup.
+`--live` sets `CSPR_LIVE_TESTS=1` for pytest and defaults collection to `tests/live`.
+`--wasm` defaults collection to `tests/wasm`; build its artifacts first. These
+options are mutually exclusive. Without either, pytest uses the project configuration.
+
+Put all pytest arguments after `--`. Explicit test paths override the selected
+default collection, while flags such as `-q` and `-k` keep it:
+
+```sh
+casthon test --live -- -q -k counter
+casthon test --live -- tests/live/test_counter.py -x
+casthon test --wasm -- -q
+casthon test -- --help  # pytest help; casthon test --help describes Casthon options
+```
+
+The live opt-in starts local networks. These remain ordinary Python suites;
+`CSPR_LIVE_TESTS=1 python -m pytest tests/live` also works. See
+[testing contracts](testing.md) for mock state, invocation rollback and network setup/cleanup.
 
 ## Creating a project
 
@@ -405,7 +419,7 @@ uv sync
 casthon test
 casthon check contracts
 casthon build
-CSPR_LIVE_TESTS=1 casthon test tests/live
+casthon test --live
 ```
 
 The template's SDK version is taken from the Casthon checkout's Python package

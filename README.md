@@ -78,7 +78,7 @@ The [CLI guide](docs/casthon.md#requirements) covers the build requirements.
 make setup
 make cli
 ./target/release/casthon doctor
-./target/release/casthon test -q
+./target/release/casthon test -- -q
 ./target/release/casthon build hello
 ./target/release/casthon inspect build/hello.wasm
 ```
@@ -157,8 +157,9 @@ make test-wasm
 make test-live     # Starts local Casper networks; requires casper-devnet
 ```
 
-`casthon test` is a pytest wrapper. Wasm and live tests are ordinary test suites,
-with the live opt-in described in the [testing guide](docs/testing.md).
+`casthon test` runs pytest. Use `casthon test --live` for local-network tests or
+`casthon test --wasm` for compiled tests. Put pytest arguments after `--`, for
+example `casthon test --live -- -q -k counter`. See the [testing guide](docs/testing.md).
 
 ## Tooling benchmarks
 

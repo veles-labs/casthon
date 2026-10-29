@@ -668,6 +668,7 @@ fn test_delegates_arguments_working_directory_and_exit_code() {
     let output = command(project.path())
         .args([
             "test",
+            "--",
             "tests/a b.py",
             "-k",
             "transfer and not failure",
@@ -687,6 +688,80 @@ fn test_delegates_arguments_working_directory_and_exit_code() {
             .unwrap(),
         project.path().canonicalize().unwrap()
     );
+}
+
+#[test]
+fn test_suite_options_set_defaults_and_keep_python_arguments_intact() {
+    let project = tempdir().unwrap();
+    fs::write(
+        project.path().join("pytest.py"),
+        "import json,os,sys\nprint(json.dumps({'args':sys.argv[1:],'live':os.environ.get('CSPR_LIVE_TESTS')}))\nraise SystemExit(7)\n",
+    )
+    .unwrap();
+    for (suite, directory, enabled) in
+        [("--live", "tests/live", "1"), ("--wasm", "tests/wasm", "0")]
+    {
+        let output = command(project.path())
+            .env("CSPR_LIVE_TESTS", "0")
+            .args([
+                "test",
+                suite,
+                "--",
+                "tests/custom/test_selected.py::TestExample",
+                "-q",
+                "-k",
+                "transfer and not failure",
+            ])
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(7));
+        let received: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(received["live"], enabled);
+        assert_eq!(
+            received["args"],
+            serde_json::json!([
+                "-o",
+                format!("testpaths={directory}"),
+                "tests/custom/test_selected.py::TestExample",
+                "-q",
+                "-k",
+                "transfer and not failure"
+            ])
+        );
+    }
+    let output = command(project.path())
+        .env_remove("CSPR_LIVE_TESTS")
+        .args(["test", "--", "--live", "--wasm"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(7));
+    let received: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(received["args"], serde_json::json!(["--live", "--wasm"]));
+    assert!(received["live"].is_null());
+}
+
+#[test]
+fn test_requires_the_runner_separator_and_rejects_conflicting_suites() {
+    let project = tempdir().unwrap();
+    for arguments in [
+        vec!["test", "-q"],
+        vec!["test", "tests/test_contract.py"],
+        vec!["test", "--live", "--wasm"],
+    ] {
+        let output = command(project.path()).args(arguments).output().unwrap();
+        assert_eq!(output.status.code(), Some(2));
+        assert!(output.stdout.is_empty());
+    }
+    let output = success(
+        command(project.path())
+            .args(["test", "--help"])
+            .output()
+            .unwrap(),
+    );
+    let help = String::from_utf8_lossy(&output.stdout);
+    assert!(help.contains("--live"), "{help}");
+    assert!(help.contains("--wasm"), "{help}");
+    assert!(help.contains("PYTEST_ARGS"), "{help}");
 }
 
 #[test]
