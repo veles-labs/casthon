@@ -10,10 +10,25 @@ flow = root / ".cache/revert_types.py"
 flow.write_text("""from typing import Mapping, NoReturn, Optional, assert_type
 from casthon import Key, URef, U32, U256, AccountHash, ContractHash, ContractPackageHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
 from casthon.contract_api import runtime
+from casthon.contracts import Contract
 from contracts import counter
 from contracts.my_token import MyToken
 from contracts.cep18_events import EventsMode, Mint, ChangeSecurity
 from contracts import typed_exports
+class Properties(Contract):
+    value: U32 = runtime.named_keys.property()
+    target: ContractHash = runtime.named_keys.property()
+    stored_target: ContractHash = runtime.named_keys.property(uref=True)
+    items: Dictionary[str, U32] = runtime.named_keys.property()
+def state_property_types(state: Properties, target: ContractHash) -> None:
+    assert_type(state.value, int)
+    assert_type(state.target, ContractHash)
+    assert_type(state.stored_target, ContractHash)
+    assert_type(state.items, Dictionary[str, int])
+    state.value += 1
+    state.target = target
+    state.stored_target = target
+    state.items["item"] = state.value
 def event_types(owner: AccountHash) -> None:
     event = Mint(owner, 42)
     assert_type(event.amount, int)
@@ -71,18 +86,18 @@ def ordinary_calls() -> None:
     assert_type(package.add_contract_version(state), tuple[ContractHash, int])
     assert_type(package.disable_contract_version(ContractHash(bytes(32))), None)
     assert_type(package.enable_contract_version(ContractHash(bytes(32))), None)
-    assert_type(state.count.read(), int)
-    assert_type(state.paused.read(), bool)
-    assert_type(state.owner.read(), AccountHash)
+    assert_type(state.count, int)
+    assert_type(state.paused, bool)
+    assert_type(state.owner, AccountHash)
     assert_type(state.increments.get(AccountHash(bytes(32)), 0), int)
     token = MyToken(total_supply=100)
-    assert_type(token.events_mode.read(), EventsMode)
-    token.events_mode.write(EventsMode.CES)
+    assert_type(token.events_mode, EventsMode)
+    token.events_mode = EventsMode.CES
     assert_type(MyToken(events_mode=EventsMode.NATIVE), MyToken)
     assert_type(token.balance_of(AccountHash(bytes(32))), int)
     assert_type(token.balances.get(AccountHash(bytes(32)), 0), int)
     assert_type(token.allowances.get(bytes(66), 0), int)
-    assert_type(token.supply.read(), int)
+    assert_type(token.supply, int)
 def remote_calls(contract: ContractHash) -> None:
     assert_type(contract.call(counter.Counter.get), int)
     assert_type(contract.call(counter.Counter.increment_by, 5), None)
@@ -183,9 +198,9 @@ contract.call(counter.Counter.get, amount=1)
 contract.call(counter.Counter.get_increments, contract)
 wrong_result: str = contract.call(counter.Counter.get)
 state = counter.Counter()
-state.count.write("bad")
-state.paused.write(1)
-state.owner.write(contract)
+state.count = "bad"
+state.paused = 1
+state.owner = contract
 state.increments[contract] = 1
 contract.call(counter.Counter.transfer_ownership, contract)
 counter.Counter("bad")
@@ -200,8 +215,8 @@ MyToken(total_supply="bad")
 contract.call(MyToken.transfer, AccountHash(bytes(32)), "bad")
 wrong_balance: str = contract.call(MyToken.balance_of, AccountHash(bytes(32)))
 token = MyToken()
-token.events_mode.write(1)
-token.events_mode.write(SecurityBadge.ADMIN)
+token.events_mode = 1
+token.events_mode = SecurityBadge.ADMIN
 contract.call(MyToken.change_events_mode, "CES")
 contract.call(MyToken.change_events_mode, 1)
 MyToken(events_mode=1)

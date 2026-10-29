@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import casthon
 from casthon.references import URefType, DictionaryType
 from casthon._contract_schema import state_key, signature_key
+from casthon.contracts import _property_annotation
 
 ROOT = (None, "Contract")
 ROOT_ATTRIBUTES = {"__init__", "bind", "named_keys", "entry_points", "_cspr_schema", "event_types"}
@@ -17,6 +18,7 @@ class Field:
     name: str
     annotation: object
     configuration: object
+    value_property: bool
 
 
 @dataclass
@@ -91,42 +93,58 @@ class ClassPlanner:
                                 int(values["entry_point_type"]), int(values["payment"]))
 
     def field(self, path, node):
+        configuration = node.value
+        is_property = (isinstance(configuration, ast.Call) and
+                       self.symbol(path, configuration.func) == "casthon.contract_api.runtime.named_keys.property")
         try:
             annotation = self.annotation(path, node.annotation)
         except (ValueError, TypeError):
             # Non-storage annotations, including ClassVar, remain Python data.
-            if isinstance(node.annotation, ast.Subscript) and self.symbol(path, node.annotation.value) in ("casthon.URef", "casthon.Dictionary", "casthon.key.URef", "casthon.references.Dictionary"):
+            if is_property or (isinstance(node.annotation, ast.Subscript) and
+                               self.symbol(path, node.annotation.value) in (
+                                   "casthon.URef", "casthon.Dictionary", "casthon.key.URef", "casthon.references.Dictionary")):
                 raise
             return None
-        if not (isinstance(annotation, (URefType, DictionaryType)) or
+        if not (is_property or isinstance(annotation, (URefType, DictionaryType)) or
                 isinstance(annotation, type) and issubclass(annotation, casthon.Key)):
             return None
         if annotation is casthon.URef:
             raise ValueError("State URefs require a value type: URef[T]")
-        name, configuration = node.target.id, node.value
+        name = node.target.id
         if configuration is not None:
-            if not isinstance(configuration, ast.Call) or self.symbol(path, configuration.func) != "casthon.contract_api.runtime.named_keys.reference":
-                raise ValueError("Annotated state only accepts named_keys.reference(...) configuration")
+            if not isinstance(configuration, ast.Call) or self.symbol(path, configuration.func) not in (
+                    "casthon.contract_api.runtime.named_keys.reference",
+                    "casthon.contract_api.runtime.named_keys.property"):
+                raise ValueError("Annotated state requires named_keys.reference(...) or named_keys.property(...)")
             if len(configuration.args) > 1:
                 raise ValueError("The state annotation already supplies its type")
             keywords = {kw.arg: kw.value for kw in configuration.keywords}
-            if set(keywords) - {"name", "key"}:
+            if len(keywords) != len(configuration.keywords):
+                raise ValueError("Duplicate state configuration option")
+            if set(keywords) - ({"name", "key", "uref"} if is_property else {"name", "key"}):
                 raise ValueError("Unsupported state reference configuration")
+            if is_property:
+                annotation = _property_annotation(annotation, ast.literal_eval(keywords["uref"]) if "uref" in keywords else False)
             if configuration.args and "name" in keywords:
                 raise ValueError("Multiple storage names supplied")
             name_node = configuration.args[0] if configuration.args else keywords.get("name")
             if name_node is not None:
-                name = ast.literal_eval(name_node)
-            if "key" in keywords and not isinstance(annotation, DictionaryType):
+                configured_name = ast.literal_eval(name_node)
+                if configured_name is not None:
+                    name = configured_name
+            key_node = keywords.get("key")
+            has_key = key_node is not None and not (isinstance(key_node, ast.Constant) and key_node.value is None)
+            if has_key and not isinstance(annotation, DictionaryType):
                 raise ValueError("key= is only valid for dictionary state")
-            has_key = "key" in keywords
+            if has_key and isinstance(key_node, ast.Constant):
+                raise ValueError("Dictionary key transform must be callable")
         else:
             has_key = False
         if not isinstance(name, str) or not name:
             raise ValueError("State requires a nonempty storage name")
         if isinstance(annotation, DictionaryType) and annotation.key_type is not str and not has_key:
             raise ValueError("A non-string dictionary key requires key=callable")
-        return Field(node.target.id, name, annotation, configuration)
+        return Field(node.target.id, name, annotation, configuration, is_property)
 
     def plan(self, path, node):
         key = path, node.name
@@ -171,7 +189,7 @@ class ClassPlanner:
             if base == ROOT:
                 continue
             for name, field in self.plans[base].fields.items():
-                if name in fields and (field.name != fields[name].name or state_key(field.annotation) != state_key(fields[name].annotation)):
+                if name in fields and (field.name != fields[name].name or field.value_property != fields[name].value_property or state_key(field.annotation) != state_key(fields[name].annotation)):
                     raise ValueError("Inherited state schemas cannot be changed: " + name)
                 fields[name] = field
             for name, method in self.plans[base].methods.items():
@@ -183,7 +201,7 @@ class ClassPlanner:
                 attributes.add(item.target.id)
                 field = self.field(path, item)
                 if field is not None:
-                    if field.attribute in fields and (field.name != fields[field.attribute].name or state_key(field.annotation) != state_key(fields[field.attribute].annotation)):
+                    if field.attribute in fields and (field.name != fields[field.attribute].name or field.value_property != fields[field.attribute].value_property or state_key(field.annotation) != state_key(fields[field.attribute].annotation)):
                         raise ValueError("Inherited state schemas cannot be changed: " + field.attribute)
                     fields[field.attribute] = field
                 elif item.target.id in fields:
@@ -210,6 +228,9 @@ class ClassPlanner:
                     name, options = self.options(path, markers[0]) if markers else (inherited.name, inherited.options)
                     methods[item.name] = Method(item.name, name or item.name, path, item, signature, positional, options)
             elif isinstance(item, ast.Assign):
+                if (isinstance(item.value, ast.Call) and
+                        self.symbol(path, item.value.func) == "casthon.contract_api.runtime.named_keys.property"):
+                    raise ValueError("State properties require a value annotation")
                 attributes.update(target.id for target in item.targets if isinstance(target, ast.Name))
                 if any(isinstance(target, ast.Name) and target.id in fields for target in item.targets):
                     raise ValueError("An inherited state field cannot be hidden")

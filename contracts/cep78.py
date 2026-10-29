@@ -66,46 +66,46 @@ class Cep78(Contract):
     events = (Mint, Burn, Approval, ApprovalRevoked, ApprovalForAll, RevokedForAll,
               Transfer, MetadataUpdated, VariablesSet, Migration)
 
-    installer: AccountHash
-    collection_name: URef[str]
-    collection_symbol: URef[str]
-    total_token_supply: URef[U64]
-    allow_minting: URef[bool]
-    minting_mode: URef[MintingMode]
-    ownership_mode: URef[OwnershipMode]
-    nft_kind: URef[NFTKind]
-    holder_mode: URef[NFTHolderMode]
-    whitelist_mode: URef[WhitelistMode]
-    acl_package_mode: URef[bool]
-    package_operator_mode: URef[bool]
-    operator_burn_mode: URef[bool]
-    json_schema: URef[str]
-    nft_metadata_kind: URef[NFTMetadataKind]
-    nft_metadata_kinds: URef[Map[U8, U8]]
-    identifier_mode: URef[NFTIdentifierMode]
-    metadata_mutability: URef[MetadataMutability]
-    burn_mode: URef[BurnMode]
-    reporting_mode: URef[OwnerReverseLookupMode]
-    events_mode: URef[EventsMode]
-    receipt_name: URef[str]
-    number_of_minted_tokens: URef[U64]
-    page_limit: URef[U64]
-    rlo_mflag: URef[bool]
-    transfer_filter_contract: URef[Key | None]
-    token_owners: Dictionary[str, Key]
-    token_issuers: Dictionary[str, Key]
-    approved: Dictionary[str, Key | None]
-    operators: Dictionary[bytes, bool] = named_keys.reference(key=operator_key)
-    burnt_tokens: Dictionary[str, None]
-    balances: Dictionary[Key, U64] = named_keys.reference(key=address_key)
-    acl_whitelist: Dictionary[Key, bool] = named_keys.reference(key=address_key)
-    metadata_cep78: Dictionary[str, str]
-    metadata_nft721: Dictionary[str, str]
-    metadata_raw: Dictionary[str, str]
-    metadata_custom_validated: Dictionary[str, str]
-    hash_by_index: Dictionary[str, str]
-    index_by_hash: Dictionary[str, U64]
-    page_table: Dictionary[Key, list[bool]] = named_keys.reference(key=address_key)
+    installer: AccountHash = named_keys.property()
+    collection_name: str = named_keys.property()
+    collection_symbol: str = named_keys.property()
+    total_token_supply: U64 = named_keys.property()
+    allow_minting: bool = named_keys.property()
+    minting_mode: MintingMode = named_keys.property()
+    ownership_mode: OwnershipMode = named_keys.property()
+    nft_kind: NFTKind = named_keys.property()
+    holder_mode: NFTHolderMode = named_keys.property()
+    whitelist_mode: WhitelistMode = named_keys.property()
+    acl_package_mode: bool = named_keys.property()
+    package_operator_mode: bool = named_keys.property()
+    operator_burn_mode: bool = named_keys.property()
+    json_schema: str = named_keys.property()
+    nft_metadata_kind: NFTMetadataKind = named_keys.property()
+    nft_metadata_kinds: Map[U8, U8] = named_keys.property()
+    identifier_mode: NFTIdentifierMode = named_keys.property()
+    metadata_mutability: MetadataMutability = named_keys.property()
+    burn_mode: BurnMode = named_keys.property()
+    reporting_mode: OwnerReverseLookupMode = named_keys.property()
+    events_mode: EventsMode = named_keys.property()
+    receipt_name: str = named_keys.property()
+    number_of_minted_tokens: U64 = named_keys.property()
+    page_limit: U64 = named_keys.property()
+    rlo_mflag: bool = named_keys.property()
+    transfer_filter_contract: Key | None = named_keys.property()
+    token_owners: Dictionary[str, Key] = named_keys.property()
+    token_issuers: Dictionary[str, Key] = named_keys.property()
+    approved: Dictionary[str, Key | None] = named_keys.property()
+    operators: Dictionary[bytes, bool] = named_keys.property(key=operator_key)
+    burnt_tokens: Dictionary[str, None] = named_keys.property()
+    balances: Dictionary[Key, U64] = named_keys.property(key=address_key)
+    acl_whitelist: Dictionary[Key, bool] = named_keys.property(key=address_key)
+    metadata_cep78: Dictionary[str, str] = named_keys.property()
+    metadata_nft721: Dictionary[str, str] = named_keys.property()
+    metadata_raw: Dictionary[str, str] = named_keys.property()
+    metadata_custom_validated: Dictionary[str, str] = named_keys.property()
+    hash_by_index: Dictionary[str, str] = named_keys.property()
+    index_by_hash: Dictionary[str, U64] = named_keys.property()
+    page_table: Dictionary[Key, list[bool]] = named_keys.property(key=address_key)
 
     def __init__(self, collection_name: str, collection_symbol: str, total_token_supply: U64, *,
                  ownership_mode: OwnershipMode = OwnershipMode.TRANSFERABLE,
@@ -176,7 +176,7 @@ class Cep78(Contract):
 
     @entry_point
     def init(self, cep78_package_key: OptionalArg[str] = MISSING) -> None:
-        marker = "cep78_" + self.collection_name.read()
+        marker = "cep78_" + self.collection_name
         if marker in named_keys:
             raise errors.ContractAlreadyInitialized()
         self._require_installer()
@@ -187,15 +187,15 @@ class Cep78(Contract):
         named_keys["cep78_python_layout"] = storage.new_uref(CLU8(1))
 
     def _require_transferable(self) -> None:
-        if self.ownership_mode.read() is not OwnershipMode.TRANSFERABLE:
+        if self.ownership_mode is not OwnershipMode.TRANSFERABLE:
             raise errors.InvalidOwnershipMode()
 
     def _identifier(self, token_id: OptionalArg[U64], token_hash: OptionalArg[str], *,
                     check_bounds: bool = False) -> str:
-        if self.identifier_mode.read() is NFTIdentifierMode.ORDINAL:
+        if self.identifier_mode is NFTIdentifierMode.ORDINAL:
             if token_id is MISSING:
                 raise errors.MissingTokenID()
-            if check_bounds and token_id >= self.number_of_minted_tokens.read():
+            if check_bounds and token_id >= self.number_of_minted_tokens:
                 raise errors.InvalidTokenIdentifier()
             return str(token_id)
         if token_hash is MISSING:
@@ -215,7 +215,7 @@ class Cep78(Contract):
     def _is_operator(self, owner: Key, caller: Key, package: Key | None) -> bool:
         if self.operators.get(bytes(owner) + bytes(caller), False):
             return True
-        return bool(self.package_operator_mode.read() and package is not None
+        return bool(self.package_operator_mode and package is not None
                     and self.operators.get(bytes(owner) + bytes(package), False))
 
     def _metadata_dictionary(self, kind: NFTMetadataKind) -> Dictionary[str, str]:
@@ -229,12 +229,12 @@ class Cep78(Contract):
 
     def _validated_metadata(self, text: str) -> list[tuple[NFTMetadataKind, str]]:
         result = []
-        for kind, required in sorted(self.nft_metadata_kinds.read().items()):
+        for kind, required in sorted(self.nft_metadata_kinds.items()):
             if required == int(Requirement.UNNEEDED):
                 continue
             mode = NFTMetadataKind.from_value(kind)
             try:
-                result.append((mode, validate_metadata(mode, text, self.json_schema.read())))
+                result.append((mode, validate_metadata(mode, text, self.json_schema)))
             except errors.Cep78Error:
                 if required == int(Requirement.REQUIRED):
                     raise
@@ -248,55 +248,57 @@ class Cep78(Contract):
                       operator_burn_mode: OptionalArg[bool] = MISSING) -> None:
         self._require_installer()
         if acl_whitelist is not MISSING and acl_whitelist:
-            if self.whitelist_mode.read() is WhitelistMode.LOCKED:
+            if self.whitelist_mode is WhitelistMode.LOCKED:
                 raise errors.InvalidWhitelistMode()
             seed = storage.new_dictionary_seed()
             replacement = Dictionary[Key, bool](seed=seed, key=address_key)
             for key in acl_whitelist:
                 replacement[key] = True
             named_keys["acl_whitelist"] = seed
-        for reference, value in ((self.allow_minting, allow_minting),
-                                 (self.acl_package_mode, acl_package_mode),
-                                 (self.package_operator_mode, package_operator_mode),
-                                 (self.operator_burn_mode, operator_burn_mode)):
-            if value is not MISSING:
-                reference.write(value)
+        if allow_minting is not MISSING:
+            self.allow_minting = allow_minting
+        if acl_package_mode is not MISSING:
+            self.acl_package_mode = acl_package_mode
+        if package_operator_mode is not MISSING:
+            self.package_operator_mode = package_operator_mode
+        if operator_burn_mode is not MISSING:
+            self.operator_burn_mode = operator_burn_mode
         emit(VariablesSet())
 
     @entry_point
     def mint(self, token_owner: Key, token_meta_data: str, *,
              token_hash: OptionalArg[str] = MISSING) -> tuple[str, Key, str]:
-        if not self.allow_minting.read():
+        if not self.allow_minting:
             raise errors.MintingIsPaused()
-        index = self.number_of_minted_tokens.read()
-        if index >= self.total_token_supply.read():
+        index = self.number_of_minted_tokens
+        if index >= self.total_token_supply:
             raise errors.TokenSupplyDepleted()
         caller, package = immediate_caller()
-        holder_mode = self.holder_mode.read()
+        holder_mode = self.holder_mode
         account_caller = isinstance(caller, (AccountHash, AccountEntity))
         if holder_mode is NFTHolderMode.CONTRACTS and account_caller:
             raise errors.InvalidHolderMode()
-        mode = self.minting_mode.read()
+        mode = self.minting_mode
         if mode is MintingMode.INSTALLER and caller != self.installer:
             raise errors.InvalidMinter()
         if mode is MintingMode.ACL:
-            identity = package if self.acl_package_mode.read() and package is not None else caller
+            identity = package if self.acl_package_mode and package is not None else caller
             if not self.acl_whitelist.get(identity, False):
                 if isinstance(caller, Hash):
                     raise errors.UnlistedContractHash()
                 if isinstance(caller, (AccountEntity, ContractEntity)):
                     raise errors.UnlistedEntity()
                 raise errors.InvalidMinter()
-        owner = caller if self.ownership_mode.read() is OwnershipMode.MINTER else token_owner
+        owner = caller if self.ownership_mode is OwnershipMode.MINTER else token_owner
         address_key(owner)
         identifier = str(index)
-        hash_mode = self.identifier_mode.read() is NFTIdentifierMode.HASH
+        hash_mode = self.identifier_mode is NFTIdentifierMode.HASH
         if hash_mode:
             identifier = token_hash if token_hash is not MISSING and token_hash else runtime.blake2b(token_meta_data.encode("utf-8")).hex()
             if identifier in self.index_by_hash:
                 raise errors.DuplicateIdentifier()
         metadata = self._validated_metadata(token_meta_data)
-        complete = self.reporting_mode.read() is OwnerReverseLookupMode.COMPLETE
+        complete = self.reporting_mode is OwnerReverseLookupMode.COMPLETE
         if complete and owner not in self.page_table:
             raise errors.UnregisteredOwnerInMint()
         for kind, value in metadata:
@@ -307,7 +309,7 @@ class Cep78(Contract):
             self.hash_by_index[str(index)] = identifier
             self.index_by_hash[identifier] = index
         self.balances[owner] = self.balances.get(owner, 0) + 1
-        self.number_of_minted_tokens.write(index + 1)
+        self.number_of_minted_tokens = index + 1
         emit(Mint(owner, identifier, token_meta_data))
         if complete:
             seed = self._set_page(index, owner, True, on_mint=True)
@@ -318,12 +320,12 @@ class Cep78(Contract):
     @entry_point
     def burn(self, *, token_id: OptionalArg[U64] = MISSING,
              token_hash: OptionalArg[str] = MISSING) -> None:
-        if self.burn_mode.read() is BurnMode.NON_BURNABLE:
+        if self.burn_mode is BurnMode.NON_BURNABLE:
             raise errors.InvalidBurnMode()
         identifier = self._identifier(token_id, token_hash)
         owner = self._owner(identifier)
         caller, package = immediate_caller()
-        if caller != owner and not (self.operator_burn_mode.read() and self._is_operator(owner, caller, package)):
+        if caller != owner and not (self.operator_burn_mode and self._is_operator(owner, caller, package)):
             raise errors.InvalidTokenOwner()
         self._require_not_burnt(identifier)
         balance = self.balances.get(owner, 0)
@@ -390,9 +392,9 @@ class Cep78(Contract):
                 and not self._is_operator(owner, caller, package)):
             raise errors.InvalidTokenOwner()
         address_key(target_key)
-        filter_contract = self.transfer_filter_contract.read()
+        filter_contract = self.transfer_filter_contract
         if filter_contract is not None:
-            identifier_value = CLU64(cast(int, token_id)) if self.identifier_mode.read() is NFTIdentifierMode.ORDINAL else CLString(identifier)
+            identifier_value = CLU64(cast(int, token_id)) if self.identifier_mode is NFTIdentifierMode.ORDINAL else CLString(identifier)
             result = runtime.call_contract(filter_contract, "can_transfer", {
                 "source_key": CLKey(source_key), "target_key": CLKey(target_key),
                 "token_id": identifier_value}, U8)
@@ -401,7 +403,7 @@ class Cep78(Contract):
         balance = self.balances.get(owner, 0)
         if balance == 0:
             raise errors.FatalTokenIdDuplication()
-        reporting = self.reporting_mode.read()
+        reporting = self.reporting_mode
         if reporting is not OwnerReverseLookupMode.NO_LOOKUP:
             if source_key not in self.page_table or target_key not in self.page_table:
                 raise errors.UnregisteredOwnerInTransfer()
@@ -411,7 +413,7 @@ class Cep78(Contract):
         self.approved[identifier] = None
         emit(Transfer(owner, None if caller == owner else caller, target_key, identifier))
         if reporting is not OwnerReverseLookupMode.NO_LOOKUP:
-            index = int(identifier) if self.identifier_mode.read() is NFTIdentifierMode.ORDINAL else self.index_by_hash[identifier]
+            index = int(identifier) if self.identifier_mode is NFTIdentifierMode.ORDINAL else self.index_by_hash[identifier]
             if reporting is OwnerReverseLookupMode.TRANSFERS_ONLY:
                 self._set_page(index, source_key, True)
             seed = self._set_page(index, source_key, False)
@@ -432,7 +434,7 @@ class Cep78(Contract):
     def metadata(self, *, token_id: OptionalArg[U64] = MISSING,
                  token_hash: OptionalArg[str] = MISSING) -> str:
         identifier = self._identifier(token_id, token_hash, check_bounds=True)
-        for kind, requirement in sorted(self.nft_metadata_kinds.read().items()):
+        for kind, requirement in sorted(self.nft_metadata_kinds.items()):
             if requirement == int(Requirement.REQUIRED):
                 value = self._metadata_dictionary(NFTMetadataKind.from_value(kind)).get(identifier)
                 if value is None:
@@ -450,7 +452,7 @@ class Cep78(Contract):
     @entry_point
     def set_token_metadata(self, token_meta_data: str, *, token_id: OptionalArg[U64] = MISSING,
                            token_hash: OptionalArg[str] = MISSING) -> None:
-        if self.metadata_mutability.read() is MetadataMutability.IMMUTABLE:
+        if self.metadata_mutability is MetadataMutability.IMMUTABLE:
             raise errors.ForbiddenMetadataUpdate()
         identifier = self._identifier(token_id, token_hash)
         if self._owner(identifier) != immediate_caller()[0]:
@@ -460,10 +462,10 @@ class Cep78(Contract):
         emit(MetadataUpdated(identifier, token_meta_data))
 
     def _receipt_name(self, page: int) -> str:
-        return self.receipt_name.read() + "_m_1000_p_" + str(page)
+        return self.receipt_name + "_m_1000_p_" + str(page)
 
     def _page(self, page: int) -> Dictionary[Key, list[bool]]:
-        if page >= self.page_limit.read():
+        if page >= self.page_limit:
             raise errors.InvalidPageNumber()
         name = "page_" + str(page)
         seed = named_keys.get(name)
@@ -497,18 +499,18 @@ class Cep78(Contract):
 
     @entry_point
     def register_owner(self, token_owner: Key) -> tuple[str, URef[str]]:
-        if self.reporting_mode.read() is OwnerReverseLookupMode.NO_LOOKUP:
+        if self.reporting_mode is OwnerReverseLookupMode.NO_LOOKUP:
             runtime.ret(CLUnit())
-        owner = immediate_caller()[0] if self.ownership_mode.read() is OwnershipMode.MINTER else token_owner
+        owner = immediate_caller()[0] if self.ownership_mode is OwnershipMode.MINTER else token_owner
         if owner not in self.page_table:
-            self.page_table[owner] = [False] * self.page_limit.read()
-        collection = self.collection_name.read()
+            self.page_table[owner] = [False] * self.page_limit
+        collection = self.collection_name
         package = named_keys.reference("cep78_" + collection, URef[str]).read()
         return collection, storage.new_uref(CLString(package))
 
     @entry_point
     def updated_receipts(self) -> list[tuple[str, Key]]:
-        if self.reporting_mode.read() is not OwnerReverseLookupMode.COMPLETE:
+        if self.reporting_mode is not OwnerReverseLookupMode.COMPLETE:
             runtime.ret(CLUnit())
         caller, _ = immediate_caller()
         receipts: list[tuple[str, Key]] = []
@@ -530,17 +532,18 @@ class Cep78(Contract):
         if total_token_supply is not MISSING:
             if total_token_supply == 0:
                 raise errors.CannotUpgradeWithZeroSupply()
-            if total_token_supply > self.total_token_supply.read():
+            if total_token_supply > self.total_token_supply:
                 raise errors.CannotUpgradeToMoreSupply()
-            if total_token_supply < self.number_of_minted_tokens.read():
+            if total_token_supply < self.number_of_minted_tokens:
                 raise errors.ExceededMaxTotalSupply()
-            self.total_token_supply.write(total_token_supply)
+            self.total_token_supply = total_token_supply
         if events_mode is not MISSING:
-            self.events_mode.write(events_mode)
-        for reference, value in ((self.acl_package_mode, acl_package_mode),
-                                 (self.package_operator_mode, package_operator_mode),
-                                 (self.operator_burn_mode, operator_burn_mode)):
-            if value is not MISSING and value:
-                reference.write(value)
+            self.events_mode = events_mode
+        if acl_package_mode is not MISSING and acl_package_mode:
+            self.acl_package_mode = acl_package_mode
+        if package_operator_mode is not MISSING and package_operator_mode:
+            self.package_operator_mode = package_operator_mode
+        if operator_burn_mode is not MISSING and operator_burn_mode:
+            self.operator_burn_mode = operator_burn_mode
         initialize_events(self.event_types())
         emit(Migration())

@@ -61,6 +61,118 @@ class ClassContractTests(unittest.TestCase):
         key = self.host.accounts[self.alice]['py_counter']
         return ContractHarness(Counter, host=self.host, contract=key)
 
+    def test_value_properties_match_native_and_frozen_reads_writes_and_storage(self):
+        source = '''from casthon import U32, ContractHash, Dictionary
+from casthon.contracts import Contract, entry_point, export_contract
+from casthon.contract_api.runtime import named_keys
+class Base(Contract):
+    count: U32 = named_keys.property("legacy_count")
+class Example(Base):
+    target: ContractHash = named_keys.property()
+    stored_target: ContractHash = named_keys.property(uref=True)
+    items: Dictionary[str, U32] = named_keys.property(key=None)
+    nullable: U32 | None = named_keys.property()
+    pair: tuple[U32, str] = named_keys.property(name=None)
+    @entry_point
+    def get(self) -> U32: return self.count
+export_contract(Example)
+'''
+        with class_pair(source) as (author, frozen, exports):
+            for module in (author, frozen):
+                host = MockHost()
+                first_target, second_target = ContractHash(bytes([3]) * 32), ContractHash(bytes([4]) * 32)
+                with use_host(host):
+                    instance = module.Example(count=3, target=first_target, stored_target=first_target,
+                                              nullable=None, pair=(1, 'a'))
+                    original = instance.named_keys.copy()
+                    self.assertEqual(original['target'], first_target)
+                    self.assertIsInstance(original['stored_target'], URef)
+                    self.assertEqual(instance.stored_target, first_target)
+                    instance.count += 2
+                    instance.items['foo'] = 6
+                    instance.items['foo'] += 1
+                    instance.nullable = 9
+                    instance.pair = (2, 'b')
+                    instance.stored_target = second_target
+                    instance.target = second_target
+                    self.assertEqual(instance.get(), 5)
+                    self.assertEqual(instance.items['foo'], 7)
+                    self.assertEqual(instance.nullable, 9)
+                    self.assertEqual(instance.pair, (2, 'b'))
+                    self.assertEqual(instance.named_keys['legacy_count'], original['legacy_count'])
+                    self.assertEqual(instance.named_keys['stored_target'], original['stored_target'])
+                    self.assertEqual(instance.named_keys['target'], second_target)
+                    cells, dictionaries, keys = host.cells.copy(), {k: v.copy() for k, v in host.dictionaries.items()}, instance.named_keys.copy()
+                    for field, value in [('count', -1), ('count', 1 << 32), ('target', self.alice),
+                                         ('stored_target', self.alice), ('pair', ('bad', 0)), ('items', {})]:
+                        with self.subTest(module=module, field=field), self.assertRaises((TypeError, ABIError)):
+                            setattr(instance, field, value)
+                        self.assertEqual(host.cells, cells)
+                        self.assertEqual(host.dictionaries, dictionaries)
+                        self.assertEqual(instance.named_keys, keys)
+                    for name, key in instance.named_keys.items():
+                        named_keys[name] = key
+                    bound = module.Example.bind()
+                    bound.count += 1
+                    bound.target = first_target
+                    self.assertEqual(instance.count, 6)
+                    self.assertEqual(bound.items['foo'], 7)
+                    self.assertEqual(bound.target, first_target)
+                    self.assertEqual(instance.target, second_target)
+
+    def test_invalid_property_declarations_fail_in_native_and_builder(self):
+        declarations = [
+            'value = named_keys.property()',
+            'value: U32 = named_keys.property("")',
+            'value: U32 = named_keys.property(key=str)',
+            'value: U32 = named_keys.property(uref="yes")',
+            'value: URef[U32] = named_keys.property()',
+            'value: Dictionary[str, U32] = named_keys.property(uref=True)',
+            'value: Dictionary[AccountHash, U32] = named_keys.property()',
+            'value: Dictionary[AccountHash, U32] = named_keys.property(key=None)',
+            'value: Dictionary[str, U32] = named_keys.property(key=42)',
+            'value: OptionalArg[U32] = named_keys.property()',
+        ]
+        prefix = '''from casthon import U32, URef, Dictionary, AccountHash, OptionalArg
+from casthon.contracts import Contract, export_contract
+from casthon.contract_api.runtime import named_keys
+'''
+        for declaration in declarations:
+            with self.subTest(declaration=declaration), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / 'invalid_property.py'
+                source = prefix + 'class Example(Contract):\n    ' + declaration + '\nexport_contract(Example)\n'
+                path.write_text(source)
+                with self.assertRaises((TypeError, ValueError)):
+                    load_contract(path)
+                module = types.ModuleType('invalid_property')
+                module.__file__ = str(path)
+                with patch.dict(sys.modules, {'invalid_property': module}):
+                    exec(compile(source, str(path), 'exec'), vars(module))
+                    with self.assertRaises((TypeError, ValueError)):
+                        _schema(module.Example)
+
+    def test_inherited_property_cannot_change_to_reference_access(self):
+        source = '''from casthon import U32, URef
+from casthon.contracts import Contract, export_contract
+from casthon.contract_api.runtime import named_keys
+class Base(Contract):
+    count: U32 = named_keys.property()
+class Example(Base):
+    count: URef[U32]
+export_contract(Example)
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'invalid_property.py'
+            path.write_text(source)
+            with self.assertRaises(ValueError):
+                load_contract(path)
+            module = types.ModuleType('invalid_property')
+            module.__file__ = str(path)
+            with patch.dict(sys.modules, {'invalid_property': module}):
+                exec(compile(source, str(path), 'exec'), vars(module))
+                with self.assertRaises(TypeError):
+                    _schema(module.Example)
+
     def test_export_contract_decorator_selects_inherited_methods_and_is_erased(self):
         for imports, marker in (
             ('from casthon.contracts import export_contract as publish', 'publish'),
@@ -195,15 +307,15 @@ export_contract(Example)
         contract = self.install(3)
         with self.host.context(contract=contract.contract), use_host(self.host):
             instance = Counter.bind()
-            original = instance.count
+            original = URef.of(U32).wrap(instance.named_keys['count'])
             addresses = set(self.host.cells)
-            instance.count.write(11)
+            instance.count = 11
             self.assertIsInstance(original, URef)
             self.assertEqual(named_keys['count'], original)
             self.assertEqual(set(self.host.cells), addresses)
             self.assertEqual(original.read(), 11)
-            self.assertEqual(instance.count.read(), 11)
-            instance.count.write(12)
+            self.assertEqual(instance.count, 11)
+            instance.count += 1
             self.assertEqual(original.read(), 12)
             self.assertEqual(set(self.host.cells), addresses)
         with self.host.context(contract=contract.contract), use_host(self.host):
@@ -215,9 +327,9 @@ export_contract(Example)
         with use_host(self.host):
             named_keys['count'] = new_uref(CLU32(99))
             first, second = Counter(3), Counter(7)
-            original = first.count
+            original = URef.of(U32).wrap(first.named_keys['count'])
             addresses = set(self.host.cells)
-            first.count.write(11)
+            first.count = 11
             self.assertEqual(first.named_keys['count'], original)
             self.assertEqual(set(self.host.cells), addresses)
             self.assertEqual(first.get(), 11)
@@ -226,7 +338,7 @@ export_contract(Example)
             self.assertEqual(original.read(), 11)
             cells = self.host.cells.copy()
             with self.assertRaises((TypeError, ABIError)):
-                first.count.write('bad')
+                first.count = 'bad'
             self.assertEqual(self.host.cells, cells)
             self.assertEqual(first.get(), 11)
 
@@ -240,8 +352,8 @@ export_contract(Example)
                     self.increment()
                     raise UserError(79)
                 finally:
-                    self.count.write(9)
-                    cleanup.append(self.count.read())
+                    self.count = 9
+                    cleanup.append(self.count)
 
         def install() -> None:
             Failing()
@@ -299,8 +411,8 @@ export_contract(Example)
         contract = self.install()
         with self.host.context(contract=contract.contract, caller=self.alice), use_host(self.host):
             local = Counter.bind()
-            self.assertIsInstance(local.paused, URef)
-            self.assertIsInstance(local.owner.read(), AccountHash)
+            self.assertIsInstance(local.paused, bool)
+            self.assertIsInstance(local.owner, AccountHash)
             local.pause()
             try:
                 local.increment()

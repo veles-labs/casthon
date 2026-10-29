@@ -12,8 +12,9 @@ from unittest.mock import patch
 from casthon import (
     AccountHash, ApiError, CLKey, CLKeyList, CLString, CLU8, CLU256,
     ContractHash, ContractPackageHash, Key, InvalidArgument, MessageBytes, MessageString, UserError,
-    ABIError, MissingArgument,
+    ABIError, MissingArgument, URef,
 )
+from casthon.contract_api import runtime
 from casthon.caller import decode_caller_information
 from casthon.entry_points import serialize_entry_points
 from casthon.testing import ContractHarness, MockHost, use_host
@@ -183,7 +184,7 @@ class Cep18Tests(unittest.TestCase):
             else:
                 self.fail("Expected an ordinary catchable contract exception")
             finally:
-                token.token_symbol.write("CLEANUP")
+                token.token_symbol = "CLEANUP"
             self.assertEqual(token.symbol(), "CLEANUP")
             self.assertEqual(token.balance_of(self.alice), 10)
 
@@ -345,13 +346,13 @@ class Cep18Tests(unittest.TestCase):
     def test_events_modes_switch_without_resetting_ces_history(self):
         token = self.install()
         with self.host.context(contract=token.contract), use_host(self.host):
-            original = MyToken.bind().events_mode
+            original = runtime.named_keys.reference("events_mode", URef[EventsMode]).get()
         addresses = set(self.host.cells)
         token.invoke("change_events_mode", {"events_mode": CLU8(2)})
         with self.host.context(contract=token.contract), use_host(self.host):
-            self.assertEqual(MyToken.bind().events_mode, original)
+            self.assertEqual(runtime.named_keys["events_mode"], original)
             self.assertIs(original.read(), EventsMode.NATIVE)
-            self.assertIs(MyToken.bind().events_mode.read(), EventsMode.NATIVE)
+            self.assertIs(MyToken.bind().events_mode, EventsMode.NATIVE)
         self.assertEqual(set(self.host.cells), addresses)
         token.invoke("transfer", {"recipient": CLKey(self.bob), "amount": CLU256(1)})
         self.assertEqual(self.host.messages[-1][2], Json.to_message(Transfer(self.alice, self.bob, 1)).to_bytes())
@@ -371,7 +372,7 @@ class Cep18Tests(unittest.TestCase):
         self.assertEqual(len(self.events(token)), 2)
         self.assertEqual(set(self.host.cells), addresses)
         with self.host.context(contract=token.contract), use_host(self.host):
-            self.assertEqual(MyToken.bind().events_mode, original)
+            self.assertEqual(runtime.named_keys["events_mode"], original)
             self.assertIs(original.read(), EventsMode.CES)
 
     def test_failed_event_rolls_back_prior_balance_and_allowance_writes(self):

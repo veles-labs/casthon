@@ -3,7 +3,7 @@
 import inspect
 from typing import Any, get_type_hints
 
-from .contracts import Contract, EntryPointMethod, Method, Schema, StateField, _state_field
+from .contracts import Contract, EntryPointMethod, Method, Schema, StateConfiguration, StateField, _state_field
 from .key import Key, URef
 from .references import Dictionary, DictionaryType, URefType
 from ._signatures import function_signature
@@ -95,21 +95,26 @@ def prepare_class(cls: type[Contract]) -> Schema:
         state_names = set()
         for name in inspect.get_annotations(base):
             annotation = hints[name]
-            if not (isinstance(annotation, (URefType, DictionaryType)) or
+            configuration = own.get(name)
+            if not (isinstance(configuration, (StateConfiguration, StateField)) or
+                    isinstance(annotation, (URefType, DictionaryType)) or
                     isinstance(annotation, type) and issubclass(annotation, Key)):
                 if name in fields:
                     raise TypeError("An inherited state field cannot be hidden: " + name)
                 continue
             if annotation is URef:
                 raise TypeError("State URefs require a value type: URef[T]")
-            configuration = own.get(name)
             field = configuration if isinstance(configuration, StateField) else _state_field(name, annotation, configuration)
-            if name in fields and (fields[name].name != field.name or state_key(field.annotation) != state_key(fields[name].annotation)):
+            if name in fields and (fields[name].name != field.name or
+                                   field.value_property != fields[name].value_property or
+                                   state_key(field.annotation) != state_key(fields[name].annotation)):
                 raise TypeError("Inherited state schemas cannot be changed")
             fields[name] = field
             state_names.add(name)
             setattr(base, name, field)
         for name, value in list(own.items()):
+            if isinstance(value, StateConfiguration) and value.value_property and name not in state_names:
+                raise TypeError("State properties require a value annotation: " + name)
             if name in fields and name not in state_names:
                 raise TypeError("An inherited state field cannot be hidden: " + name)
             if name in methods and not isinstance(value, EntryPointMethod) and not inspect.isfunction(value):

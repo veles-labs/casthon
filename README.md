@@ -27,7 +27,7 @@ from casthon.contracts import Contract, entry_point, export_contract
 
 @export_contract
 class Hello(Contract):
-    calls: URef[U32]
+    calls: U32 = named_keys.property()
 
     @entry_point
     def greet(self, name: str) -> str:
@@ -41,7 +41,7 @@ class Hello(Contract):
         except ValueError:
             return "Hello, stranger!"
         finally:
-            self.calls.write(self.calls.read() + 1)
+            self.calls += 1
             print("Greeting finished")
 
 
@@ -131,8 +131,8 @@ casthon call flipper get --simulate --json -vv
 
 ## A few more examples
 
-- [Counter](contracts/counter.py) composes ownership and pause controls, with a
-  typed URef and a persistent dictionary.
+- [Counter](contracts/counter.py) composes ownership and pause controls, with
+  typed state properties and a persistent dictionary.
 - [Counter session](contracts/counter_session.py) imports the counter's Python
   ABI to call a deployed contract. The session exports only `call`.
 - [MyToken](contracts/my_token.py) inherits the [CEP-18 base](contracts/cep18.py),

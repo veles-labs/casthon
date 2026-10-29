@@ -73,15 +73,15 @@ contract TOML file.
 
 ```python
 from typing import Any
-from casthon import URef, U32, AccountHash, Dictionary
+from casthon import U32, AccountHash, Dictionary
 from casthon.contract_api.runtime import named_keys
 from casthon.contracts import entry_point, export_contract
 from contracts.pausable import Pausable
 
 @export_contract
 class Counter(Pausable):
-    count: URef[U32]
-    increments: Dictionary[AccountHash, U32] = named_keys.reference(
+    count: U32 = named_keys.property()
+    increments: Dictionary[AccountHash, U32] = named_keys.property(
         key=lambda account: bytes(account)[1:].hex())
 
     def __init__(self, initial: U32 = 0, **state: Any) -> None:
@@ -89,27 +89,43 @@ class Counter(Pausable):
 
     @entry_point
     def get(self) -> U32:
-        return self.count.read()
+        return self.count
 ```
 
-Annotation-only state infers its named-key name and schema. For example, `Ownable.owner:
-URef[AccountHash]` and `Pausable.paused: URef[bool]` are inherited by Counter.
+`named_keys.property()` uses the attribute's value annotation and infers its named-key
+name. For example, `Ownable.owner: AccountHash` and `Pausable.paused: bool` are
+inherited by Counter. Ownership uses `named_keys.property(uref=True)` to preserve its
+URef-backed storage; a Key subclass otherwise represents a direct named-key binding.
 Declarations perform no storage I/O. `Counter(initial)` runs the normal Python
 constructor chain: Pausable supplies its `paused` default, Ownable supplies its `owner`
 default, and Contract validates the collected values and allocates fresh URefs and
 dictionary seeds. Unspecified dictionaries start empty; other required state must be
 supplied. The new instance owns its state-key map, without binding those names into the
 installer's account. After `super().__init__` returns, constructor code can read/write
-`self.count` and `self.increments`. Use `named_keys.reference("old_count")` to specify a
+`self.count` and `self.increments`. Use `named_keys.property("old_count")` to specify a
 different persistent name.
 
 `Counter.bind()` creates a view of existing state in the current context. It skips the
-constructor and resolves named keys lazily, following rebinding. `self.count` returns a
-typed URef, and `self.increments[account]` accesses dictionary items directly. Reads
-validate key variants and stored value types. `self.count.write(7)` updates its existing
+constructor and resolves named keys lazily, following rebinding. `self.count` returns
+the stored U32, and `self.increments[account]` accesses dictionary items directly. Reads
+validate key variants and stored value types. `self.count = 7` updates its existing
 cell without allocating another URef or changing its named-key binding. Previously
 resolved URefs see the new value. A new instance writes its own initial state, while a
 bound instance writes the current contract's state.
+
+`self.count += 1` reads, increments and writes through the same URef. Dictionary
+properties return typed views: `self.increments[account] = amount` and
+`self.increments[account] += 1` operate on individual items. Missing items raise
+`KeyError`; use `.get(account, 0)` when a default is needed. Whole-dictionary assignment
+is rejected. A property holding a list or map returns a decoded value: mutate a local
+copy and assign it back to persist the change.
+
+Key properties such as `target: ContractHash = named_keys.property()` read and replace
+the named-key binding directly. Use `uref=True` to store a Key value inside a URef
+instead. Raw keys remain available through `self.named_keys`; ordinary typed references
+from `named_keys.reference(name, schema)` retain `.get()`, `.read()` and `.write()`.
+Existing `URef[T]` class fields remain explicit references; properties use the exposed
+value type `T` as their annotation.
 
 `@entry_point` marks a method for the class ABI. `Counter.entry_points()` includes
 inherited ownership, pause and counter methods without a manual `ENTRY_POINTS` list.
@@ -269,7 +285,7 @@ run.
 ### Enums
 
 `WireEnum` subclasses are typed U8 annotations. For example, CEP-18 declares
-`events_mode: URef[EventsMode]` and `change_events_mode(events_mode: EventsMode)`. Reads
+`events_mode: EventsMode = named_keys.property()` and `change_events_mode(events_mode: EventsMode)`. Reads
 and dispatch return enum members, and typed writes require that enum's members. Enum
 return annotations and typed remote calls preserve the same type. Use
 `Optional[EventsMode]` for nullable enum values and `OptionalArg[EventsMode]` for

@@ -388,7 +388,7 @@ class Lower(ast.NodeTransformer):
                     self.argument_factory, self.optional_factory = True, True
                     return ast.copy_location(ast.parse(frozen_annotation(annotation, self.cspr_name, self.optional_name,
                                                                         self.argument_name, self.enum_name, self.path), mode="eval").body, node)
-            if origin in (list, dict, List, Dict, Annotated, casthon.Map):
+            if origin in (list, dict, tuple, List, Dict, Annotated, casthon.Map):
                 # Carry the type tree directly; no string grammar in frozen contracts.
                 annotation = self.annotation_value(self.path, node)
                 self.optional_factory = True

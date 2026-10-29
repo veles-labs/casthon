@@ -195,6 +195,15 @@ class NamedKeys:
         from ..references import reference
         return reference(self, name, annotation)
 
+    def property(self, name: str | None = None, *, key: Any = None, uref: bool = False) -> Any:
+        """Declare a class state property using its exposed value annotation.
+
+        Values use typed URefs; Key subclasses bind named keys directly. Pass
+        uref=True to store a Key value inside a URef. Dictionaries expose item access.
+        """
+        from ..contracts import StateConfiguration
+        return StateConfiguration(name, key, value_property=True, uref=uref)
+
 
 named_keys = NamedKeys()
 

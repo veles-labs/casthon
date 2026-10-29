@@ -73,13 +73,14 @@ migration of historical Rust 1.x installations has not been validated.
 
 ## State and behavior
 
-State uses annotated `URef[T]` and `Dictionary[K, V]` fields. Getter methods such
+State uses value annotations with `named_keys.property()`, including
+`Dictionary[K, V]` views. Getter methods such
 as `name()` use a different Python attribute (`token_name`) bound to the original
 storage name (`name`). Dictionary operations use normal collection syntax:
 
 ```python
 self.balances[recipient] = received
-self.supply.write(supply)
+self.supply = supply
 ```
 
 Balance and security keys are base64 of the complete Key bytes, preserving
@@ -107,18 +108,18 @@ or an addressable entity. A stored caller never spends the initiating account's
 tokens or allowance by accident.
 
 `EventsMode` is a closed `WireEnum` with `NO_EVENTS`, `CES`, `NATIVE` and
-`NATIVE_BYTES` members. The state declaration is `events_mode: URef[EventsMode]`;
+`NATIVE_BYTES` members. The state declaration is `events_mode: EventsMode = named_keys.property()`;
 constructors and `change_events_mode()` accept the enum directly:
 
 ```python
 token = MyToken(events_mode=EventsMode.CES)
-mode = token.events_mode.read()             # EventsMode.CES
-token.events_mode.write(EventsMode.NATIVE)
+mode = token.events_mode                    # EventsMode.CES
+token.events_mode = EventsMode.NATIVE
 contract.call(Cep18.change_events_mode, EventsMode.NATIVE_BYTES)
 ```
 
 The enum serializes as U8, preserving the Rust ABI and existing stored values.
-`change_events_mode()` uses `.write()` to update its existing cell, preserving
+`change_events_mode()` assigns the property to update its existing cell, preserving
 the URef and its named-key binding. This intentionally differs from upstream's
 `put_key(..., new_uref(...))`: changing a mode does not leave an old cell behind.
 Decoding returns canonical enum members. Typed writes require members of the

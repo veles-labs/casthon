@@ -18,14 +18,14 @@ def _account_key(account: AccountHash) -> str:
 
 @export_contract
 class Counter(Pausable):
-    count: URef[U32]
-    increments: Dictionary[AccountHash, U32] = named_keys.reference(key=_account_key)
+    count: U32 = named_keys.property()
+    increments: Dictionary[AccountHash, U32] = named_keys.property(key=_account_key)
 
     def __init__(self, initial: U32 = 0, **state: Any) -> None:
         super().__init__(count=initial, **state)
 
     def _increment_by(self, amount: U32) -> None:
-        self.count.write(self.count.read() + amount)
+        self.count += amount
         caller = get_caller()
         self.increments[caller] = self.increments.get(caller, 0) + amount
 
@@ -41,7 +41,7 @@ class Counter(Pausable):
 
     @entry_point
     def get(self) -> U32:
-        return self.count.read()
+        return self.count
 
     @entry_point
     def get_increments(self, owner: AccountHash) -> U32:

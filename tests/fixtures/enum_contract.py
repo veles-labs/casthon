@@ -2,8 +2,9 @@
 
 from typing import Any, Optional
 
-from casthon import ContractHash, Dictionary, MISSING, OptionalArg, URef, WireEnum, export
+from casthon import ContractHash, Dictionary, MISSING, OptionalArg, WireEnum, export
 from casthon.contract_api import runtime, storage
+from casthon.contract_api.runtime import named_keys
 from casthon.contracts import Contract, entry_point, export_contract
 from contracts.cep18_events import EventsMode
 
@@ -21,35 +22,35 @@ def local(mode: LocalMode) -> LocalMode:
 
 @export_contract
 class Modes(Contract):
-    mode: URef[EventsMode]
-    previous: Dictionary[str, EventsMode]
-    nullable: URef[Optional[EventsMode]]
+    mode: EventsMode = named_keys.property()
+    previous: Dictionary[str, EventsMode] = named_keys.property()
+    nullable: Optional[EventsMode] = named_keys.property()
 
     def __init__(self, **state: Any) -> None:
         super().__init__(mode=EventsMode.CES, nullable=None, **state)
 
     @entry_point
     def get(self) -> EventsMode:
-        mode = self.mode.read()
+        mode = self.mode
         assert isinstance(mode, EventsMode)
         assert mode is EventsMode.from_value(int(mode))
         return mode
 
     @entry_point
     def set(self, mode: EventsMode) -> EventsMode:
-        old = self.mode.read()
+        old = self.mode
         self.previous["last"] = old
-        self.mode.write(mode)
-        assert self.mode.read() is mode
+        self.mode = mode
+        assert self.mode is mode
         assert self.previous["last"] is old
         return old
 
     @entry_point
     def optional(self, mode: OptionalArg[Optional[EventsMode]] = MISSING) -> Optional[EventsMode]:
         if mode is MISSING:
-            return self.nullable.read()
-        self.nullable.write(mode)
-        assert self.nullable.read() is mode
+            return self.nullable
+        self.nullable = mode
+        assert self.nullable is mode
         return mode
 
 

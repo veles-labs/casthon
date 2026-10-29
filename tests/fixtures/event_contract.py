@@ -1,8 +1,9 @@
 """Typed event records composed across a diamond of contract mixins."""
 
-from casthon import ABIError, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, Key, Map, U32, URef, export
+from casthon import ABIError, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, Key, Map, U32, export
 from casthon.contract_api import runtime, storage
 from casthon import ces, emit
+from casthon.contract_api.runtime import named_keys
 from casthon.contracts import Contract, entry_point, export_contract
 
 
@@ -54,13 +55,13 @@ class Permissions(Root):
 
 @export_contract
 class Events(Audit, Permissions):
-    count: URef[U32]
+    count: U32 = named_keys.property()
     events = (Added,)
 
     @entry_point
     def add(self, amount: U32) -> Map[str, U32 | None]:
-        value = self.count.read() + amount
-        self.count.write(value)
+        value = self.count + amount
+        self.count = value
         values: Map[str, U32 | None] = {'count': value, 'empty': None}
         ces.emit(Added(runtime.get_caller(), values))
         return values
@@ -70,7 +71,7 @@ class Events(Audit, Permissions):
         try:
             ces.emit(Added(runtime.get_caller(), {'bad': -1}))
         except ABIError:
-            return self.count.read()
+            return self.count
         return 999
 
     @entry_point
@@ -109,7 +110,7 @@ class Events(Audit, Permissions):
 
     @entry_point
     def fail(self) -> None:
-        self.count.write(999)
+        self.count = 999
         ces.emit(Added(runtime.get_caller(), {'bad': -1}))
 
 

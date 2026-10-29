@@ -9,8 +9,8 @@ from contracts.cep18 import Cep18
 
 @export_contract
 class TokenClient(Contract):
-    token: ContractHash
-    package: ContractPackageHash
+    token: ContractHash = named_keys.property()
+    package: ContractPackageHash = named_keys.property()
 
     @entry_point
     def approve(self, spender: Key, amount: U256) -> None:

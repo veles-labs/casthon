@@ -144,7 +144,7 @@ permits omission under strict node validation. `tests/test_optional_args.py`,
 `tests/wasm/test_wasm_typed_exports.py` and `tests/live/test_optional_args.py`
 cover the native, frozen and live paths, including typed cross-contract calls.
 
-Enum annotations preserve their Python member types: a `URef[EventsMode]` read
+Enum annotations preserve their Python member types: an `EventsMode` state property
 returns `EventsMode`, and a typed remote call decodes an enum return into a
 member. The underlying CLType remains U8. Chain queries expose that U8 value;
 the Python enum domain comes from the contract's annotations. Enum tests cover

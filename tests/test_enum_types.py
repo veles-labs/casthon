@@ -81,9 +81,9 @@ class EnumTypeTests(unittest.TestCase):
         session.invoke("call", {"contract": CLValue("Key", contract)})
         with use_host(host), host.context(contract=contract):
             state = enum_contract.Modes.bind()
-            self.assertIs(state.mode.read(), EventsMode.NATIVE)
+            self.assertIs(state.mode, EventsMode.NATIVE)
             self.assertIs(state.previous["last"], EventsMode.CES)
-            self.assertIsNone(state.nullable.read())
+            self.assertIsNone(state.nullable)
         with self.assertRaises(InvalidEventsMode):
             session.at(contract).invoke("set", {"mode": CLU8(4)})
 

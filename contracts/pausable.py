@@ -3,7 +3,8 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast
 
-from casthon import URef, UserError
+from casthon import UserError
+from casthon.contract_api.runtime import named_keys
 from casthon.contracts import entry_point
 from contracts.ownable import Ownable, require_owner
 
@@ -25,25 +26,25 @@ def require_unpaused(function: _F) -> _F:
 
 
 class Pausable(Ownable):
-    paused: URef[bool]
+    paused: bool = named_keys.property()
 
     def __init__(self, *, paused: bool = False, **state: Any) -> None:
         super().__init__(paused=paused, **state)
 
     def _require_unpaused(self) -> None:
-        if self.paused.read():
+        if self.paused:
             raise Paused()
 
     @entry_point
     @require_owner
     def pause(self) -> None:
-        self.paused.write(True)
+        self.paused = True
 
     @entry_point
     @require_owner
     def unpause(self) -> None:
-        self.paused.write(False)
+        self.paused = False
 
     @entry_point
     def is_paused(self) -> bool:
-        return self.paused.read()
+        return self.paused

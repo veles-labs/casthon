@@ -1,6 +1,6 @@
 """A stored NFT caller and transfer filter, importing the base ABI only."""
 
-from casthon import ContractHash, Key, MISSING, OptionalArg, U8, U64, URef, export
+from casthon import ContractHash, Key, MISSING, OptionalArg, U8, U64, export
 from casthon.contract_api import storage
 from casthon.contract_api.runtime import named_keys
 from casthon.contracts import Contract, entry_point, export_contract
@@ -9,10 +9,10 @@ from contracts.cep78 import Cep78
 
 @export_contract
 class NftClient(Contract):
-    token: ContractHash
-    allowed: URef[bool]
-    last_source: URef[Key]
-    last_target: URef[Key]
+    token: ContractHash = named_keys.property()
+    allowed: bool = named_keys.property()
+    last_source: Key = named_keys.property(uref=True)
+    last_target: Key = named_keys.property(uref=True)
 
     @entry_point
     def mint(self, token_owner: Key, token_meta_data: str) -> tuple[str, Key, str]:
@@ -33,9 +33,9 @@ class NftClient(Contract):
     @entry_point
     def can_transfer(self, source_key: Key, target_key: Key,
                      token_id: OptionalArg[U64] = MISSING) -> U8:
-        self.last_source.write(source_key)
-        self.last_target.write(target_key)
-        return int(self.allowed.read())
+        self.last_source = source_key
+        self.last_target = target_key
+        return int(self.allowed)
 
 
 @export

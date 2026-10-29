@@ -1,6 +1,6 @@
 """Minimal stored counter shared by the tooling benchmarks."""
 
-from casthon import ContractHash, U32, URef, export
+from casthon import ContractHash, U32, export
 from casthon.contract_api import storage
 from casthon.contract_api.runtime import named_keys
 from casthon.contracts import Contract, entry_point, export_contract
@@ -8,22 +8,22 @@ from casthon.contracts import Contract, entry_point, export_contract
 
 @export_contract
 class BenchCounter(Contract):
-    value: URef[U32]
+    value: U32 = named_keys.property()
 
     def __init__(self) -> None:
         super().__init__(value=0)
 
     @entry_point
     def get(self) -> U32:
-        return self.value.read()
+        return self.value
 
     @entry_point
     def set(self, value: U32) -> None:
-        self.value.write(value)
+        self.value = value
 
     @entry_point
     def increment_by(self, amount: U32) -> None:
-        self.value.write(self.value.read() + amount)
+        self.value += amount
 
     @entry_point
     def version(self) -> U32:

@@ -8,15 +8,15 @@ from casthon.contracts import Contract, entry_point, export_contract
 
 @export_contract
 class Flipper(Contract):
-    value: URef[bool]
+    value: bool = named_keys.property()
 
     @entry_point
     def flip(self) -> None:
-        self.value.write(not self.value.read())
+        self.value = not self.value
 
     @entry_point
     def get(self) -> bool:
-        return self.value.read()
+        return self.value
 
 
 installed = named_keys.reference("flipper", ContractHash)

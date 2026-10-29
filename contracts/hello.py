@@ -8,7 +8,7 @@ from casthon.contracts import Contract, entry_point, export_contract
 
 @export_contract
 class Hello(Contract):
-    calls: URef[U32]
+    calls: U32 = named_keys.property()
 
     @entry_point
     def greet(self, name: str) -> str:
@@ -22,7 +22,7 @@ class Hello(Contract):
         except ValueError:
             return "Hello, stranger!"
         finally:
-            self.calls.write(self.calls.read() + 1)
+            self.calls += 1
             print("Greeting finished")
 
 

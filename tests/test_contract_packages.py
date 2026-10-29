@@ -108,7 +108,7 @@ class ContractPackageTests(unittest.TestCase):
         with self.assertRaises(UserError):
             harness.invoke('greet', {'name': CLString('x' * 65)})
         with self.host.context(contract=contract), use_host(self.host):
-            self.assertEqual(hello.Hello.bind().calls.read(), 2)
+            self.assertEqual(hello.Hello.bind().calls, 2)
 
 
 if __name__ == '__main__':

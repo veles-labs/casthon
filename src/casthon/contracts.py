@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Callable, Concatenate, Generic, Mapping, ParamSpec, TypeVar, ClassVar, cast, overload
 
 from .enums import EntryPointAccess, EntryPointPayment, EntryPointType
-from .key import Key
+from .key import Key, URef
 from .references import Dictionary, DictionaryType, URefType, reference
 from .return_value import _validate_value, typed_value
 from .arguments import argument_in_abi, argument_type
@@ -18,16 +18,20 @@ _Contract = TypeVar("_Contract", bound="Contract")
 
 
 class StateConfiguration:
-    """Optional storage name and dictionary key transform for an annotated field."""
+    """Storage name, access mode and dictionary key transform for a state field."""
 
-    def __init__(self, name: str | None = None, key: Callable[..., str] | None = None) -> None:
+    def __init__(self, name: str | None = None, key: Callable[..., str] | None = None,
+                 value_property: bool = False, uref: bool = False) -> None:
         self.name, self.key = name, key
+        self.value_property, self.uref = value_property, uref
 
 
 class StateField:
-    def __init__(self, attribute: str, name: str, annotation: Any, binding: Any) -> None:
+    def __init__(self, attribute: str, name: str, annotation: Any, binding: Any,
+                 value_property: bool = False) -> None:
         self.attribute, self.name = attribute, name
         self.annotation, self.reference = annotation, binding
+        self.value_property = value_property
 
     def __get__(self, instance: Any, owner: Any = None) -> Any:
         if instance is None:
@@ -36,10 +40,22 @@ class StateField:
         binding = self.reference if references is None else references[self.attribute]
         if isinstance(self.annotation, Dictionary):
             return binding
-        return binding.get()
+        value = binding.get()
+        if self.value_property and isinstance(self.annotation, URefType):
+            return value.read()
+        return value
 
     def __set__(self, instance: Any, value: Any) -> None:
-        raise TypeError("Use URef.write(), dictionary items or named_keys to update state")
+        if not self.value_property:
+            raise TypeError("Use URef.write(), dictionary items or named_keys to update state")
+        if isinstance(self.annotation, Dictionary):
+            raise TypeError("Update dictionary items; replace its seed explicitly through named_keys")
+        references = instance._state_references
+        binding = self.reference if references is None else references[self.attribute]
+        if isinstance(self.annotation, URefType):
+            binding.get().write(value)
+        else:
+            binding.set(value)
 
     def validate(self, value: Any) -> None:
         if isinstance(self.annotation, URefType):
@@ -69,11 +85,29 @@ class StateField:
         return value  # type: ignore[no-any-return]
 
 
+def _property_annotation(annotation: Any, uref: bool = False) -> Any:
+    """Translate a property's exposed value type into its storage schema."""
+    if type(uref) is not bool:
+        raise TypeError("uref= must be a bool")
+    if isinstance(annotation, (DictionaryType, Dictionary)):
+        if uref:
+            raise TypeError("uref= is only valid for value properties")
+        return annotation
+    if isinstance(annotation, URefType) or annotation is URef:
+        raise TypeError("Property annotations describe values; use T instead of URef[T]")
+    if not uref and isinstance(annotation, type) and issubclass(annotation, Key):
+        return annotation
+    return URefType(annotation)
+
+
 def _state_field(attribute: str, annotation: Any, configuration: Any = None) -> StateField:
     from .contract_api.runtime import named_keys
 
     if configuration is not None and not isinstance(configuration, StateConfiguration):
-        raise TypeError("Annotated storage fields only accept named_keys.reference(...) configuration")
+        raise TypeError("Annotated storage fields require named_keys.reference(...) or named_keys.property(...)")
+    value_property = configuration is not None and configuration.value_property
+    if configuration is not None and value_property:
+        annotation = _property_annotation(annotation, configuration.uref)
     name = configuration.name if configuration is not None and configuration.name is not None else attribute
     key = configuration.key if configuration is not None else None
     if not isinstance(name, str) or not name:
@@ -83,7 +117,7 @@ def _state_field(attribute: str, annotation: Any, configuration: Any = None) -> 
     elif key is not None:
         raise TypeError("key= is only valid for dictionary state")
     binding = reference(named_keys, name, annotation)
-    return StateField(attribute, name, annotation, binding)
+    return StateField(attribute, name, annotation, binding, value_property)
 
 
 class EntryPointReference(Generic[_P, _R]):

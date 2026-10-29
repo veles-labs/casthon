@@ -426,7 +426,7 @@ class Cep78Tests(unittest.TestCase):
         # Set up the count of a collection whose earlier mints are outside this
         # test, then exercise the two sides of the actual page boundary.
         with self.host.context(contract=nft.contract), use_host(self.host):
-            MyNft.bind().number_of_minted_tokens.write(999)
+            MyNft.bind().number_of_minted_tokens = 999
         self.assertEqual(self.mint(nft).value[0], "cep78_My NFT_m_1000_p_0")
         self.assertEqual(self.mint(nft).value[0], "cep78_My NFT_m_1000_p_1")
         receipts = nft.invoke("updated_receipts").value
@@ -470,15 +470,15 @@ class Cep78Tests(unittest.TestCase):
         self.register(nft, self.alice, self.bob)
         self.mint(nft)
         with self.host.context(contract=nft.contract), use_host(self.host):
-            MyNft.bind().transfer_filter_contract.write(client.contract)
+            MyNft.bind().transfer_filter_contract = client.contract
         with self.host.context(contract=client.contract), use_host(self.host):
-            cep78_client.NftClient.bind().allowed.write(False)
+            cep78_client.NftClient.bind().allowed = False
         before = deepcopy(self.host.cells), deepcopy(self.host.dictionaries)
         with self.assertRaises(errors.TransferFilterContractDenied):
             self.transfer(nft)
         self.assertEqual((self.host.cells, self.host.dictionaries), before)
         with self.host.context(contract=client.contract), use_host(self.host):
-            cep78_client.NftClient.bind().allowed.write(True)
+            cep78_client.NftClient.bind().allowed = True
         self.transfer(nft)
         self.assertEqual((self.read(client, "last_source"), self.read(client, "last_target")), (self.alice, self.bob))
 

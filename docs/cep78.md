@@ -100,7 +100,8 @@ does not have burn permission.
 
 ## State, identities and metadata
 
-State uses `URef[T]` and `Dictionary[K, V]`. Ownership and metadata dictionaries
+State uses value annotations with `named_keys.property()` and `Dictionary[K, V]`
+views. Scalar properties retain their existing URef storage. Ownership and metadata dictionaries
 use decimal ordinal strings or the supplied hash/custom string. Address keys use
 the underlying account/contract/entity/package address as 64 lowercase hex
 characters, matching upstream. Operators use

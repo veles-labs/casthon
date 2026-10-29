@@ -11,7 +11,7 @@ from typing import Any, Callable, TypeVar, cast
 
 from casthon import (
     AccountCaller, ContractCaller, EntityCaller,
-    Key, U8, URef, U256, Dictionary, OptionalArg, MISSING, MissingArgument, base64,
+    Key, U8, U256, Dictionary, OptionalArg, MISSING, MissingArgument, base64,
 )
 from casthon.contract_api import runtime
 from casthon.contract_api.runtime import named_keys
@@ -86,16 +86,16 @@ def require_security_admin(function: _F) -> _F:
 class Cep18(Contract):
     events = (Mint, Burn, SetAllowance, IncreaseAllowance, DecreaseAllowance,
               Transfer, TransferFrom, ChangeSecurity, ChangeEventsMode)
-    token_name: URef[str] = named_keys.reference("name")
-    token_symbol: URef[str] = named_keys.reference("symbol")
-    token_decimals: URef[U8] = named_keys.reference("decimals")
-    supply: URef[U256] = named_keys.reference("total_supply")
-    events_mode: URef[EventsMode]
-    enable_mint_burn: URef[U8]
-    balances: Dictionary[Key, U256] = named_keys.reference(key=address_key)
+    token_name: str = named_keys.property("name")
+    token_symbol: str = named_keys.property("symbol")
+    token_decimals: U8 = named_keys.property("decimals")
+    supply: U256 = named_keys.property("total_supply")
+    events_mode: EventsMode = named_keys.property()
+    enable_mint_burn: U8 = named_keys.property()
+    balances: Dictionary[Key, U256] = named_keys.property(key=address_key)
     # The compound key is the owner's Key bytes followed by the spender's.
-    allowances: Dictionary[bytes, U256] = named_keys.reference(key=allowance_key)
-    security_badges: Dictionary[Key, U8] = named_keys.reference(key=address_key)
+    allowances: Dictionary[bytes, U256] = named_keys.property(key=allowance_key)
+    security_badges: Dictionary[Key, U8] = named_keys.property(key=address_key)
 
     def __init__(self, name: str, symbol: str, decimals: U8, total_supply: U256 = 0, *,
                  events_mode: EventsMode = EventsMode.NO_EVENTS, enable_mint_burn: U8 = 0,
@@ -123,23 +123,23 @@ class Cep18(Contract):
         named_keys["package_hash"] = package_hash
         named_keys["contract_hash"] = contract_hash
         initialize_events(self.event_types())
-        emit(Mint(recipient=immediate_caller(), amount=self.supply.read()))
+        emit(Mint(recipient=immediate_caller(), amount=self.supply))
 
     @entry_point
     def name(self) -> str:
-        return self.token_name.read()
+        return self.token_name
 
     @entry_point
     def symbol(self) -> str:
-        return self.token_symbol.read()
+        return self.token_symbol
 
     @entry_point
     def decimals(self) -> U8:
-        return self.token_decimals.read()
+        return self.token_decimals
 
     @entry_point
     def total_supply(self) -> U256:
-        return self.supply.read()
+        return self.supply
 
     @entry_point
     def balance_of(self, address: Key) -> U256:
@@ -214,7 +214,7 @@ class Cep18(Contract):
 
     def _require_mint_burn(self) -> None:
         # Upstream enables this for every nonzero U8, not only 1.
-        if self.enable_mint_burn.read() == 0:
+        if self.enable_mint_burn == 0:
             raise MintBurnDisabled()
 
     def _require_badge(self, allow_minter: bool = False) -> None:
@@ -227,11 +227,11 @@ class Cep18(Contract):
         self._require_mint_burn()
         self._require_badge(allow_minter=True)
         balance = self.balances.get(owner, 0) + amount
-        supply = self.supply.read() + amount
+        supply = self.supply + amount
         if balance > MAX_U256 or supply > MAX_U256:
             raise Overflow()
         self.balances[owner] = balance
-        self.supply.write(supply)
+        self.supply = supply
         emit(Mint(recipient=owner, amount=amount))
 
     @entry_point
@@ -242,11 +242,11 @@ class Cep18(Contract):
         balance = self.balances.get(owner, 0) - amount
         if balance < 0:
             raise InsufficientBalance()
-        supply = self.supply.read() - amount
+        supply = self.supply - amount
         if supply < 0:
             raise FailedToChangeTotalSupply()
         self.balances[owner] = balance
-        self.supply.write(supply)
+        self.supply = supply
         emit(Burn(owner=owner, amount=amount))
 
     @entry_point
@@ -274,9 +274,9 @@ class Cep18(Contract):
     @entry_point
     def change_events_mode(self, events_mode: EventsMode) -> None:
         self._require_badge()
-        old = self.events_mode.read()
+        old = self.events_mode
         if events_mode is old:
             return
-        self.events_mode.write(events_mode)
+        self.events_mode = events_mode
         initialize_events(self.event_types())
         emit(ChangeEventsMode(events_mode=events_mode))

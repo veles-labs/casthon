@@ -3,8 +3,8 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast
 
-from casthon import AccountHash, URef, UserError
-from casthon.contract_api.runtime import get_caller
+from casthon import AccountHash, UserError
+from casthon.contract_api.runtime import get_caller, named_keys
 from casthon.contracts import Contract, entry_point
 
 
@@ -25,20 +25,20 @@ def require_owner(function: _F) -> _F:
 
 
 class Ownable(Contract):
-    owner: URef[AccountHash]
+    owner: AccountHash = named_keys.property(uref=True)
 
     def __init__(self, *, owner: AccountHash | None = None, **state: Any) -> None:
         super().__init__(owner=get_caller() if owner is None else owner, **state)
 
     def _require_owner(self) -> None:
-        if get_caller() != self.owner.read():
+        if get_caller() != self.owner:
             raise NotOwner()
 
     @entry_point
     def get_owner(self) -> AccountHash:
-        return self.owner.read()
+        return self.owner
 
     @entry_point
     @require_owner
     def transfer_ownership(self, new_owner: AccountHash) -> None:
-        self.owner.write(new_owner)
+        self.owner = new_owner
