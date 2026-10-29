@@ -624,7 +624,7 @@ fn run_command(cli: Cli, report: Option<&mut output::CommandResult>) -> Result<i
     let casper_cli = cli.casper_cli.clone();
     match cli.command {
         Action::Build(options) => build(&project, options),
-        Action::Test(options) => testing::run(&project, options),
+        Action::Test(options) => testing::run(&project, &casper_cli, options),
         Action::Check(args) => project.forward("mypy", &args.args),
         Action::Inspect { wasm, json } => inspect(&project, &wasm, json),
         Action::Doctor => doctor::run(&project, &casper_cli),

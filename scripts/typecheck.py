@@ -8,9 +8,10 @@ root = Path(__file__).resolve().parent.parent
 subprocess.run([sys.executable, "-m", "mypy"], cwd=root, check=True)
 flow = root / ".cache/revert_types.py"
 flow.write_text("""from typing import Mapping, NoReturn, Optional, assert_type
-from casthon import Key, URef, U32, U256, AccountHash, ContractHash, ContractPackageHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
+from casthon import Key, URef, U32, U256, AccountHash, ContractHash, ContractPackageHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, SerializedCLValue, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
 from casthon.contract_api import runtime
 from casthon.contracts import Contract
+from casthon.testing import DevnetNetwork, TestAccount, SimulationResult
 from contracts import counter
 from contracts.my_token import MyToken
 from contracts.cep18_events import EventsMode, Mint, ChangeSecurity
@@ -29,6 +30,13 @@ def state_property_types(state: Properties, target: ContractHash) -> None:
     state.target = target
     state.stored_target = target
     state.items["item"] = state.value
+def getter_simulation(network: DevnetNetwork, contract: ContractHash, caller: TestAccount) -> None:
+    result = network.simulate(contract, "get", caller=caller)
+    assert_type(result, SimulationResult)
+    assert_type(result.cl_value, SerializedCLValue | None)
+    assert_type(result.consumed, int)
+    assert_type(result.block_height, int)
+    assert_type(result.state_root_hash, str)
 def event_types(owner: AccountHash) -> None:
     event = Mint(owner, 42)
     assert_type(event.amount, int)

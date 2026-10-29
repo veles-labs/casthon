@@ -3,7 +3,7 @@
 import hashlib
 from typing import Optional
 
-from casthon import U32, CLU32, CLKey, CLValue, SerializedCLValue, URef
+from casthon import U32, CLU32, CLKey, CLString, CLValue, SerializedCLValue, URef
 from casthon.testing import LiveNetworkTest
 
 
@@ -23,6 +23,29 @@ class TestCounter(LiveNetworkTest):
         self.assertEqual(self.network.query(contract, path=["count"]).value, 10)
         self.assertEqual(self.network.query(contract, path=["owner"]).value, alice.account_hash)
         self.assertIs(self.network.query(contract, path=["paused"]).value, False)
+
+    def test_simulated_getters_return_values_without_changing_chain_state(self):
+        alice = self.funded_account("simulated-getter")
+        contract = self.install_counter(alice, initial=7)
+        result = self.network.simulate(contract, "get", caller=alice).assert_success()
+        self.assertEqual(result.value, 7)
+        self.assertGreater(result.consumed, 0)
+        self.network.simulate(contract, "increment_by", caller=alice,
+                              args={"amount": CLU32(3)}).assert_success()
+        self.assertEqual(self.network.simulate(contract, "get", caller=alice).value, 7)
+        self.assertEqual(self.network.query(contract, path=["count"]).value, 7)
+        self.network.call(contract, "increment_by", signer=alice,
+                          args={"amount": CLU32(5)}).assert_success()
+        self.assertEqual(self.network.simulate(contract, "get", caller=alice).value, 12)
+
+    def test_simulated_debug_prints_preserve_json_and_discard_state_changes(self):
+        alice = self.funded_account("simulated-print")
+        self.network.deploy(self.build("contracts/hello.py"), signer=alice).assert_success()
+        contract = self.network.named_keys(alice)["hello"]
+        result = self.network.simulate(contract, "greet", caller=alice,
+            args={"name": CLString("Casper")}).assert_success()
+        self.assertEqual(result.value, "Hello, Casper!")
+        self.assertEqual(self.network.query(contract, path=["calls"]).value, 0)
 
     def test_inherited_ownership_pause_and_transfer(self):
         alice = self.funded_account("owner")

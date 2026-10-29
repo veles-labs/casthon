@@ -16,7 +16,7 @@ import subprocess
 import tempfile
 import threading
 import time
-from typing import Any, Callable, ClassVar, Mapping, Protocol, Sequence, TextIO
+from typing import Any, Callable, ClassVar, Mapping, Protocol, Sequence, TextIO, TYPE_CHECKING
 import uuid
 
 from ..crypto import PublicKey
@@ -24,6 +24,9 @@ from ..key import AccountHash, Key, URef
 from ..values import CLValue, SerializedCLValue
 from .values import from_json, inspect_value, parse_key, runtime_args
 from .prints import ContractPrint, _PrintCapture, _print_note
+
+if TYPE_CHECKING:
+    from .simulation import SimulationResult
 
 
 class DevnetError(RuntimeError):
@@ -316,7 +319,8 @@ class DevnetNetwork:
                  port_offset: int | None = None, timeout: float = 120,
                  diagnostics: Path | str | None = None, owned: bool = True,
                  client: DevnetTransport | None = None, binary: str = "casper-devnet",
-                 custom_asset: str | None = None) -> None:
+                 custom_asset: str | None = None, casper_cli: str = "casper-cli",
+                 rpc_endpoint: str | None = None) -> None:
         if not 1 <= nodes <= 16 or users < 1 or timeout <= 0:
             raise ValueError("Require 1–16 nodes, at least one user and a positive timeout")
         self.name = name or "casthon-py-test-" + uuid.uuid4().hex[:12]
@@ -324,10 +328,13 @@ class DevnetNetwork:
         self.nodes, self.users, self.port_offset = nodes, users, port_offset
         self.timeout, self.owned, self.binary = timeout, owned, binary
         self.custom_asset = custom_asset
+        self.casper_cli, self.rpc_endpoint = casper_cli, rpc_endpoint
+        self._simulation_lock = threading.Lock()
         self._prints = client._prints if isinstance(client, DevnetClient) else _PrintCapture()
         self.diagnostics = Path(diagnostics or Path.cwd() / ".cache/casthon-testing/live" / self.name)
         self.accounts: dict[str, TestAccount] = {}
         self.transactions: list[TransactionReceipt] = []
+        self.simulations: list[SimulationResult] = []
         self._client, self._owns_client = client, client is None
         self._lease: _PortLease | None = None
         self._attempted = self._started = self._stopped = False
@@ -495,6 +502,12 @@ class DevnetNetwork:
                          amount=str(motes), payment_amount=payment)
         return self._wait(sent["transaction_hash"], print_since=cursor)
 
+    def simulate(self, contract: Key | str, entry: str, *, caller: TestAccount,
+                 args: Mapping[str, CLValue] | None = None) -> "SimulationResult":
+        """Execute against current RPC state locally, returning getter values without submission."""
+        from .simulation import simulate
+        return simulate(self, contract, entry, caller=caller, args=args)
+
     def query(self, key: Key | str | TestAccount, *, path: Sequence[str] = (),
               state_root_hash: str | None = None, block_id: str | None = None) -> QueryResult:
         if isinstance(key, TestAccount):
@@ -528,7 +541,8 @@ class DevnetNetwork:
         errors = []
         report: dict[str, Any] = {"network": self.name, "protocolVersion": self.protocol_version,
             "owned": self.owned, "portOffset": self.port_offset,
-            "transactions": [{"hash": receipt.transaction_hash, "response": receipt.raw} for receipt in self.transactions]}
+            "transactions": [{"hash": receipt.transaction_hash, "response": receipt.raw} for receipt in self.transactions],
+            "simulations": [result.raw for result in self.simulations]}
         try:
             self.diagnostics.mkdir(parents=True, exist_ok=True)
             if self._attempted and self._client is not None:

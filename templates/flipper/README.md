@@ -33,7 +33,8 @@ not wallet secrets.
 
 The live test starts an isolated Casper network, deploys the compiled contract,
 calls `flip`, and queries the resulting state. It is opt-in because it requires
-`casper-devnet` and the Casthon Wasm toolchain:
+`casper-devnet`, Veles Labs `casper-cli` with unsigned local simulation support,
+and the Casthon Wasm toolchain. Getter results are read through `--simulate`:
 
 ```sh
 casthon test --live -- -q

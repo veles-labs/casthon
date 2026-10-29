@@ -37,6 +37,11 @@ class TestCep18(LiveNetworkTest):
         return self.network.dictionary(seed, item).value
 
     def assert_returns(self, alice, token, owner, spender, balance, supply, allowance):
+        self.assertEqual(self.network.simulate(token, "balance_of", caller=alice,
+            args={"address": CLKey(owner)}).value, balance)
+        self.assertEqual(self.network.simulate(token, "total_supply", caller=alice).value, supply)
+        self.assertEqual(self.network.simulate(token, "allowance", caller=alice,
+            args={"owner": CLKey(owner), "spender": CLKey(spender)}).value, allowance)
         self.network.deploy(self.build("tests/fixtures/cep18_session.py"), signer=alice, install=False, args={
             "token": CLKey(token), "owner": CLKey(owner), "spender": CLKey(spender),
             "balance": CLU256(balance), "supply": CLU256(supply), "allowance": CLU256(allowance),

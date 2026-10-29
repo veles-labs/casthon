@@ -695,7 +695,7 @@ fn test_suite_options_set_defaults_and_keep_python_arguments_intact() {
     let project = tempdir().unwrap();
     fs::write(
         project.path().join("pytest.py"),
-        "import json,os,sys\nprint(json.dumps({'args':sys.argv[1:],'live':os.environ.get('CSPR_LIVE_TESTS')}))\nraise SystemExit(7)\n",
+        "import json,os,sys\nprint(json.dumps({'args':sys.argv[1:],'live':os.environ.get('CSPR_LIVE_TESTS'),'backend':os.environ.get('CSPR_CASPER_CLI_BIN')}))\nraise SystemExit(7)\n",
     )
     .unwrap();
     for (suite, directory, enabled) in
@@ -738,6 +738,12 @@ fn test_suite_options_set_defaults_and_keep_python_arguments_intact() {
     let received: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(received["args"], serde_json::json!(["--live", "--wasm"]));
     assert!(received["live"].is_null());
+    let output = command(project.path())
+        .args(["--casper-cli", "/custom/casper-cli", "test", "--live"])
+        .output()
+        .unwrap();
+    let received: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(received["backend"], "/custom/casper-cli");
 }
 
 #[test]

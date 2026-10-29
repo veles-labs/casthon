@@ -217,8 +217,34 @@ class TestCounter(LiveNetworkTest):
         token = self.network.named_keys(alice)["py_counter"]
         self.network.call(token, "increment_by", signer=alice,
                           args={"amount": CLU32(5)}).assert_success()
+        self.assertEqual(self.network.simulate(token, "get", caller=alice).value, 5)
         self.assertEqual(self.network.query(token, path=["count"]).value, 5)
 ```
+
+`network.simulate(contract, entry, caller=account, args=...)` uses Veles Labs
+`casper-cli transaction call --simulate --raw --initiator account-hash-...`.
+It executes locally against a pinned root from the live network's RPC. No private
+key is requested, no transaction is submitted, and simulated writes are discarded.
+Use `network.call(...)` to commit a change, then simulate a getter to inspect its return:
+
+```python
+result = self.network.simulate(token, "get", caller=alice).assert_success()
+self.assertEqual(result.value, 5)
+print(result.consumed, result.block_height, result.state_root_hash)
+```
+
+`SimulationResult.value` decodes the returned CLValue bytes; `.cl_value` exposes
+the serialized CLValue and `.raw` retains the full JSON result. Execution errors
+support `.assert_failure(pattern)`; accessing `.value` asserts success first.
+Transport errors, invalid output, and a missing simulator raise `DevnetError`.
+The simulator's key-enumeration restriction still applies. Node transaction
+receipts retain their normal behavior and do not expose entrypoint return bytes.
+
+Simulation uses its own CLI configuration and state cache under the test's
+diagnostics directory. It does not change the user's wallet or active network.
+Choose the backend with `casthon --casper-cli /path/to/casper-cli test --live`,
+`CSPR_CASPER_CLI_BIN`, or a `LiveNetworkTest.casper_cli` class attribute. Attached
+`DevnetNetwork` instances need `rpc_endpoint` or `port_offset` for simulation.
 
 `funded_account("alice")` derives an identity from the configured seed and test
 method ID, then funds it once from `user-1`. Another method gets a different
@@ -230,7 +256,7 @@ Accounts expose `.account_hash`, `.public_key`, `.path` and lazily derived PEM
 `.secret_key` bytes. Signing delegates to casper-devnet using the derivation
 path. Secret material is excluded from account repr and framework reports.
 
-The client exposes `deploy`, `call`, `submit`, `transfer`, `query`, `named_keys`,
+The client exposes `deploy`, `call`, `simulate`, `submit`, `transfer`, `query`, `named_keys`,
 `dictionary`, `balance`, `rpc` and `tool`. Transfer amounts are integer motes;
 entrypoint arguments are explicit CLValues. `rpc` and `tool` provide access to
 additional node/tool capabilities without adding another mock implementation.

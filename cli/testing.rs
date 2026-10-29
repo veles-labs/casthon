@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use clap::Args;
 use std::ffi::OsString;
+use std::path::Path;
 
 use crate::Project;
 
@@ -17,8 +18,11 @@ pub struct Test {
     args: Vec<OsString>,
 }
 
-pub fn run(project: &Project, options: Test) -> Result<i32> {
+pub fn run(project: &Project, casper_cli: &Path, options: Test) -> Result<i32> {
     let mut command = project.command()?;
+    if casper_cli != Path::new("casper-cli") {
+        command.env("CSPR_CASPER_CLI_BIN", casper_cli);
+    }
     command.args(["-m", "pytest"]);
     // Let pytest parse paths and selectors: explicit paths override testpaths,
     // while flags such as -q and -k retain the selected default collection.

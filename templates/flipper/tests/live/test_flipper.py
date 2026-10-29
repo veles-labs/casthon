@@ -15,6 +15,7 @@ class TestFlipperOnCasper(LiveNetworkTest):
         ).assert_success()
 
         contract = self.network.named_keys(alice)["flipper"]
-        self.assertIs(self.network.query(contract, path=["value"]).value, False)
+        self.assertIs(self.network.simulate(contract, "get", caller=alice).value, False)
         self.network.call(contract, "flip", signer=alice).assert_success()
+        self.assertIs(self.network.simulate(contract, "get", caller=alice).value, True)
         self.assertIs(self.network.query(contract, path=["value"]).value, True)

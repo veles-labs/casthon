@@ -48,6 +48,7 @@ class LiveNetworkTest(unittest.TestCase):
     runtime: ClassVar[str] = "asyncify"
     profile: ClassVar[str] = "debug"
     binary: ClassVar[str] = "casper-devnet"
+    casper_cli: ClassVar[str] = "casper-cli"
     custom_asset: ClassVar[str | None] = None
     network: ClassVar[DevnetNetwork]
 
@@ -58,6 +59,7 @@ class LiveNetworkTest(unittest.TestCase):
             raise unittest.SkipTest("Live tests require casthon test --live, CSPR_LIVE_TESTS=1, or make test-live")
         cls.network = DevnetNetwork(protocol_version=cls.protocol_version, seed=cls.network_seed,
                                    binary=os.environ.get("CSPR_DEVNET_BIN", cls.binary), custom_asset=cls.custom_asset,
+                                   casper_cli=os.environ.get("CSPR_CASPER_CLI_BIN", cls.casper_cli),
                                    nodes=cls.node_count, users=cls.user_count,
                                    port_offset=cls.port_offset, timeout=cls.network_timeout,
                                    diagnostics=cls.project_root / ".cache/casthon-testing/live" /

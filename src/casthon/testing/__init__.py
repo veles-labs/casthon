@@ -43,18 +43,19 @@ if TYPE_CHECKING:
         TestAccount as TestAccount, TransactionReceipt as TransactionReceipt, QueryResult as QueryResult,
     )
     from .live import LiveNetworkTest as LiveNetworkTest
+    from .simulation import SimulationResult as SimulationResult
     from .prints import ContractPrint as ContractPrint
 
 
 __all__ = ["use_host", "MockHost", "MockAccessError", "UnsupportedHostCall", "ContractHarness", "InvocationResult",
            "build_contract", "DevnetClient", "DevnetNetwork", "DevnetError", "TestAccount",
-           "TransactionReceipt", "QueryResult", "LiveNetworkTest", "ContractPrint"]
+           "TransactionReceipt", "QueryResult", "LiveNetworkTest", "ContractPrint", "SimulationResult"]
 
 
 def __getattr__(name: str) -> Any:
     # Native state tests do not import subprocess/network/build dependencies.
     import importlib
-    modules = {"build_contract": "build", "LiveNetworkTest": "live", "ContractPrint": "prints",
+    modules = {"build_contract": "build", "LiveNetworkTest": "live", "ContractPrint": "prints", "SimulationResult": "simulation",
                **{item: "devnet" for item in ("DevnetClient", "DevnetNetwork", "DevnetError",
                                                "TestAccount", "TransactionReceipt", "QueryResult")}}
     if name not in modules:
