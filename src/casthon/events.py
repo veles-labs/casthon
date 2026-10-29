@@ -94,13 +94,16 @@ class Event:
             validate(annotation, getattr(self, name))
 
     def to_message(self) -> MessageString | MessageBytes:
-        """Use the single encoder; multiple encoders require an explicit choice."""
+        """Use an explicit encoder, or default a plain record to Bytesrepr."""
         schema = event_schema(type(self))
         if schema.encoder is None:
             if schema.encoders:
                 raise TypeError("Multiple event encoders; select Encoder.to_message(event) or define a default")
-            raise TypeError("Event has no message encoder")
-        message = schema.encoder(self)
+            if type(self) is Event:
+                raise TypeError("Event has no message encoder")
+            message = Bytesrepr.to_message(self)
+        else:
+            message = schema.encoder(self)
         if not isinstance(message, (MessageString, MessageBytes)):
             raise TypeError("An event encoder must return MessageString or MessageBytes")
         return message
@@ -146,10 +149,11 @@ class Json(MessageEncoder):
     def to_message(self) -> MessageString | MessageBytes:
         record = _record(self)
         parts = []
+        json_field = getattr(type(self), "json_field", Json.json_field)
         for name, annotation in event_schema(type(record)).fields:
             value = getattr(record, name)
             validate(annotation, value)
-            parts.append(json_string(name) + ":" + self.json_field(name, annotation, value))
+            parts.append(json_string(name) + ":" + json_field(self, name, annotation, value))
         return MessageString("{" + ",".join(parts) + "}")
 
 

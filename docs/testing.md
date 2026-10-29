@@ -4,6 +4,9 @@ The normal feedback loop runs contract source and the real `casthon` library und
 CPython. The scoped host changes; contract functions remain ordinary Python.
 `casthon.testing` is development-only and is excluded from frozen contract Wasm.
 
+For a step-by-step overview with command output, see the
+[website testing guide](../website/testing.html).
+
 ```sh
 make setup         # Development environment, type checker and Wasmtime
 make test          # Native Python tests; no network, Node or Wasm build
@@ -48,6 +51,38 @@ Python code would. Use the invocation harness to test transactional behavior.
 `use_host` uses context-local binding and restores the previous host on exit.
 The SDK itself is not monkeypatched. The `raw=True` option accepts a transport
 whose methods return `(status, value)`, useful for SDK boundary tests.
+
+### Print debugging in native tests
+
+`casthon test` invokes pytest with the project's Python interpreter. Native
+contract calls therefore use ordinary CPython `print()`, independent of any
+debug or release Wasm profile. Pytest captures stdout by default and includes
+it in a failed test's report; passing tests normally keep it hidden.
+`--capture=tee-sys` displays output while retaining pytest's capture for
+failure reports. `-s` displays output but disables capture.
+
+From the Casthon source checkout, run the existing
+[Hello installer test](../tests/test_contract_packages.py):
+
+```sh
+casthon test -- tests/test_contract_packages.py -q -k hello_installer --capture=tee-sys
+```
+
+Example output (test count and timing may vary):
+
+```text
+Greeting finished
+Greeting finished
+Greeting finished
+.                                                                        [100%]
+1 passed, 5 deselected in 0.02s
+```
+
+The three lines come from `Hello.greet`'s `finally` block during its successful,
+caught-error, and reverting calls. The last invocation prints before its state
+write is rolled back. For the compiled contract, see
+[captured contract prints](#captured-contract-prints): debug Wasm uses the
+Casper host, whereas release Wasm is silent.
 
 ## Native entrypoint invocation
 
@@ -299,6 +334,11 @@ With a print-FD capable node and launcher, debug contract `print()` output is
 captured automatically from the MCP transport's dedicated `node-N casper_print:`
 stderr lines. It stays separate from ordinary node logs and JSON-RPC responses.
 Release Wasm has no `casper_print` import and produces no output.
+The debug profile is the default for `LiveNetworkTest`; select release with
+`profile = "release"`. These are contract Wasm prints, separate from pytest's
+capture of native CPython stdout described above.
+`casthon deploy` builds release Wasm by default, so its deployed contract does
+not emit `print()` diagnostics.
 
 Uncaught Python exceptions in debug Wasm also print their traceback, exception
 type and message at the outer C dispatcher, after Python `finally` blocks run.
@@ -375,6 +415,21 @@ has all 58 host imports; release has the same signatures except `casper_print`.
 The tests check built-in formatting and UTF-8, string-conversion side effects,
 silent release output, uncaught exception tracebacks, broken error formatting,
 and unchanged `Ret`, revert, error and `finally` behavior.
+After `make setup`, run the focused profile check from the source checkout:
+
+```sh
+casthon test --wasm -- tests/wasm/test_wasm_print.py -q -k builtin_print_formatting
+```
+
+Example output (counts and timing may vary):
+
+```text
+..                                                               [100%]
+2 passed, 12 deselected, 8 subtests passed in 38.30s
+```
+
+The test checks `Harness.prints` for debug output and an empty release buffer;
+passing assertions do not print those captured lines in pytest's summary.
 Build on demand with `build_contract(source, profile="release")`; a
 `LiveNetworkTest` subclass can select the same profile with `profile = "release"`.
 

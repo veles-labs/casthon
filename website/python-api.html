@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f8f5" />
+    <meta name="description" content="A practical guide to Casthon class contracts, typed entry points, persistent state, installation, and events." />
+    <link rel="canonical" href="https://veles-labs.github.io/casthon/python-api.html" />
+    <link rel="describedby" href="llms.txt" />
+    <link rel="icon" href="assets/casthon-logo.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="guides.css" />
+    <script src="assets/prism/core.min.js" defer></script>
+    <script src="assets/prism/python.min.js" defer></script>
+    <script src="assets/prism/bash.min.js" defer></script>
+    <script src="main.js" defer></script>
+    <title>Python API guide — Casthon</title>
+  </head>
+  <body class="guide-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="Casthon home"><img src="assets/casthon-logo.png" width="36" height="36" alt="" /><span>casthon<span class="brand-dot">.</span></span></a>
+        <nav class="desktop-nav" aria-label="Main navigation">
+          <a href="index.html#tutorial">Get started</a><a href="python-api.html" aria-current="page">Python API</a><a href="testing.html">Testing</a><a href="examples.html">Examples</a>
+        </nav>
+        <a class="nav-github" href="https://github.com/veles-labs/casthon" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" aria-controls="mobile-nav" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden><a href="index.html#tutorial">Get started</a><a href="python-api.html" aria-current="page">Python API</a><a href="testing.html">Testing</a><a href="examples.html">Examples</a><a href="https://github.com/veles-labs/casthon">GitHub ↗</a></nav>
+    </header>
+
+    <main id="main">
+      <section class="guide-hero">
+        <div class="container guide-hero-grid">
+          <div>
+            <div class="guide-breadcrumb"><a href="index.html">Home</a><span>/</span> Python API</div>
+            <span class="eyebrow"><span class="eyebrow-spark">✳</span> GUIDE 01 / THE LANGUAGE</span>
+            <h1>Python that<br /><span>becomes a contract.</span></h1>
+            <p>Start with familiar classes and type annotations. Casthon turns marked methods into Casper entry points and keeps declared state across calls.</p>
+            <div class="guide-hero-actions"><a class="button button-primary" href="#classes">Explore the API <span aria-hidden="true">↓</span></a><a class="button button-text" href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md">Full reference ↗</a></div>
+          </div>
+          <div class="guide-hero-demo">
+            <div class="demo-label">A SMALL IDEA, A REAL RESULT <span>↗</span></div>
+            <div class="code-window"><div class="code-title"><span>inside Flipper</span><button class="copy-button" type="button" aria-label="Copy Flipper getter">Copy ⧉</button></div><pre><code class="language-python">@entry_point
+def get(self) -&gt; bool:
+    return self.value</code></pre></div>
+            <div class="demo-arrow" aria-hidden="true">↓</div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Simulated return</figcaption><pre><code>false</code></pre></figure>
+          </div>
+        </div>
+      </section>
+
+      <div class="container guide-layout">
+        <aside class="guide-sidebar" aria-label="On this page">
+          <p class="sidebar-title">ON THIS PAGE</p>
+          <nav><a href="#classes"><span>01</span> Class contracts</a><a href="#state"><span>02</span> Persistent state</a><a href="#types"><span>03</span> Types &amp; returns</a><a href="#install"><span>04</span> Install &amp; call</a><a href="#errors"><span>05</span> Errors &amp; events</a></nav>
+          <div class="sidebar-help"><span aria-hidden="true">✳</span><p>Need every detail?<br /><a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md">Read the full API ↗</a></p></div>
+        </aside>
+        <div class="guide-content">
+          <section class="guide-section" id="classes" aria-labelledby="classes-title">
+            <div class="guide-section-top"><span class="step-number">01</span><span class="step-label">START WITH A CLASS</span></div>
+            <h2 id="classes-title">Mark what Casper can call.</h2>
+            <p><code>@export_contract</code> selects a class for Wasm exports. Each <code>@entry_point</code> method becomes callable through its typed ABI. Ordinary methods remain ordinary Python.</p>
+            <div class="code-window"><div class="code-title"><span>contracts/flipper.py · class excerpt</span><button class="copy-button" type="button" aria-label="Copy Flipper class">Copy ⧉</button></div><pre><code class="language-python">from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point, export_contract
+
+@export_contract
+class Flipper(Contract):
+    value: bool = named_keys.property()
+
+    @entry_point
+    def flip(self) -&gt; None:
+        self.value = not self.value
+
+    @entry_point
+    def get(self) -&gt; bool:
+        return self.value</code></pre></div>
+            <div class="guide-facts"><div><b>Class marker</b><span>Selects the root class exports.</span></div><div><b>Method marker</b><span>Registers the callable entry point.</span></div><div><b>Plain Python</b><span>Direct calls still work in tests.</span></div></div>
+            <p class="guide-source">The complete installer is in <a href="https://github.com/veles-labs/casthon/blob/main/templates/flipper/contracts/flipper.py">the Flipper scaffold ↗</a>.</p>
+          </section>
+
+          <section class="guide-section" id="state" aria-labelledby="state-title">
+            <div class="guide-section-top"><span class="step-number">02</span><span class="step-label">KEEP STATE</span></div>
+            <h2 id="state-title">Declare a field. Read it like a field.</h2>
+            <p>Counter keeps one total and one per-account tally. This is its complete class: the fields declare persistent storage, the constructor supplies the initial total, and the entry points control who can change or read it.</p>
+            <div class="code-window"><div class="code-title"><span>contracts/counter.py · complete Counter class</span><button class="copy-button" type="button" aria-label="Copy Counter class">Copy ⧉</button></div><pre><code class="language-python">from typing import Any
+
+from casthon import AccountHash, Dictionary, U32
+from casthon.contract_api.runtime import get_caller, named_keys
+from casthon.contracts import entry_point, export_contract
+from contracts.pausable import Pausable, require_unpaused
+
+def _account_key(account: AccountHash) -&gt; str:
+    return bytes(account)[1:].hex()
+
+@export_contract
+class Counter(Pausable):
+    count: U32 = named_keys.property()
+    increments: Dictionary[AccountHash, U32] = named_keys.property(key=_account_key)
+
+    def __init__(self, initial: U32 = 0, **state: Any) -&gt; None:
+        super().__init__(count=initial, **state)
+
+    def _increment_by(self, amount: U32) -&gt; None:
+        self.count += amount
+        caller = get_caller()
+        self.increments[caller] = self.increments.get(caller, 0) + amount
+
+    @entry_point
+    @require_unpaused
+    def increment(self) -&gt; None:
+        self._increment_by(1)
+
+    @entry_point
+    @require_unpaused
+    def increment_by(self, amount: U32) -&gt; None:
+        self._increment_by(amount)
+
+    @entry_point
+    def get(self) -&gt; U32:
+        return self.count
+
+    @entry_point
+    def get_increments(self, owner: AccountHash) -&gt; U32:
+        return self.increments.get(owner, 0)</code></pre></div>
+            <ol class="guide-explain"><li><strong>Declare storage.</strong> <code>count</code> is a named-key value. <code>increments</code> is a typed dictionary; <code>_account_key</code> turns an account hash into its dictionary key.</li><li><strong>Initialize once.</strong> The installer constructs <code>Counter(initial)</code>. <code>super().__init__</code> passes the initial count through inherited state setup; later calls bind stored values without rerunning initialization.</li><li><strong>Write both totals.</strong> <code>_increment_by</code> updates the total, gets the current caller, then adds the amount to that caller’s tally. <code>.get(caller, 0)</code> starts a new tally at zero.</li><li><strong>Guard writes, allow reads.</strong> <code>require_unpaused</code> protects the mutating entry points. <code>get</code> and <code>get_increments</code> remain callable while paused.</li></ol>
+            <p class="guide-source">See the <a href="https://github.com/veles-labs/casthon/blob/main/contracts/counter.py">complete Counter source and installer ↗</a> and the <a href="examples.html#counter-mixins">Ownable and Pausable walkthrough ↗</a>. Direct dictionary indexing of an absent account raises <code>KeyError</code>; the getter uses <code>.get(..., 0)</code> to return zero.</p>
+          </section>
+
+          <section class="guide-section" id="types" aria-labelledby="types-title">
+            <div class="guide-section-top"><span class="step-number">03</span><span class="step-label">DESCRIBE THE WIRE</span></div>
+            <h2 id="types-title">Annotations are your ABI.</h2>
+            <p><code>U32</code> arrives as a Python integer. A <code>bool</code> return is encoded as Casper Bool. Use <code>Optional[T]</code> for a nullable value and <code>OptionalArg[T]</code> when the argument may be absent entirely.</p>
+            <div class="type-grid"><div class="type-tile"><span>PYTHON ANNOTATION</span><b>amount: U32</b><p>Caller supplies a Casper U32; your method receives an int.</p></div><div class="type-tile"><span>RETURN ANNOTATION</span><b>-&gt; bool</b><p>Casthon serializes the returned Python bool.</p></div><div class="type-tile"><span>OPTIONAL PRESENCE</span><b>OptionalArg[T]</b><p>Distinguishes an omitted argument from a supplied value.</p></div></div>
+            <div class="code-window"><div class="code-title"><span>nullable and missing arguments</span><button class="copy-button" type="button" aria-label="Copy optional argument example">Copy ⧉</button></div><pre><code class="language-python">from typing import Optional
+from casthon import MISSING, OptionalArg, U32, export
+
+@export
+def describe(amount: OptionalArg[Optional[U32]] = MISSING) -&gt; str:
+    if amount is MISSING:
+        return "absent"
+    if amount is None:
+        return "explicit None"
+    return str(amount)</code></pre></div>
+            <div class="guide-callout"><strong>Expected values</strong><p>Omitted argument → <code>"absent"</code> · encoded Option::None → <code>"explicit None"</code> · U32 value 5 → <code>"5"</code>.</p></div>
+          </section>
+
+          <section class="guide-section" id="install" aria-labelledby="install-title">
+            <div class="guide-section-top"><span class="step-number">04</span><span class="step-label">CREATE THE PACKAGE</span></div>
+            <h2 id="install-title">Installation stays explicit.</h2>
+            <p>The exported top-level <code>call</code> creates a package, adds a contract version, and stores the resulting hashes. Building Wasm alone does not run this installer.</p>
+            <div class="code-window"><div class="code-title"><span>contracts/flipper.py · installer excerpt</span><button class="copy-button" type="button" aria-label="Copy Flipper installer">Copy ⧉</button></div><pre><code class="language-python">installed = named_keys.reference("flipper", ContractHash)
+installed_package = named_keys.reference("flipper_package", ContractPackageHash)
+installed_access = named_keys.reference("flipper_access", URef[None])
+
+@export
+def call(initial: bool = False) -&gt; None:
+    if installed.name in named_keys:
+        raise InvalidArgument()
+    package, access = storage.create_contract_package_at_hash()
+    contract, _ = package.add_contract_version(Flipper(value=initial))
+    installed.set(contract)
+    installed_package.set(package)
+    installed_access.set(access)</code></pre></div>
+            <div class="code-window guide-command"><div class="code-title"><span>from the Flipper project</span><button class="copy-button" type="button" aria-label="Copy build command">Copy ⧉</button></div><pre><code class="language-bash">casthon build
+casthon inspect build/flipper.wasm</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>path varies</small></figcaption><pre><code>Built .../build/flipper.wasm
+Casper V1: compatible</code></pre></figure>
+          </section>
+
+          <section class="guide-section" id="errors" aria-labelledby="errors-title">
+            <div class="guide-section-top"><span class="step-number">05</span><span class="step-label">HANDLE OUTCOMES</span></div>
+            <h2 id="errors-title">Catch, clean up, or revert.</h2>
+            <p>When a host API returns an error status, Casthon raises a Python <code>ApiError</code> subclass. You can catch it and recover. An uncaught error, including an ordinary Python exception, reverts the invocation and rolls back its state changes.</p>
+            <div class="type-grid outcome-grid"><div class="type-tile"><span>HOST API ERROR</span><b>ApiError</b><p><code>MissingKey</code>, <code>InvalidArgument</code>, and <code>UserError</code> are catchable by <code>except Exception</code>. Unknown host codes remain <code>ApiError(code)</code>.</p></div><div class="type-tile"><span>EXPLICIT FAILURE</span><b>runtime.revert(code)</b><p>Raises <code>Revert</code>, a <code>BaseException</code>. It bypasses <code>except Exception</code>, runs <code>finally</code>, and rolls back if it escapes.</p></div><div class="type-tile"><span>EXPLICIT RETURN</span><b>runtime.ret(value)</b><p>Serializes a CLValue and raises <code>Ret</code>, also a <code>BaseException</code>. It runs <code>finally</code> before returning successfully.</p></div></div>
+            <h3 class="guide-subtitle">Follow one entry point through every path.</h3>
+            <p class="guide-body">The repository’s <code>Hello.greet</code> catches an empty-name <code>ValueError</code>. A long name raises <code>UserError(1)</code>, which that handler does not catch. In all three paths, the <code>finally</code> block runs before the result reaches Casper.</p>
+            <div class="code-window"><div class="code-title"><span>contracts/hello.py · complete greet method</span><button class="copy-button" type="button" aria-label="Copy Hello error and cleanup example">Copy ⧉</button></div><pre><code class="language-python">from casthon import U32, UserError
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point, export_contract
+
+@export_contract
+class Hello(Contract):
+    calls: U32 = named_keys.property()
+
+    @entry_point
+    def greet(self, name: str) -&gt; str:
+        try:
+            name = name.strip()
+            if not name:
+                raise ValueError("Empty name")
+            if len(name) &gt; 64:
+                raise UserError(1)
+            return f"Hello, {name}!"
+        except ValueError:
+            return "Hello, stranger!"
+        finally:
+            self.calls += 1
+            print("Greeting finished")</code></pre></div>
+            <div class="guide-facts"><div><b>Valid name</b><span><code>" Ada "</code> returns <code>"Hello, Ada!"</code>. The cleanup increment commits.</span></div><div><b>Empty name</b><span><code>ValueError</code> is caught, the fallback returns, and the increment commits.</span></div><div><b>Name over 64 characters</b><span><code>UserError(1)</code> escapes. <code>finally</code> runs, then the invocation reverts and the increment rolls back.</span></div></div>
+            <p class="guide-source">The <code>print("Greeting finished")</code> line is useful while debugging. See the <a href="testing.html#prints">captured <code>casthon test</code> run and debug versus release behavior ↗</a>.</p>
+            <div class="guide-callout"><strong>Cleanup follows the final outcome</strong><p>Normal <code>return</code>, <code>runtime.ret</code>, and <code>runtime.revert</code> all run applicable <code>finally</code> blocks. Writes from <code>finally</code> commit only if the invocation succeeds. You can explicitly catch <code>Ret</code> or <code>Revert</code>, but <code>except Exception</code> leaves both signals alone. A <code>return</code> or new exception in <code>finally</code> can replace the pending result, so keep cleanup free of outcome-changing control flow. Engine traps that do not return an API status still terminate execution.</p></div>
+            <p class="guide-source">See <a href="https://github.com/veles-labs/casthon/blob/main/contracts/hello.py">Hello’s installer ↗</a>, its <a href="https://github.com/veles-labs/casthon/blob/main/tests/test_contract_packages.py">three-path test ↗</a>, and the <a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md#exceptions-and-cleanup">full exception reference ↗</a>.</p>
+            <h3 class="guide-subtitle">Give events a record, an entry point, and a topic.</h3>
+            <p class="guide-body">An event is a typed record. <code>emit</code> encodes a plain <code>Event</code> as Bytesrepr by default and sends its binary payload to the <code>"events"</code> topic. Select JSON explicitly when a text payload is useful. Register the topic when installing the contract.</p>
+            <div class="code-window"><div class="code-title"><span>complete native-message contract pattern</span><button class="copy-button" type="button" aria-label="Copy complete event example">Copy ⧉</button></div><pre><code class="language-python">from casthon import Event, Json, emit, export
+from casthon.contract_api import storage
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point, export_contract
+
+class Greeted(Event):
+    name: str
+
+@export_contract
+class Greeter(Contract):
+    @entry_point
+    def greet(self, name: str) -&gt; None:
+        emit(Greeted(name))
+
+    @entry_point
+    def greet_json(self, name: str) -&gt; None:
+        emit(Greeted(name), encoder=Json.to_message)
+
+@export
+def call() -&gt; None:
+    package, access = storage.create_contract_package_at_hash()
+    contract, _ = package.add_contract_version(
+        Greeter(), message_topics=("events",)
+    )
+    named_keys["greeter"] = contract
+    named_keys["greeter_package"] = package
+    named_keys["greeter_access"] = access</code></pre></div>
+            <div class="guide-facts"><div><b>Default: Bytesrepr</b><span><code>greet("Ada")</code> sends example payload <code>03 00 00 00 41 64 61</code>: a four-byte string length, then UTF-8 text.</span></div><div><b>Optional: JSON</b><span><code>greet_json("Ada")</code> sends example message string <code>{"name":"Ada"}</code>.</span></div></div>
+            <div class="guide-callout"><strong>Other formats and failures</strong><p>Inherit <code>Json</code> to make JSON the default for a record, or use <code>JsonBytes</code> for UTF-8 JSON bytes. A malformed record or encoder failure raises an ordinary catchable Python exception. Delivery uses the host API, so a host error arrives as <code>ApiError</code>. For a different topic, register it and call <code>emit(event, topic="audit")</code>. CES also accepts plain event records and encodes their fields as Bytesrepr. The <a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md#events">full events reference ↗</a> covers encoder selection and CES.</p></div>
+          </section>
+        </div>
+      </div>
+
+      <section class="guide-next"><div class="container guide-next-inner"><div><span class="kicker">NEXT GUIDE</span><h2>Now prove the behavior.</h2><p>Use the same Python source in fast unit tests, invocation tests, compiled Wasm tests, and live networks.</p></div><a class="button button-primary" href="testing.html">Testing guide <span aria-hidden="true">↗</span></a></div></section>
+    </main>
+    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="index.html"><img src="assets/casthon-logo.png" width="32" height="32" alt="" /><span>casthon<span class="brand-dot">.</span></span></a><p>Python smart contracts for Casper. Developer preview.</p><a href="llms.txt">llms.txt ↗</a></div></footer>
+  </body>
+</html>

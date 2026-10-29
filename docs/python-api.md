@@ -5,7 +5,11 @@ reference covers the class API and the procedural functions underneath it. Build
 commands live in the [CLI guide](casthon.md); contract tests have their own
 [guide](testing.md).
 
+For a shorter path with copyable examples, see the
+[website Python API guide](../website/python-api.html).
+
 - [Classes and state](#class-contracts)
+- [Reusable contract mixins](#reusable-contract-mixins)
 - [Typed arguments](#typed-arguments)
 - [Exceptions and cleanup](#exceptions-and-cleanup)
 - [Calling a deployed contract](#calling-a-deployed-contract)
@@ -179,22 +183,59 @@ attributes created by the constructor do not persist across invocations; persist
 belongs in declared storage fields. Uncaught constructor errors use the ordinary
 invocation rollback policy, including writes made by `finally`.
 
-Only the owner may pause, unpause or transfer ownership. Both counter increment methods
-use `@require_unpaused` from `contracts.pausable`; the guard lives in `Pausable`.
-Pause, unpause and ownership transfer use `@require_owner` from `contracts.ownable`.
-Place these decorators underneath `@entry_point`. They preserve argument and return
-annotations, run once before the method body, and also apply to ordinary local calls.
-Reads remain available while paused. Unauthorized calls raise `NotOwner` (User
-error 100), and paused increments raise `Paused` (User error 101). The installer binds
-`py_counter`, so it can coexist with `basic.py` at `py_basic`. Build it with `make
-build-counter` or `python3.14 scripts/build.py counter`.
-
 The builder checks inherited state names, entrypoint names and override wire signatures.
 MicroPython uses depth-first inheritance lookup rather than CPython's C3 order. The
 builder rejects inheritance graphs whose lookup or `super().method(...)` resolution
 would differ; the Counter → Pausable → Ownable chain works on both interpreters. General
 cooperative C3 diamonds are not implemented. Metadata is inspected on CPython and frozen
 at build time for Wasm; no runtime `typing` or `inspect` package is deployed.
+
+### Reusable contract mixins
+
+The example modules [Ownable](../contracts/ownable.py) and
+[Pausable](../contracts/pausable.py) show how to compose contract behavior.
+They live in the repository's `contracts/` directory, rather than in the core
+`casthon` package or the Flipper scaffold. Copy or adapt them in your own
+project. [Counter](../contracts/counter.py) inherits `Pausable`, which inherits
+`Ownable`, so its chain is `Counter → Pausable → Ownable → Contract`.
+
+| Layer | Stored state and default | Inherited entry points | Guard and error |
+| --- | --- | --- | --- |
+| `Ownable` | `owner: AccountHash`, URef-backed; defaults to `get_caller()` during installation, or an explicit constructor owner | `get_owner()`, `transfer_ownership(new_owner)` | `@require_owner` checks the current caller before transfer; `NotOwner` is `UserError(100)` |
+| `Pausable` | `paused: bool`; defaults to `False` | `pause()`, `unpause()`, `is_paused()` | `pause` and `unpause` use `@require_owner`; `@require_unpaused` raises `Paused`, a `UserError(101)`, on a guarded method |
+| `Counter` | `count: U32` and a per-account `increments` dictionary | `increment()`, `increment_by(amount)`, `get()`, `get_increments(owner)` | Only the increment methods use `@require_unpaused`; reads remain available while paused |
+
+`super().__init__` passes constructor values through the chain. `Ownable` takes
+the current caller as the initial owner only when no `owner=` was supplied.
+Creating `Counter(initial)` initializes all four stored fields once; later
+entry-point invocations bind existing state without rerunning constructors.
+The concrete `@export_contract` class selects root Wasm exports, and its
+`entry_points()` includes the inherited methods automatically.
+
+The guards are ordinary Python decorators. Place them below `@entry_point` on
+the method they protect. `@require_owner` calls `_require_owner()` before the
+method body, comparing `get_caller()` with `self.owner`.
+`@require_unpaused` calls `_require_unpaused()` before the body and rejects a
+call only when `self.paused` is true. Both use `functools.wraps` to preserve the
+method signature used by native inspection. They run for local Python calls
+as well as dispatched entry points, and their `UserError` subclasses are
+catchable in native tests. If uncaught on chain, user error 100 or 101 reverts
+the invocation.
+
+Ownership does not implicitly guard every method. Any caller may increment
+Counter while it is unpaused; only an owner may pause, unpause, or transfer
+ownership. A failed pause guard runs before the increment body and leaves the
+count and per-account tally unchanged. A paused contract still allows
+`get()`, `get_increments()`, `get_owner()`, and `is_paused()` because none has
+the pause guard. Transferring ownership changes who can control pause and
+transfer next; it does not change `paused`. The
+[website Counter walkthrough](../website/examples.html#counter-mixins) has a
+copyable native session and its example output; the
+[native contract tests](../tests/test_class_contracts.py) and
+[compiled Wasm test](../tests/wasm/test_wasm_counter.py) exercise the same
+behavior. The installer binds `py_counter`, so it can coexist with `basic.py`
+at `py_basic`. Build it with `make build-counter` or
+`python3.14 scripts/build.py counter`.
 
 ### Typed arguments
 
@@ -298,6 +339,25 @@ classmethod `_missing_` hook can raise a contract-specific exception.
 Python exceptions derived from `ApiError`, catchable by `except Exception`. `UserError`
 and `User` refer to the same class. Internal calls to exported functions still return
 normally; the identity `@export` marker adds no dispatcher at the call site.
+
+| Signal | `except Exception` | `finally` | If it escapes the entry point |
+| --- | --- | --- | --- |
+| `ApiError` (including `UserError`) | Catches it | Runs | Reverts and rolls back state |
+| Ordinary Python exception | Catches it | Runs | Reverts and rolls back state |
+| `runtime.revert(code)` (`Revert`) | Does not catch it | Runs | Reverts and rolls back state |
+| `runtime.ret(value)` (`Ret`) | Does not catch it | Runs | Returns the serialized value successfully |
+
+[Hello.greet](../contracts/hello.py) shows the difference in one method: an empty
+name raises a caught `ValueError` and returns a fallback; a long name raises an
+uncaught `UserError(1)`. The `finally` increment runs in both cases, but the
+long-name invocation rolls that increment back. The
+[native contract test](../tests/test_contract_packages.py) checks all three
+paths, including the successful greeting.
+Its `print("Greeting finished")` also runs on every path. Native pytest can
+display and capture the three lines with `--capture=tee-sys`; debug Wasm sends
+them to `casper_print`, while release Wasm discards their output. See the
+[print debugging run](testing.md#print-debugging-in-native-tests) and
+[compiled print capture](testing.md#captured-contract-prints).
 
 The private C bridge returns `(status, value)` for every binding. Python interprets
 nonzero ApiError statuses and raises known subclasses, including `MissingArgument`;
@@ -683,11 +743,16 @@ increments = named_keys.reference(
     "increments", Dictionary[AccountHash, U32](key=account_key)
 )
 
-# Inside an entrypoint:
-increments[owner] = increments.get(owner, 0) + 1
+def increment_for(owner: AccountHash) -> U32:
+    updated = increments.get(owner, 0) + 1
+    increments[owner] = updated
+    return updated
 ```
 
-Dictionary references expose collection operations directly. Each item access resolves
+An entrypoint can call `increment_for` after the dictionary seed is installed.
+The first call for an account starts from zero; later calls read and update its
+stored tally. Dictionary references expose collection operations directly. Each
+item access resolves
 the current named-key seed internally; `.get(key, default)` reads an item, while `.seed`
 explicitly retrieves the current URef. `.set(seed)` and `.remove()` manage the named-key
 binding. Item indexing raises `KeyError` on absence, and membership distinguishes
@@ -748,29 +813,47 @@ boundary serialization. Build it with `make build-typed-exports`.
 
 ## Events
 
-An event is an annotated record. An encoder mixin supplies its message format:
+An event is an annotated record. A plain `Event` subclass emits its fields as
+Bytesrepr in a `MessageBytes` payload by default:
 
 ```python
 from casthon import Event, Json, emit
+from casthon.contracts import Contract, entry_point, export_contract
 
-class Greeted(Event, Json):
+class Greeted(Event):
     name: str
 
-# Inside a stored-contract entrypoint:
-emit(Greeted("World"))
+@export_contract
+class Greeter(Contract):
+    @entry_point
+    def greet(self, name: str) -> None:
+        emit(Greeted(name))
+
+    @entry_point
+    def greet_json(self, name: str) -> None:
+        emit(Greeted(name), encoder=Json.to_message)
 ```
 
 `emit(event)` calls the record's `to_message()` and sends it to the `"events"` topic.
 Register that topic when adding the contract version, using
-`message_topics=("events",)`. Select another registered topic with `emit(event,
-topic="audit")`.
+`package.add_contract_version(Greeter(), message_topics=("events",))`. Select
+another registered topic with `emit(event, topic="audit")`.
+Record construction and encoding failures raise ordinary Python exceptions;
+host message-delivery errors raise `ApiError` subclasses. Both can be caught
+before they escape the entry point.
 
-`Json` produces `MessageString`; `JsonBytes` produces UTF-8 JSON in `MessageBytes`;
-`Bytesrepr` produces binary field data. Multiple encoder mixins require an explicit
-choice such as `emit(event, encoder=Json.to_message)`, or a record-defined
+For `Greeted("Ada")`, the default payload is `03 00 00 00 41 64 61` in hex:
+the four-byte little-endian string length followed by UTF-8 `Ada`. The JSON
+entry point instead sends the text `{"name":"Ada"}`. `Json.to_message` can
+encode a plain event when selected with `encoder=`. To make JSON the record's
+default, inherit `Json` as a mixin: `class Greeted(Event, Json)`.
+`JsonBytes` produces UTF-8 JSON in `MessageBytes`; an explicit `Bytesrepr`
+mixin also produces binary field data. Multiple encoder mixins require an
+explicit choice such as `emit(event, encoder=Json.to_message)`, or a record-defined
 `to_message()` default. Encoder failures are ordinary catchable Python exceptions.
 
 Contract mixins can declare `events = (Greeted,)`; `Contract.event_types()` collects
 their schemas. Native message delivery does not need an ambient contract object. CES
-storage has its own explicit backend, `casthon.ces`. The [CEP-18 guide](cep18.md) covers
-event composition, CES and message formats.
+storage has its own explicit backend, `casthon.ces`. `ces.emit` always encodes
+event fields as Bytesrepr and accepts plain `Event` subclasses. The
+[CEP-18 guide](cep18.md) covers event composition, CES and message formats.

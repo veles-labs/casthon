@@ -1,0 +1,30 @@
+# Casthon
+
+> Casthon is a developer-preview Python SDK and CLI for writing Casper smart contracts and building them into Casper-compatible WebAssembly.
+
+The CLI currently needs a Casthon source checkout for its compiler and SDK resources. The website guides are short learning paths; the linked repository Markdown files are the detailed references. Network deploy and call commands preview execution by default. Submission requires --broadcast.
+
+## Website guides
+
+- [Getting started](https://veles-labs.github.io/casthon/): Set up the toolchain, scaffold Flipper, write a contract, test, build, and deploy.
+- [Python API guide](https://veles-labs.github.io/casthon/python-api.html): Class contracts, persistent state, typed arguments, mixin walkthrough link, installation, errors, and Bytesrepr-default events with optional JSON.
+- [Testing guide](https://veles-labs.github.io/casthon/testing.html): Native Python tests, ContractHarness, compiled Wasm, local-network tests, and print debugging by build profile.
+- [Contract examples](https://veles-labs.github.io/casthon/examples.html): Flipper, Counter with Ownable and Pausable mixins, CEP-18 token, CEP-78 NFT, and procedural Basic examples.
+
+## Detailed Markdown references
+
+- [CLI and deployment](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/casthon.md): Requirements, commands, project configuration, build artifacts, and network behavior.
+- [Python API](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/python-api.md): Full class and procedural API, reusable mixins, ABI types, state, calls, errors, and events.
+- [Testing contracts](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/testing.md): MockHost, ContractHarness, rollback, Wasm tests, live devnets, and captured contract prints.
+- [CEP-18 guide](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/cep18.md): Fungible-token behavior, events, permissions, and upgrades.
+- [CEP-78 guide](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/cep78.md): NFT metadata, ownership, receipts, and upgrades.
+
+## Example source
+
+- [Flipper scaffold](https://raw.githubusercontent.com/veles-labs/casthon/main/templates/flipper/contracts/flipper.py): Smallest class contract with an installer.
+- [Counter](https://raw.githubusercontent.com/veles-labs/casthon/main/contracts/counter.py): Typed state with ownership and pause mixins.
+- [Ownable](https://raw.githubusercontent.com/veles-labs/casthon/main/contracts/ownable.py): URef-backed owner state, transfer entry point, and caller guard.
+- [Pausable](https://raw.githubusercontent.com/veles-labs/casthon/main/contracts/pausable.py): Owner-controlled pause state and selective pause guard.
+- [CEP-18 token](https://raw.githubusercontent.com/veles-labs/casthon/main/contracts/my_token.py): Inherited token contract and installer.
+- [CEP-78 NFT](https://raw.githubusercontent.com/veles-labs/casthon/main/contracts/my_nft.py): Inherited NFT collection and installer.
+- [Basic procedural contract](https://raw.githubusercontent.com/veles-labs/casthon/main/contracts/basic.py): Low-level runtime and storage calls.

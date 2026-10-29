@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f8f5" />
+    <meta name="description" content="Explore Casthon contracts: Flipper, Counter, CEP-18 token, CEP-78 NFT, and the procedural Basic example." />
+    <link rel="canonical" href="https://veles-labs.github.io/casthon/examples.html" />
+    <link rel="describedby" href="llms.txt" />
+    <link rel="icon" href="assets/casthon-logo.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="guides.css" />
+    <script src="assets/prism/core.min.js" defer></script>
+    <script src="assets/prism/python.min.js" defer></script>
+    <script src="assets/prism/bash.min.js" defer></script>
+    <script src="main.js" defer></script>
+    <title>Contract examples — Casthon</title>
+  </head>
+  <body class="guide-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="Casthon home"><img src="assets/casthon-logo.png" width="36" height="36" alt="" /><span>casthon<span class="brand-dot">.</span></span></a>
+        <nav class="desktop-nav" aria-label="Main navigation"><a href="index.html#tutorial">Get started</a><a href="python-api.html">Python API</a><a href="testing.html">Testing</a><a href="examples.html" aria-current="page">Examples</a></nav>
+        <a class="nav-github" href="https://github.com/veles-labs/casthon" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" aria-controls="mobile-nav" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden><a href="index.html#tutorial">Get started</a><a href="python-api.html">Python API</a><a href="testing.html">Testing</a><a href="examples.html" aria-current="page">Examples</a><a href="https://github.com/veles-labs/casthon">GitHub ↗</a></nav>
+    </header>
+
+    <main id="main">
+      <section class="guide-hero guide-hero-examples">
+        <div class="container guide-hero-grid">
+          <div>
+            <div class="guide-breadcrumb"><a href="index.html">Home</a><span>/</span> Examples</div>
+            <span class="eyebrow"><span class="eyebrow-spark">✳</span> GUIDE 03 / LEARN BY BUILDING</span>
+            <h1>Find a pattern.<br /><span>Make it yours.</span></h1>
+            <p>From a boolean toggle to tokens and NFT collections, each example shows a different part of the Casthon API. Start small, then borrow the pattern you need.</p>
+            <div class="guide-hero-actions"><a class="button button-primary" href="#choose">Pick an example <span aria-hidden="true">↓</span></a><a class="button button-text" href="https://github.com/veles-labs/casthon/tree/main/contracts">All source files ↗</a></div>
+          </div>
+          <div class="example-hero-list" aria-label="Example progression"><div><span>01</span><b>Flipper</b><em>one boolean, two methods</em></div><div><span>02</span><b>Counter</b><em>ownership + pause controls</em></div><div><span>03</span><b>CEP-18</b><em>fungible token</em></div><div><span>04</span><b>CEP-78</b><em>NFT collection</em></div></div>
+        </div>
+      </section>
+
+      <section class="example-picker" id="choose"><div class="container"><span class="kicker">CHOOSE A STARTING POINT</span><div class="example-picker-grid"><a href="#flipper"><span>01 / FIRST PROJECT</span><h2>Flipper</h2><p>Learn the class, installer, and test loop.</p><b>↗</b></a><a href="#counter"><span>02 / ACCESS CONTROL</span><h2>Counter</h2><p>Compose ownership, pause controls, and typed state.</p><b>↗</b></a><a href="#token"><span>03 / FUNGIBLE TOKEN</span><h2>CEP-18</h2><p>Start from the token scaffold and inherited ABI.</p><b>↗</b></a><a href="#nft"><span>04 / NFT COLLECTION</span><h2>CEP-78</h2><p>Explore metadata, ownership, and upgrades.</p><b>↗</b></a></div></div></section>
+
+      <div class="container guide-layout">
+        <aside class="guide-sidebar" aria-label="On this page"><p class="sidebar-title">EXAMPLES</p><nav><a href="#flipper"><span>01</span> Flipper</a><a href="#counter"><span>02</span> Counter</a><a href="#token"><span>03</span> CEP-18 token</a><a href="#nft"><span>04</span> CEP-78 NFT</a><a href="#basic"><span>05</span> Basic API</a></nav><div class="sidebar-help"><span aria-hidden="true">✳</span><p>Prefer a walkthrough?<br /><a href="index.html#tutorial">Start the tutorial ↗</a></p></div></aside>
+        <div class="guide-content">
+          <section class="guide-section" id="flipper" aria-labelledby="flipper-title">
+            <div class="guide-section-top"><span class="step-number">01</span><span class="step-label">FIRST CONTRACT</span></div>
+            <h2 id="flipper-title">Flipper: the smallest useful start.</h2>
+            <p>The default scaffold installs a boolean contract with <code>flip</code> and <code>get</code> entry points. It includes a native unit test and an opt-in local-network test.</p>
+            <div class="guide-tags"><span>class contract</span><span>named-key state</span><span>native tests</span></div>
+            <div class="code-window"><div class="code-title"><span>from the checkout's parent directory</span><button class="copy-button" type="button" aria-label="Copy Flipper starter commands">Copy ⧉</button></div><pre><code class="language-bash">casthon new my-flipper
+cd my-flipper
+uv sync
+casthon test -- -q</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>path and timing vary</small></figcaption><pre><code>Created .../my-flipper (flipper)
+..                           [100%]
+2 passed in 0.03s</code></pre></figure>
+            <p class="guide-source">Continue with the <a href="index.html#tutorial">full tutorial ↗</a> or read <a href="https://github.com/veles-labs/casthon/blob/main/templates/flipper/contracts/flipper.py">the contract source ↗</a>.</p>
+          </section>
+
+          <section class="guide-section" id="counter" aria-labelledby="counter-title">
+            <div class="guide-section-top"><span class="step-number">02</span><span class="step-label">STATE + ACCESS</span></div>
+            <h2 id="counter-title">Counter: compose behavior.</h2>
+            <p>Counter inherits <code>Pausable</code>, which itself inherits <code>Ownable</code>. It stores a U32 count and tracks increments by account in a typed dictionary. Read methods remain available while paused.</p>
+            <div class="guide-tags"><span>mixins</span><span>typed dictionary</span><span>owner and pause guards</span></div>
+            <p class="guide-body">The <a href="python-api.html#state">complete Counter class ↗</a> shows the pause guard on both increment methods and the unguarded read methods. The build exposes all inherited entry points:</p>
+            <div class="code-window guide-command"><div class="code-title"><span>from the Casthon source checkout</span><button class="copy-button" type="button" aria-label="Copy Counter build commands">Copy ⧉</button></div><pre><code class="language-bash">casthon build counter
+casthon inspect build/counter.wasm</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Inspect output <small>excerpt</small></figcaption><pre><code>Function exports: call, get_owner, transfer_ownership,
+pause, unpause, is_paused, increment, increment_by,
+get, get_increments
+Casper V1: compatible</code></pre></figure>
+            <h3 class="guide-subtitle" id="counter-mixins">What each mixin contributes.</h3>
+            <p class="guide-body"><code>Counter → Pausable → Ownable → Contract</code> is the inheritance chain. The concrete <code>Counter</code> class selects the Wasm exports; inherited <code>@entry_point</code> methods and stored fields become part of its contract. Both mixins are example modules in this repository, so copy or adapt them when building your own project.</p>
+            <div class="guide-two-up"><div class="guide-mini-card"><span>01 / OWNERSHIP</span><h3>Ownable</h3><p><code>owner</code> stores an account hash in a URef. On installation it defaults to <code>get_caller()</code>, unless the constructor receives an owner. <code>get_owner()</code> is public; <code>transfer_ownership(new_owner)</code> uses <code>@require_owner</code>. An unauthorized caller gets <code>NotOwner</code>, user error 100.</p></div><div class="guide-mini-card"><span>02 / PAUSE CONTROL</span><h3>Pausable</h3><p><code>paused</code> starts as <code>False</code>. Only the owner can call <code>pause()</code> or <code>unpause()</code>; anyone can call <code>is_paused()</code>. Put <code>@require_unpaused</code> below <code>@entry_point</code> on methods that should stop while paused. A blocked call gets <code>Paused</code>, user error 101.</p></div></div>
+            <div class="guide-callout"><strong>The guards are selective</strong><p><code>Counter.increment()</code> and <code>increment_by()</code> use the pause guard, so any caller can change the count while unpaused. The read methods have no pause guard. Ownership transfer changes who can pause and unpause; it does not change the paused state. A failed guard runs before the method body and leaves the count unchanged.</p></div>
+            <h3 class="guide-subtitle">Try the full access-control flow.</h3>
+            <p class="guide-body">Run this from the Casthon source checkout after installing its development environment. The session installs Counter with Alice as the default owner, tries an unauthorized pause, checks a paused write and read, then transfers ownership to Bob.</p>
+            <div class="code-window guide-command"><div class="code-title"><span>from the Casthon source checkout</span><button class="copy-button" type="button" aria-label="Copy Counter mixin walkthrough">Copy ⧉</button></div><pre><code class="language-bash">.venv/bin/python - &lt;&lt;'PY'
+from casthon import AccountHash, CLKey, CLU32
+from casthon.testing import ContractHarness, MockHost
+from contracts import counter
+from contracts.counter import Counter
+from contracts.ownable import NotOwner
+from contracts.pausable import Paused
+
+alice = AccountHash(bytes([1]) * 32)
+bob = AccountHash(bytes([2]) * 32)
+host = MockHost(caller=alice, strict_arguments=True)
+ContractHarness(counter, host=host).invoke("call", {"initial": CLU32(3)})
+contract_hash = host.accounts[alice]["py_counter"]
+contract = ContractHarness(Counter, host=host, contract=contract_hash)
+
+print("owner is Alice:", contract.invoke("get_owner").value == alice)
+try:
+    contract.invoke("pause", caller=bob)
+except NotOwner as error:
+    print("Bob cannot pause:", type(error).__name__)
+contract.invoke("pause", caller=alice)
+print("paused:", contract.invoke("is_paused").value)
+try:
+    contract.invoke("increment_by", {"amount": CLU32(4)}, caller=bob)
+except Paused as error:
+    print("increment blocked:", type(error).__name__)
+print("count while paused:", contract.invoke("get", caller=bob).value)
+contract.invoke("transfer_ownership", {"new_owner": CLKey(bob)}, caller=alice)
+print("owner is Bob:", contract.invoke("get_owner").value == bob)
+contract.invoke("unpause", caller=bob)
+contract.invoke("increment", caller=bob)
+print("count after unpause:", contract.invoke("get").value)
+PY</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output</figcaption><pre><code>owner is Alice: True
+Bob cannot pause: NotOwner
+paused: True
+increment blocked: Paused
+count while paused: 3
+owner is Bob: True
+count after unpause: 4</code></pre></figure>
+            <p class="guide-source">Read the <a href="python-api.html#state">full Counter class ↗</a> and the <a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md#reusable-contract-mixins">detailed mixin reference ↗</a>. Source: <a href="https://github.com/veles-labs/casthon/blob/main/contracts/ownable.py">Ownable ↗</a>, <a href="https://github.com/veles-labs/casthon/blob/main/contracts/pausable.py">Pausable ↗</a>, and <a href="https://github.com/veles-labs/casthon/blob/main/contracts/counter.py">Counter ↗</a>.</p>
+          </section>
+
+          <section class="guide-section" id="token" aria-labelledby="token-title">
+            <div class="guide-section-top"><span class="step-number">03</span><span class="step-label">FUNGIBLE TOKEN</span></div>
+            <h2 id="token-title">CEP-18: start with the token scaffold.</h2>
+            <p>The bundled template creates a CEP-18 project using the reusable base, events, errors, and an installer. The repository's <code>MyToken</code> example shows the inherited contract with defaults and an upgrade path.</p>
+            <div class="guide-tags"><span>allowances</span><span>transfers</span><span>events</span><span>upgrades</span></div>
+            <div class="code-window"><div class="code-title"><span>contracts/my_token.py · inherited contract excerpt</span><button class="copy-button" type="button" aria-label="Copy CEP-18 contract pattern">Copy ⧉</button></div><pre><code class="language-python">@export_contract
+class MyToken(Cep18):
+    def __init__(self, name: str = "My Token", symbol: str = "MYT",
+                 decimals: U8 = 18,
+                 total_supply: U256 = 1_000_000 * 10**18,
+                 *, events_mode: EventsMode = EventsMode.CES,
+                 enable_mint_burn: U8 = 1, **state: Any) -&gt; None:
+        super().__init__(name, symbol, decimals, total_supply,
+                         events_mode=events_mode,
+                         enable_mint_burn=enable_mint_burn, **state)</code></pre></div>
+            <p>Inheriting <code>Cep18</code> brings its entry points into the stored ABI. The installer creates the package and calls <code>init</code>; read the source before changing supply or mint permissions.</p>
+            <div class="code-window"><div class="code-title"><span>from a working directory</span><button class="copy-button" type="button" aria-label="Copy CEP-18 scaffold commands">Copy ⧉</button></div><pre><code class="language-bash">casthon new my-token --template cep18
+cd my-token
+uv sync
+casthon test -- -q</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Scaffold output <small>path varies</small></figcaption><pre><code>Created .../my-token (cep18)</code></pre></figure>
+            <div class="code-window guide-command"><div class="code-title"><span>from the Casthon source checkout</span><button class="copy-button" type="button" aria-label="Copy CEP-18 example build commands">Copy ⧉</button></div><pre><code class="language-bash">casthon build my_token
+casthon inspect build/my_token.wasm</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Inspect output <small>excerpt</small></figcaption><pre><code>Function exports: call, init, name, symbol, decimals,
+total_supply, balance_of, allowance, approve, transfer,
+transfer_from, mint, burn, change_security, ...
+Casper V1: compatible</code></pre></figure>
+            <div class="guide-callout"><strong>What to read next</strong><p>Follow the <a href="https://github.com/veles-labs/casthon/blob/main/docs/cep18.md">CEP-18 guide ↗</a> for installation, permissions, events, and upgrades. The full example is <a href="https://github.com/veles-labs/casthon/blob/main/contracts/my_token.py">my_token.py ↗</a>.</p></div>
+          </section>
+
+          <section class="guide-section" id="nft" aria-labelledby="nft-title">
+            <div class="guide-section-top"><span class="step-number">04</span><span class="step-label">NFT COLLECTION</span></div>
+            <h2 id="nft-title">CEP-78: a complete collection.</h2>
+            <p><code>MyNft</code> inherits the CEP-78 base and selects defaults for metadata, mutability, owner lookup, and events. Its installer also handles upgrades. Explore it from the source checkout.</p>
+            <div class="guide-tags"><span>metadata</span><span>ownership</span><span>approvals</span><span>receipts</span></div>
+            <div class="code-window"><div class="code-title"><span>contracts/my_nft.py · collection defaults excerpt</span><button class="copy-button" type="button" aria-label="Copy CEP-78 collection pattern">Copy ⧉</button></div><pre><code class="language-python">@export_contract
+class MyNft(Cep78):
+    def __init__(self, collection_name: str = "My NFT",
+                 collection_symbol: str = "MNFT",
+                 total_token_supply: U64 = 1000, *,
+                 nft_metadata_kind: NFTMetadataKind = NFTMetadataKind.NFT721,
+                 metadata_mutability: MetadataMutability = MetadataMutability.MUTABLE,
+                 owner_reverse_lookup_mode: OwnerReverseLookupMode = OwnerReverseLookupMode.COMPLETE,
+                 events_mode: EventsMode = EventsMode.CES,
+                 **state: Any) -&gt; None:
+        super().__init__(collection_name, collection_symbol,
+                         total_token_supply,
+                         nft_metadata_kind=nft_metadata_kind,
+                         metadata_mutability=metadata_mutability,
+                         owner_reverse_lookup_mode=owner_reverse_lookup_mode,
+                         events_mode=events_mode, **state)</code></pre></div>
+            <p>The subclass chooses collection policy; <code>Cep78</code> supplies minting, transfer, metadata, and lookup behavior. Its defaults are example choices, so check them before deploying a real collection.</p>
+            <div class="code-window"><div class="code-title"><span>from the Casthon source checkout</span><button class="copy-button" type="button" aria-label="Copy CEP-78 build commands">Copy ⧉</button></div><pre><code class="language-bash">casthon build my_nft
+casthon inspect build/my_nft.wasm</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Inspect output <small>excerpt</small></figcaption><pre><code>Function exports: call, init, set_variables, mint,
+burn, approve, transfer, balance_of, owner_of,
+metadata, ..., updated_receipts, migrate
+Casper V1: compatible</code></pre></figure>
+            <p class="guide-source">Read the <a href="https://github.com/veles-labs/casthon/blob/main/docs/cep78.md">CEP-78 guide ↗</a> with <a href="https://github.com/veles-labs/casthon/blob/main/contracts/my_nft.py">my_nft.py ↗</a>.</p>
+          </section>
+
+          <section class="guide-section" id="basic" aria-labelledby="basic-title">
+            <div class="guide-section-top"><span class="step-number">05</span><span class="step-label">LOW-LEVEL ROUTE</span></div>
+            <h2 id="basic-title">Basic: see the API underneath.</h2>
+            <p>Prefer procedural functions? <code>basic.py</code> calls <code>runtime</code> and <code>storage</code> directly, declares explicit entry-point metadata, and returns CLValues.</p>
+            <div class="code-window"><div class="code-title"><span>from the Casthon source checkout</span><button class="copy-button" type="button" aria-label="Copy Basic build commands">Copy ⧉</button></div><pre><code class="language-bash">casthon build basic
+casthon inspect build/basic.wasm</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Inspect output <small>excerpt</small></figcaption><pre><code>Function exports: increment, increment_by,
+add_fractional, get, set_mode, get_mode, ...
+Casper V1: compatible</code></pre></figure>
+            <p class="guide-source">Explore <a href="https://github.com/veles-labs/casthon/blob/main/contracts/basic.py">basic.py ↗</a> alongside the <a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md#low-level-api">low-level API reference ↗</a>.</p>
+          </section>
+        </div>
+      </div>
+
+      <section class="guide-next"><div class="container guide-next-inner"><div><span class="kicker">BACK TO BASICS</span><h2>Ready to build your own?</h2><p>Return to the five-step tutorial, then swap the Flipper contract for the pattern you need.</p></div><a class="button button-primary" href="index.html#tutorial">Start the tutorial <span aria-hidden="true">↗</span></a></div></section>
+    </main>
+    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="index.html"><img src="assets/casthon-logo.png" width="32" height="32" alt="" /><span>casthon<span class="brand-dot">.</span></span></a><p>Python smart contracts for Casper. Developer preview.</p><a href="llms.txt">llms.txt ↗</a></div></footer>
+  </body>
+</html>

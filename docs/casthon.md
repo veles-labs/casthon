@@ -139,6 +139,9 @@ and successful `Ret` completion signals have no failure traceback.
 outer-dispatch diagnostics. Expressions and string conversions passed to
 `print()` still run; only their output is discarded. Returns, reverts and
 `finally` keep the same behavior.
+The profile applies to compiled Wasm. Native `casthon test` runs CPython, where
+pytest captures `print()` output regardless of which Wasm profile you build;
+see the [print debugging example](testing.md#print-debugging-in-native-tests).
 
 For a target named `hello`, the main files are:
 
@@ -163,14 +166,48 @@ Python network API used by the live suites.
 ## Deploying to a network
 
 Casthon delegates wallet storage, network configuration, node-side speculative
-execution and signing to the [Veles Labs `casper-cli`](https://github.com/veles-labs/casper-cli).
-Install it and select or configure its networks and wallets before deploying:
+execution and signing to the [Veles Labs `casper-cli`](https://crates.io/crates/casper-cli).
+Install it from crates.io and select a network before deploying:
 
 ```sh
-cargo install --git https://github.com/veles-labs/casper-cli casper-cli --locked
-casper-cli network list
+cargo install casper-cli --locked
+casper-cli network use testnet
 casthon doctor
 ```
+
+Check that `casthon doctor` reports a compatible Veles `casper-cli` before
+continuing. Deployment requires its speculative execution, RPC-backed
+simulation, and stored-call commands.
+
+Create a signer and derive its first account. On first use, `casper-cli` may ask
+where to store wallet secrets. Save the printed recovery phrase privately.
+
+```sh
+casper-cli wallet create mywallet
+casper-cli wallet derive mywallet --start 0 --count 1
+casper-cli account balance mywallet:account-0
+```
+
+Typical output (paths and public account hashes vary; recovery words are
+redacted here):
+
+```text
+Active network: testnet
+Chain name: casper-test
+Passphrase: (none)
+Mnemonic: [private recovery words]
+Wallet saved to .../wallets/mywallet.json
+
+Name       Path                Account Hash
+account-0  m/44'/506'/0'/0/0  ...
+
+No account found on network testnet
+```
+
+The balance response is expected before funding. Obtain test CSPR using the
+[testnet funding guide](https://docs.casper.network/users/testnet-faucet),
+transfer it to the derived account, and run the balance command again. A funded
+account prints `Balance of mywallet:account-0 on testnet: ... CSPR`.
 
 Deployment builds canonical release Wasm and asks the selected network RPC to
 speculatively execute an install/upgrade transaction by default. Nothing is

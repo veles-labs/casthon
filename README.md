@@ -6,6 +6,9 @@
 
 **Python smart contracts for Casper.**
 
+Start with the [step-by-step tutorial](https://veles-labs.github.io/casthon/),
+then use the references below when you need more detail.
+
 Write a contract as a Python class, give its entrypoints type annotations, and
 build it into Casper-compatible WebAssembly. Casthon freezes your code with
 MicroPython; the `casthon` SDK handles arguments, storage, return values and host calls.
@@ -218,6 +221,7 @@ the ignored `.experiments/tooling-benchmarks/` directory. Use
 | [Repository and architecture](docs/architecture.md) | Code ownership, build stages and the remaining 0.1 work |
 | [Short pitch](docs/pitch.md) | A brief introduction and a small demo |
 | [Native port](native/README.md) | Interpreter lifecycle, unwinding and host completion |
+| [Website](website/README.md) | Tutorial and GitHub Pages deployment |
 
 ## Status
 

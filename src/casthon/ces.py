@@ -33,8 +33,8 @@ def emit(event: Event, *, events: tuple[type[Event], ...] | None = None,
     from .contract_api import runtime, storage
     if events is not None and type(event) not in events:
         raise TypeError("Event is not declared in the supplied CES registry")
-    if not isinstance(event, Bytesrepr):
-        raise TypeError("CES events require the Bytesrepr mixin")
+    if not isinstance(event, Event) or type(event) is Event:
+        raise TypeError("CES events require an Event record")
     message = Bytesrepr.to_message(event)
     if not isinstance(message, MessageBytes):
         raise TypeError("CES requires bytesrepr MessageBytes")

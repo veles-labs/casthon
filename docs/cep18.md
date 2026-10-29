@@ -1,5 +1,8 @@
 # CEP-18 class contract
 
+For a starting path through the bundled contracts, see the
+[website examples guide](../website/examples.html#token).
+
 [Cep18](../contracts/cep18.py) ports the Rust CEP-18 **2.0.0** contract at
 [`7fa83c5`](https://github.com/casper-ecosystem/cep18/tree/7fa83c559d04b3516e06b4d7202aba912c14c235).
 [MyToken](../contracts/my_token.py) inherits its state and all 16 entrypoints:
@@ -135,29 +138,35 @@ implementation. WireEnum discriminants must be distinct integers in 0–255.
 Application declarations may define a classmethod `_missing_` hook; other methods
 and decorators are outside the current frozen enum profile.
 
-Event records are top-level classes with annotated fields and explicit encoder
-mixins. The base `Event` owns record metadata and construction; encoders produce
-`MessageString` or `MessageBytes`. Delivery uses `emit` with the event instance:
+Event records are top-level classes with annotated fields. A plain `Event`
+subclass uses Bytesrepr field encoding and a `MessageBytes` carrier by default.
+Delivery uses `emit` with the event instance:
 
 ```python
-from casthon import Event, Bytesrepr, Json, Key, U256, emit
+from casthon import Event, Json, Key, U256, emit
 
-class Mint(Event, Bytesrepr):
+class Mint(Event):
     recipient: Key
     amount: U256
 
 emit(Mint(recipient, amount))
+emit(Mint(recipient, amount), encoder=Json.to_message)
 ```
 
-With one encoder, `to_message()` uses it automatically. `Bytesrepr` encodes just
-the ordered fields as `MessageBytes`; `Json` returns JSON in `MessageString`;
-`JsonBytes` returns UTF-8 JSON in `MessageBytes`. Binary messages can contain any
+The first call sends binary fields. The second explicitly sends JSON text;
+`Json.to_message` can encode a plain event. Inheriting `Json` makes JSON the
+record's default. With one explicit encoder, `to_message()` uses it
+automatically. `Bytesrepr` encodes just the ordered fields as `MessageBytes`;
+`Json` returns JSON in `MessageString`; `JsonBytes` returns UTF-8 JSON in
+`MessageBytes`. Binary messages can contain any
 format. Encoding does not imply a decoder or require `to_bytes` / `from_bytes`
 methods on the record.
 
 For multiple encoders, select one explicitly:
 
 ```python
+from casthon import Bytesrepr
+
 class Mint(Event, Bytesrepr, Json):
     recipient: Key
     amount: U256
@@ -206,8 +215,9 @@ ces.initialize(MyToken.event_types())
 ces.emit(record, events=MyToken.event_types())
 ```
 
-`ces.emit` requires `Bytesrepr`, adds the `event_<name>` envelope, and writes CES
-history. Its optional `events=` argument checks an explicit registry before any
+`ces.emit` accepts a plain `Event` subclass, encodes its fields as Bytesrepr,
+adds the `event_<name>` envelope, and writes CES history. Its optional
+`events=` argument checks an explicit registry before any
 write. `ces.initial_named_keys(events)` creates a dict of CES keys for an explicit
 installer without binding them into the account. Initialization is idempotent.
 `package.add_contract_version(contract)` registers the instance's state and ABI without

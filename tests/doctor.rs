@@ -111,7 +111,7 @@ fn healthy_doctor_is_grouped_and_shows_status_and_versions() {
 }
 
 #[test]
-fn wrong_casper_cli_is_reported_with_veles_installation_help() {
+fn wrong_casper_cli_is_reported_with_registry_installation_help() {
     let fixture = DoctorFixture::new();
     script(
         &fixture.binaries.path().join("casper-cli"),
@@ -123,7 +123,7 @@ fn wrong_casper_cli_is_reported_with_veles_installation_help() {
     assert!(text.contains("⚠️ Veles casper-cli"), "{text}");
     assert!(text.contains("incompatible casper-cli"), "{text}");
     assert!(
-        text.contains("cargo install --git https://github.com/veles-labs/casper-cli"),
+        text.contains("Install from crates.io: cargo install casper-cli --locked"),
         "{text}"
     );
     assert!(text.contains("github.com/veles-labs/casper-cli"), "{text}");

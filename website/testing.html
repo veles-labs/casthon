@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f8f5" />
+    <meta name="description" content="Test Casthon contracts with ordinary Python, ContractHarness, compiled Wasm, and a local Casper network." />
+    <link rel="canonical" href="https://veles-labs.github.io/casthon/testing.html" />
+    <link rel="describedby" href="llms.txt" />
+    <link rel="icon" href="assets/casthon-logo.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="guides.css" />
+    <script src="assets/prism/core.min.js" defer></script>
+    <script src="assets/prism/python.min.js" defer></script>
+    <script src="assets/prism/bash.min.js" defer></script>
+    <script src="main.js" defer></script>
+    <title>Testing guide — Casthon</title>
+  </head>
+  <body class="guide-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="Casthon home"><img src="assets/casthon-logo.png" width="36" height="36" alt="" /><span>casthon<span class="brand-dot">.</span></span></a>
+        <nav class="desktop-nav" aria-label="Main navigation"><a href="index.html#tutorial">Get started</a><a href="python-api.html">Python API</a><a href="testing.html" aria-current="page">Testing</a><a href="examples.html">Examples</a></nav>
+        <a class="nav-github" href="https://github.com/veles-labs/casthon" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" aria-controls="mobile-nav" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden><a href="index.html#tutorial">Get started</a><a href="python-api.html">Python API</a><a href="testing.html" aria-current="page">Testing</a><a href="examples.html">Examples</a><a href="https://github.com/veles-labs/casthon">GitHub ↗</a></nav>
+    </header>
+
+    <main id="main">
+      <section class="guide-hero guide-hero-testing">
+        <div class="container guide-hero-grid">
+          <div>
+            <div class="guide-breadcrumb"><a href="index.html">Home</a><span>/</span> Testing</div>
+            <span class="eyebrow"><span class="eyebrow-spark">✳</span> GUIDE 02 / CONFIDENCE</span>
+            <h1>Test like Python.<br /><span>Verify like Casper.</span></h1>
+            <p>Start with fast local feedback. Then check argument decoding and rollback at the contract boundary, compiled Wasm, and finally a local network.</p>
+            <div class="guide-hero-actions"><a class="button button-primary" href="#fast-loop">Choose a test <span aria-hidden="true">↓</span></a><a class="button button-text" href="https://github.com/veles-labs/casthon/blob/main/docs/testing.md">Full testing reference ↗</a></div>
+          </div>
+          <div class="guide-hero-demo">
+            <div class="demo-label">THE FAST LOOP <span>↗</span></div>
+            <div class="code-window"><div class="code-title"><span>my-flipper/</span><button class="copy-button" type="button" aria-label="Copy native test command">Copy ⧉</button></div><pre><code class="language-bash">casthon test -- -q</code></pre></div>
+            <div class="demo-arrow" aria-hidden="true">↓</div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Flipper test result</figcaption><pre><code>..                           [100%]
+2 passed in 0.03s</code></pre></figure>
+          </div>
+        </div>
+      </section>
+
+      <div class="container guide-layout">
+        <aside class="guide-sidebar" aria-label="On this page"><p class="sidebar-title">ON THIS PAGE</p><nav><a href="#fast-loop"><span>01</span> Pick the right layer</a><a href="#unit"><span>02</span> Ordinary Python</a><a href="#boundary"><span>03</span> Contract boundary</a><a href="#wasm"><span>04</span> Compiled Wasm</a><a href="#live"><span>05</span> Live network</a><a href="#prints"><span>06</span> Print debugging</a></nav><div class="sidebar-help"><span aria-hidden="true">✳</span><p>Need every detail?<br /><a href="https://github.com/veles-labs/casthon/blob/main/docs/testing.md">Read the full guide ↗</a></p></div></aside>
+        <div class="guide-content">
+          <section class="guide-section" id="fast-loop" aria-labelledby="fast-title">
+            <div class="guide-section-top"><span class="step-number">01</span><span class="step-label">PICK YOUR FEEDBACK</span></div>
+            <h2 id="fast-title">Use the smallest test that answers the question.</h2>
+            <p>The same contract source runs at four levels. Begin with native tests while editing; add boundary, Wasm, and network coverage for behavior that depends on those layers.</p>
+            <div class="test-ladder"><div><span>01</span><b>Direct Python</b><p>Logic and state, fastest feedback.</p></div><div><span>02</span><b>ContractHarness</b><p>Arguments, return encoding, and rollback.</p></div><div><span>03</span><b>Compiled Wasm</b><p>The frozen interpreter and host adapter.</p></div><div><span>04</span><b>Local devnet</b><p>Actual Casper execution and receipts.</p></div></div>
+            <div class="guide-callout"><strong>Where to run</strong><p>The Flipper scaffold contains native and opt-in live tests. The repository checkout also has the broader compiled Wasm suite under <code>tests/wasm/</code>.</p></div>
+          </section>
+
+          <section class="guide-section" id="unit" aria-labelledby="unit-title">
+            <div class="guide-section-top"><span class="step-number">02</span><span class="step-label">FAST PYTHON TESTS</span></div>
+            <h2 id="unit-title">Call the class directly.</h2>
+            <p><code>MockHost</code> provides isolated storage and caller context. <code>use_host</code> binds it for the test. Your contract methods are still ordinary Python calls.</p>
+            <div class="code-window"><div class="code-title"><span>tests/test_flipper.py · direct test</span><button class="copy-button" type="button" aria-label="Copy direct Python test">Copy ⧉</button></div><pre><code class="language-python">from casthon.testing import MockHost, use_host
+from contracts import flipper
+
+def test_flipper_is_ordinary_python():
+    with use_host(MockHost()):
+        contract = flipper.Flipper(value=False)
+        assert contract.get() is False
+        contract.flip()
+        assert contract.get() is True</code></pre></div>
+            <div class="code-window guide-command"><div class="code-title"><span>from my-flipper/</span><button class="copy-button" type="button" aria-label="Copy direct test command">Copy ⧉</button></div><pre><code class="language-bash">casthon test -- tests/test_flipper.py -q -k ordinary_python</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>time varies</small></figcaption><pre><code>.                            [100%]
+1 passed, 1 deselected in ...s</code></pre></figure>
+            <div class="guide-callout"><strong>Boundary to remember</strong><p>Direct method calls do not decode named arguments or create a transaction. Use <code>ContractHarness</code> for those checks.</p></div>
+          </section>
+
+          <section class="guide-section" id="boundary" aria-labelledby="boundary-title">
+            <div class="guide-section-top"><span class="step-number">03</span><span class="step-label">INVOKE THE ABI</span></div>
+            <h2 id="boundary-title">Test the contract boundary.</h2>
+            <p><code>ContractHarness</code> installs the contract, encodes arguments, invokes entry points, and rolls storage back when an invocation fails. The example below is the scaffold's second native test.</p>
+            <div class="code-window"><div class="code-title"><span>tests/test_flipper.py · boundary test</span><button class="copy-button" type="button" aria-label="Copy boundary test">Copy ⧉</button></div><pre><code class="language-python">from casthon import CLBool
+from casthon.testing import ContractHarness, MockHost
+from contracts import flipper
+
+def test_install_and_invoke_through_the_contract_boundary():
+    host = MockHost(strict_arguments=True)
+    installer = ContractHarness(flipper, host=host)
+    installer.invoke("call", {"initial": CLBool(True)})
+
+    contract_hash = host.accounts[host.caller]["flipper"]
+    contract = ContractHarness(flipper.Flipper, host=host, contract=contract_hash)
+    assert contract.invoke("get").value is True
+    contract.invoke("flip")
+    assert contract.invoke("get").value is False</code></pre></div>
+            <div class="code-window guide-command"><div class="code-title"><span>from my-flipper/</span><button class="copy-button" type="button" aria-label="Copy boundary test command">Copy ⧉</button></div><pre><code class="language-bash">casthon test -- tests/test_flipper.py -q -k contract_boundary</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>time varies</small></figcaption><pre><code>.                            [100%]
+1 passed, 1 deselected in ...s</code></pre></figure>
+            <p class="guide-source">Read more about <a href="https://github.com/veles-labs/casthon/blob/main/docs/testing.md#native-entrypoint-invocation">argument validation and rollback ↗</a>.</p>
+          </section>
+
+          <section class="guide-section" id="wasm" aria-labelledby="wasm-title">
+            <div class="guide-section-top"><span class="step-number">04</span><span class="step-label">RUN COMPILED CODE</span></div>
+            <h2 id="wasm-title">Exercise the actual Wasm.</h2>
+            <p>The repository's compiled suite runs frozen MicroPython and the C adapter in Wasmtime. Build the example artifacts first. This suite belongs to the Casthon source checkout, rather than the small Flipper scaffold.</p>
+            <div class="code-window"><div class="code-title"><span>from the casthon source checkout</span><button class="copy-button" type="button" aria-label="Copy Wasm test commands">Copy ⧉</button></div><pre><code class="language-bash">make build
+casthon test --wasm -- -q</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>suite count varies</small></figcaption><pre><code>... passed in ...s</code></pre></figure>
+            <div class="guide-callout"><strong>What it checks</strong><p>Wasm tests cover dispatch, host signatures, returns and reverts, metering, and the compiler's lowering. They do not replace an actual Casper-network test.</p></div>
+          </section>
+
+          <section class="guide-section" id="live" aria-labelledby="live-title">
+            <div class="guide-section-top"><span class="step-number">05</span><span class="step-label">VERIFY ON CASPER</span></div>
+            <h2 id="live-title">Opt in to a local devnet.</h2>
+            <p>The generated Flipper live test starts an isolated network, deploys the compiled contract, flips the value, queries it, and tears the network down. Install <code>casper-devnet</code> and the Veles Labs <code>casper-cli</code> first.</p>
+            <div class="code-window"><div class="code-title"><span>from my-flipper/</span><button class="copy-button" type="button" aria-label="Copy live test command">Copy ⧉</button></div><pre><code class="language-bash">casthon test --live -- -q</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>network startup time varies</small></figcaption><pre><code>tests/live/test_flipper.py .   [100%]
+1 passed in ...s</code></pre></figure>
+            <div class="guide-callout"><strong>Read the result</strong><p>An execution receipt proves admission and execution; query state or use a simulated getter to inspect a returned value. <a href="https://github.com/veles-labs/casthon/blob/main/docs/testing.md#live-network-tests">Full live-test notes ↗</a></p></div>
+          </section>
+
+          <section class="guide-section" id="prints" aria-labelledby="prints-title">
+            <div class="guide-section-top"><span class="step-number">06</span><span class="step-label">SEE YOUR DEBUG OUTPUT</span></div>
+            <h2 id="prints-title">Print while you test. Know which build can show it.</h2>
+            <p>The repository's <code>Hello.greet</code> prints <code>Greeting finished</code> in <code>finally</code>. This native test calls it three times: success, a caught empty-name error, and an uncaught long-name error. Each path reaches the print, even though the last invocation rolls back its state change.</p>
+            <div class="code-window guide-command"><div class="code-title"><span>from the Casthon source checkout</span><button class="copy-button" type="button" aria-label="Copy print capture test command">Copy ⧉</button></div><pre><code class="language-bash">casthon test -- tests/test_contract_packages.py -q -k hello_installer --capture=tee-sys</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>test count and time may vary</small></figcaption><pre><code>Greeting finished
+Greeting finished
+Greeting finished
+.                                                                        [100%]
+1 passed, 5 deselected in 0.02s</code></pre></figure>
+            <div class="guide-callout"><strong>How pytest shows prints</strong><p>Native <code>casthon test</code> runs CPython. Pytest captures stdout by default and shows captured output on failure. <code>--capture=tee-sys</code> both displays it during the run and keeps it in failure reports. Use <code>-s</code> to display output without pytest capture. The Wasm build profile does not change native test printing.</p></div>
+            <div class="guide-two-up"><div class="guide-mini-card"><span>DEFAULT / DEBUG WASM</span><h3>Debug build</h3><p><code>casthon build hello</code> writes <code>build/hello.wasm</code>. Contract <code>print()</code> calls the host's <code>casper_print</code>; an uncaught exception also prints a traceback after <code>finally</code>. The Wasm harness collects these lines, and a print-capable local devnet can forward them to live tests.</p></div><div class="guide-mini-card"><span>DEPLOY / RELEASE WASM</span><h3>Release build</h3><p><code>casthon build hello --release</code> writes <code>build/release/hello.wasm</code> without a <code>casper_print</code> import. <code>casthon deploy</code> uses release Wasm by default. Prints and dispatcher tracebacks are silent. Python still evaluates the arguments and string conversions passed to <code>print()</code>; returns, reverts, and <code>finally</code> behave the same.</p></div></div>
+            <h3 class="guide-subtitle">Verify both Wasm profiles.</h3>
+            <p class="guide-body">This focused test builds debug and release Wasm, invokes the same print-heavy contract in Wasmtime, and checks the captured host print buffer. Passing assertions keep the buffer out of pytest's terminal summary.</p>
+            <div class="code-window guide-command"><div class="code-title"><span>from the Casthon source checkout after make setup</span><button class="copy-button" type="button" aria-label="Copy Wasm print test command">Copy ⧉</button></div><pre><code class="language-bash">casthon test --wasm -- tests/wasm/test_wasm_print.py -q -k builtin_print_formatting</code></pre></div>
+            <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>counts and time may vary</small></figcaption><pre><code>..                                                               [100%]
+2 passed, 12 deselected, 8 subtests passed in 38.30s</code></pre></figure>
+            <p class="guide-source">For live prints, a compatible print-FD node and launcher are required. <code>LiveNetworkTest</code> uses debug Wasm by default, captures node lines, and attaches a bounded excerpt to failed test reports. See <a href="https://github.com/veles-labs/casthon/blob/main/docs/testing.md#captured-contract-prints">capture methods and limits ↗</a> and <a href="https://github.com/veles-labs/casthon/blob/main/docs/casthon.md#profiles-and-files">build profiles ↗</a>.</p>
+          </section>
+        </div>
+      </div>
+
+      <section class="guide-next"><div class="container guide-next-inner"><div><span class="kicker">NEXT GUIDE</span><h2>Pick a larger contract.</h2><p>Explore patterns for access control, fungible tokens, NFTs, and the low-level API.</p></div><a class="button button-primary" href="examples.html">Browse examples <span aria-hidden="true">↗</span></a></div></section>
+    </main>
+    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="index.html"><img src="assets/casthon-logo.png" width="32" height="32" alt="" /><span>casthon<span class="brand-dot">.</span></span></a><p>Python smart contracts for Casper. Developer preview.</p><a href="llms.txt">llms.txt ↗</a></div></footer>
+  </body>
+</html>

@@ -183,12 +183,17 @@ class Example(Second, First):
                     load_contract(path)
 
     def test_single_encoder_defaults_and_explicit_carrier_selection(self):
+        class Plain(Event):
+            value: U32
         class Binary(Event, Bytesrepr):
             value: U32
         class Text(Event, Json):
             value: U32
         class Utf8(Event, JsonBytes):
             value: U32
+        self.assertIsInstance(Plain(7).to_message(), MessageBytes)
+        self.assertEqual(Plain(7).to_message().value, encode(U32, 7))
+        self.assertEqual(Json.to_message(Plain(7)).value, '{"value":7}')
         self.assertIsInstance(Binary(7).to_message(), MessageBytes)
         self.assertEqual(Binary(7).to_message().value, encode(U32, 7))
         self.assertEqual(Text(7).to_message().value, '{"value":7}')
@@ -243,16 +248,25 @@ class Example(Second, First):
             ces.initialize(Ledger.event_types())
             self.assertEqual(dict(runtime.named_keys), first)
             self.assertEqual(runtime.named_keys['__events_length'].read(U32), 1)
-            with self.assertRaisesRegex(TypeError, 'Bytesrepr'):
-                ces.emit(LedgerChanged({}, None))
+            record = LedgerChanged({}, None)
+            ces.emit(record)
+            self.assertEqual(runtime.named_keys['__events_length'].read(U32), 2)
+            seed = runtime.named_keys['__events']
+            self.assertEqual(inspect_value(host.dictionaries[seed.address]['1'])[1],
+                             encode(str, 'event_LedgerChanged') + Bytesrepr.to_message(record).value)
 
     def test_emit_uses_event_defaults_on_the_default_topic(self):
+        class Plain(Event):
+            value: U32
         host = MockHost()
         with use_host(host):
             host.message_topics[host.caller] = {'events'}
+            emit(Plain(7))
+            emit(Plain(8), encoder=Json.to_message)
             emit(Credited(self.owner, 1))
             emit(LedgerChanged({}, None))
-        expected = [MessageBytes(encode(Key, self.owner) + encode(U256, 1)),
+        expected = [MessageBytes(encode(U32, 7)), MessageString('{"value":8}'),
+                    MessageBytes(encode(Key, self.owner) + encode(U256, 1)),
                     MessageString('{"amounts":{},"memo":null}')]
         self.assertEqual([message[2] for message in host.messages], [message.to_bytes() for message in expected])
 
@@ -336,6 +350,8 @@ class Custom(MessageEncoder):
         return MessageString('custom')
 class Binary(Event, Bytesrepr):
     value: U32
+class Plain(Event):
+    value: U32
 class Text(Event, Json):
     value: U32
 class Utf8(Event, JsonBytes):
@@ -351,10 +367,11 @@ class CustomEvent(Event, Custom):
 def call() -> None: pass
 @export_contract
 class Example(Contract):
-    events = (Binary, Text, Utf8, Multiple, Default, CustomEvent)
+    events = (Binary, Plain, Text, Utf8, Multiple, Default, CustomEvent)
 '''
         with class_pair(source) as (author, frozen, exports):
             for module in (author, frozen):
+                self.assertEqual(module.Plain(7).to_message().value, encode(U32, 7))
                 self.assertEqual(module.Binary(7).to_message().value, encode(U32, 7))
                 self.assertEqual(module.Text(7).to_message().value, '{"value":7}')
                 self.assertEqual(module.Utf8(7).to_message().value, b'{"value":7}')

@@ -29,11 +29,13 @@ class EventWasmTests(WasmTestCase):
                 values = {'count': 7, 'empty': None}
                 self.assertEqual(host.invoke('add', {'amount': (7).to_bytes(4, 'little')}), cl_value(Map[str, U32 | None], values))
                 self.assertEqual(unwrap(host.dictionaries[seed]['1'])[4:], b'\x0b\0\0\0event_Added' + Added(owner, values).to_message().value)
+                host.invoke('plain_ces', {'amount': (9).to_bytes(4, 'little')})
+                self.assertEqual(unwrap(host.dictionaries[seed]['2'])[4:], b'\x0b\0\0\0event_Plain' + (9).to_bytes(4, 'little'))
                 self.assertEqual(host.invoke('caught'), envelope('U32', 7))
                 self.assertEqual(host.invoke('undeclared'), envelope('Bool', True))
                 self.assert_reverts(host, 'fail', {}, 3)
                 self.assertEqual(host.invoke('caught'), envelope('U32', 7))
-                self.assertEqual(len(host.dictionaries[seed]), 2)
+                self.assertEqual(len(host.dictionaries[seed]), 3)
 
     def test_native_message_carriers_defaults_and_ambiguity(self):
         for suffix in ('.wasm', '.metered.wasm'):
@@ -41,12 +43,14 @@ class EventWasmTests(WasmTestCase):
                 host = Harness(self.wasm.with_name('event_contract' + suffix))
                 host.invoke('call')
                 host.invoke('messages', {'value': (7).to_bytes(4, 'little')})
-                expected = [MessageString('{"value":7}'), MessageBytes((7).to_bytes(4, 'little')),
+                expected = [MessageBytes((7).to_bytes(4, 'little')),
+                            MessageString('{"value":7}'),
+                            MessageString('{"value":7}'), MessageBytes((7).to_bytes(4, 'little')),
                             MessageString('{"value":7}'), MessageBytes(b'{"value":7}'),
                             MessageString('{"value":7}'), MessageString('custom'),
                             MessageString('{"value":7}')]
                 self.assertEqual([message for topic, message in host.messages], [message.to_bytes() for message in expected])
-                self.assertEqual([topic for topic, message in host.messages], ['events'] * 6 + ['audit'])
+                self.assertEqual([topic for topic, message in host.messages], ['events'] * 8 + ['audit'])
                 self.assertEqual(host.invoke('ambiguous'), envelope('Bool', True))
                 self.assertEqual(host.invoke('invalid_encoder'), envelope('Bool', True))
                 self.assertEqual(len(host.messages), len(expected))

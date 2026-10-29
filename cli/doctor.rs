@@ -368,9 +368,7 @@ pub fn run(project: &Project, casper_cli: &Path) -> Result<i32> {
         }
         Err(error) => {
             row(false, true, "Veles casper-cli", &format!("{error:#}"));
-            hint(
-                "Install: cargo install --git https://github.com/veles-labs/casper-cli casper-cli --locked",
-            );
+            hint("Install from crates.io: cargo install casper-cli --locked");
             hint("Setup: https://github.com/veles-labs/casper-cli");
             false
         }

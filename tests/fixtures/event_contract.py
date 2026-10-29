@@ -19,6 +19,10 @@ class Text(Event, Json):
     value: U32
 
 
+class Plain(Event):
+    value: U32
+
+
 class Both(Event, Bytesrepr, Json):
     value: U32
 
@@ -46,7 +50,7 @@ class Root(Contract):
 
 
 class Audit(Root):
-    events = (Added,)
+    events = (Added, Plain)
 
 
 class Permissions(Root):
@@ -67,6 +71,10 @@ class Events(Audit, Permissions):
         return values
 
     @entry_point
+    def plain_ces(self, amount: U32) -> None:
+        ces.emit(Plain(amount))
+
+    @entry_point
     def caught(self) -> U32:
         try:
             ces.emit(Added(runtime.get_caller(), {'bad': -1}))
@@ -84,6 +92,8 @@ class Events(Audit, Permissions):
 
     @entry_point
     def messages(self, value: U32) -> None:
+        emit(Plain(value))
+        emit(Plain(value), encoder=Json.to_message)
         emit(Text(value))
         emit(Both(value), encoder=Bytesrepr.to_message)
         emit(Both(value), encoder=Json.to_message)

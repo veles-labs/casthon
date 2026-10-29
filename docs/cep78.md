@@ -1,5 +1,8 @@
 # CEP-78 class contract
 
+For a starting path through the bundled contracts, see the
+[website examples guide](../website/examples.html#nft).
+
 [Cep78](../contracts/cep78.py) ports the collection behavior of the Rust CEP-78
 **2.0.0** reference at
 [`9a624aa`](https://github.com/casper-ecosystem/cep-78-enhanced-nft/tree/9a624aa9a4f5cba59260f93652b76948e528c7f2).

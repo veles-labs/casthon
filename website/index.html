@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f8f5" />
+    <meta name="description" content="Learn to write, test, build, and deploy Python smart contracts for Casper with Casthon." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Casthon — Python smart contracts for Casper" />
+    <meta property="og:description" content="A practical, step-by-step path from your first Python contract to Casper testnet." />
+    <meta property="og:image" content="https://veles-labs.github.io/casthon/assets/casthon-logo.png" />
+    <link rel="canonical" href="https://veles-labs.github.io/casthon/" />
+    <link rel="describedby" href="llms.txt" />
+    <link rel="icon" href="assets/casthon-logo.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="assets/prism/core.min.js" defer></script>
+    <script src="assets/prism/python.min.js" defer></script>
+    <script src="assets/prism/bash.min.js" defer></script>
+    <script src="main.js" defer></script>
+    <title>Casthon — Write smart contracts in Python</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="#top" aria-label="Casthon, back to top">
+          <img src="assets/casthon-logo.png" width="36" height="36" alt="" />
+          <span>casthon<span class="brand-dot">.</span></span>
+        </a>
+        <nav class="desktop-nav" aria-label="Main navigation">
+          <a href="#tutorial">Get started</a>
+          <a href="python-api.html">Python API</a>
+          <a href="testing.html">Testing</a>
+          <a href="examples.html">Examples</a>
+        </nav>
+        <a class="nav-github" href="https://github.com/veles-labs/casthon" target="_blank" rel="noopener noreferrer">
+          GitHub <span aria-hidden="true">↗</span>
+        </a>
+        <button class="menu-toggle" type="button" aria-controls="mobile-nav" aria-expanded="false" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden>
+        <a href="#tutorial">Get started</a>
+        <a href="python-api.html">Python API</a>
+        <a href="testing.html">Testing</a>
+        <a href="examples.html">Examples</a>
+        <a href="https://github.com/veles-labs/casthon">GitHub ↗</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <div class="eyebrow"><span class="eyebrow-spark">✳</span> THE DEVELOPER PREVIEW</div>
+            <h1 id="hero-title">Python in.<br /><span>Casper out.</span></h1>
+            <p class="hero-lede">Write a smart contract as a Python class. Test it like Python. Build it into Casper-compatible WebAssembly, then deploy with a deliberate final command.</p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#tutorial">Start the tutorial <span aria-hidden="true">↗</span></a>
+              <a class="button button-text" href="https://github.com/veles-labs/casthon/tree/main/contracts" target="_blank" rel="noopener noreferrer">Explore examples <span aria-hidden="true">↗</span></a>
+            </div>
+            <div class="hero-footnote"><span class="status-dot"></span> Follow along from a source checkout · Python 3.11+</div>
+          </div>
+          <div class="hero-art" aria-label="A quick look at the Casthon workflow">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+            <div class="mascot-badge"><img src="assets/casthon-logo.png" alt="Casthon ghost mascot" width="160" height="160" /></div>
+            <div class="hero-terminal">
+              <div class="terminal-top"><span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span><span>your first contract</span><span>⌘</span></div>
+              <div class="terminal-body">
+                <div><span class="prompt">$</span> casthon new my-flipper</div>
+                <div><span class="prompt">$</span> cd my-flipper &amp;&amp; uv sync</div>
+                <div><span class="prompt">$</span> casthon test</div>
+                <div class="terminal-output">✓ your Python contract is ready</div>
+              </div>
+            </div>
+            <div class="float-note"><span aria-hidden="true">✦</span> A familiar language.<br />A new place to build.</div>
+          </div>
+        </div>
+        <div class="hero-bottom container"><span>SCROLL TO BUILD</span><span aria-hidden="true">↓</span></div>
+      </section>
+
+      <section class="tutorial" id="tutorial" aria-labelledby="tutorial-title">
+        <div class="container">
+          <div class="tutorial-heading">
+            <div><span class="kicker">01 / THE TUTORIAL</span><h2 id="tutorial-title">Build your first contract.</h2></div>
+            <p>Follow these five steps in order. The bundled Flipper project gives you a real contract, tests, and a path to testnet.</p>
+          </div>
+          <div class="tutorial-layout">
+            <aside class="tutorial-sidebar" aria-label="Tutorial steps">
+              <p class="sidebar-title">YOUR ROUTE</p>
+              <nav>
+                <a href="#step-setup"><span>01</span> Set up</a>
+                <a href="#step-scaffold"><span>02</span> Start a project</a>
+                <a href="#step-write"><span>03</span> Write the contract</a>
+                <a href="#step-build"><span>04</span> Test &amp; build</a>
+                <a href="#step-deploy"><span>05</span> Deploy &amp; call</a>
+              </nav>
+              <div class="sidebar-help"><span aria-hidden="true">✳</span><p>Need the details?<br /><a href="https://github.com/veles-labs/casthon/blob/main/docs/casthon.md">Read the CLI guide ↗</a></p></div>
+            </aside>
+
+            <div class="steps">
+              <article class="step-card" id="step-setup" aria-labelledby="setup-title">
+                <div class="step-top"><span class="step-number">01</span><span class="step-label">PREPARE YOUR MACHINE</span></div>
+                <h3 id="setup-title">Set up the toolchain.</h3>
+                <p>The current developer preview builds from a source checkout. Install Python 3.11+, <code>uv</code>, Rust/Cargo, Node, Make, a C compiler, Emscripten, and Binaryen first. Then set up Casthon and let <code>doctor</code> check your environment.</p>
+                <div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy setup commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">git clone https://github.com/veles-labs/casthon.git
+cd casthon
+make setup
+make cli
+cargo install --path . --locked
+casthon doctor</code></pre></div>
+                <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>versions vary</small></figcaption><pre><code>Casthon 0.1.0 — environment check
+Build dependencies
+  ✅ MicroPython runtime      1.29.0 (pinned)
+  ✅ Python                   3.14.2
+  ✅ Emscripten (emcc)        6.0.10-git
+  ✅ Binaryen (wasm-opt)      wasm-opt version 109
+✅ Build environment is ready.</code></pre></figure>
+                <div class="step-note"><span aria-hidden="true">↳</span><p>Keep this checkout available: the preview CLI loads its compiler and SDK resources from it. <a href="https://github.com/veles-labs/casthon/blob/main/docs/casthon.md#requirements">See all requirements ↗</a></p></div>
+              </article>
+
+              <article class="step-card" id="step-scaffold" aria-labelledby="scaffold-title">
+                <div class="step-top"><span class="step-number">02</span><span class="step-label">CREATE A PROJECT</span></div>
+                <h3 id="scaffold-title">Start with Flipper.</h3>
+                <p>From the checkout's parent directory, generate a small contract that stores a boolean, plus native and optional live-network tests. The project pins its compatible SDK version.</p>
+                <div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy project commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">cd ..
+casthon new my-flipper
+cd my-flipper
+uv sync</code></pre></div>
+                <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>path varies</small></figcaption><pre><code>Created .../my-flipper (flipper)</code></pre></figure>
+                <div class="file-pill"><span aria-hidden="true">▦</span> Your code starts in <code>contracts/flipper.py</code></div>
+              </article>
+
+              <article class="step-card step-card-code" id="step-write" aria-labelledby="write-title">
+                <div class="step-top"><span class="step-number">03</span><span class="step-label">MAKE IT YOURS</span></div>
+                <h3 id="write-title">Write a contract as a class.</h3>
+                <p>Here is the scaffolded contract. <code>@entry_point</code> marks callable methods, and <code>named_keys.property()</code> persists the value. The exported <code>call</code> function installs it.</p>
+                <div class="code-window"><div class="code-title"><span>contracts/flipper.py</span><button class="copy-button" type="button" aria-label="Copy Flipper contract">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-python">from casthon import ContractHash, ContractPackageHash, InvalidArgument, URef, export
+from casthon.contract_api import storage
+from casthon.contract_api.runtime import named_keys
+from casthon.contracts import Contract, entry_point, export_contract
+
+
+@export_contract
+class Flipper(Contract):
+    value: bool = named_keys.property()
+
+    @entry_point
+    def flip(self) -&gt; None:
+        self.value = not self.value
+
+    @entry_point
+    def get(self) -&gt; bool:
+        return self.value
+
+
+installed = named_keys.reference("flipper", ContractHash)
+installed_package = named_keys.reference("flipper_package", ContractPackageHash)
+installed_access = named_keys.reference("flipper_access", URef[None])
+
+
+@export
+def call(initial: bool = False) -&gt; None:
+    if installed.name in named_keys:
+        raise InvalidArgument()
+    package, access = storage.create_contract_package_at_hash()
+    contract, _ = package.add_contract_version(Flipper(value=initial))
+    installed.set(contract)
+    installed_package.set(package)
+    installed_access.set(access)</code></pre></div>
+                <div class="step-note"><span aria-hidden="true">↳</span><p>Edit <code>flip</code> or add an entry point, then update the generated tests. <a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md">Explore the Python API ↗</a></p></div>
+              </article>
+
+              <article class="step-card" id="step-build" aria-labelledby="build-title">
+                <div class="step-top"><span class="step-number">04</span><span class="step-label">CHECK YOUR WORK</span></div>
+                <h3 id="build-title">Test, type-check, build.</h3>
+                <p>Run the scaffolded Python tests, check contract types, then compile. The build writes <code>build/flipper.wasm</code>; inspection shows its exports and imports.</p>
+                <div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy test and build commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">casthon test
+casthon check contracts
+casthon build
+casthon inspect build/flipper.wasm</code></pre></div>
+                <figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>excerpt; paths and test counts vary</small></figcaption><pre><code>tests/test_flipper.py ..                           [100%]
+Success: no issues found in 1 source file
+Built .../build/flipper.wasm</code></pre></figure>
+                <div class="artifact-row"><span class="artifact-badge">WASM</span><span>build/flipper.wasm</span><span class="artifact-row-arrow" aria-hidden="true">↗</span></div>
+              </article>
+
+              <article class="step-card step-card-deploy" id="step-deploy" aria-labelledby="deploy-title">
+                <div class="step-top"><span class="step-number">05</span><span class="step-label">GO TO TESTNET</span></div>
+                <h3 id="deploy-title">Preview. Then deploy.</h3>
+                <p>Casthon uses the Veles Labs <code>casper-cli</code> for networks, wallets, signing, and deployment. Set up a testnet signer and fund it with testnet CSPR before submitting.</p>
+                <div class="wallet-prep"><span class="mini-kicker">PREPARE A TESTNET SIGNER</span><div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy wallet setup commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">cargo install casper-cli --locked
+casthon doctor
+casper-cli network use testnet
+casper-cli wallet create mywallet
+casper-cli wallet derive mywallet --start 0 --count 1
+casper-cli account balance mywallet:account-0</code></pre></div>
+                  <div class="output-pair wallet-output"><figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Network and wallet <small>example; paths vary</small></figcaption><pre><code>Active network: testnet
+Chain name: casper-test
+Passphrase: (none)
+Mnemonic: [private recovery words]
+Wallet saved to .../wallets/mywallet.json</code></pre></figure><figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Derived signer <small>hash redacted</small></figcaption><pre><code>Name       Path                Account Hash
+account-0  m/44'/506'/0'/0/0  …
+
+No account found on network testnet</code></pre></figure></div>
+                  <p>Check that <code>casthon doctor</code> reports a compatible Veles <code>casper-cli</code>. Save the recovery phrase privately. The balance check may say “No account found” until the derived account is funded. Obtain test CSPR through <a href="https://docs.casper.network/users/testnet-faucet" target="_blank" rel="noopener noreferrer">Casper’s testnet funding guide ↗</a>, transfer it to this account, then rerun the balance command.</p>
+                  <figure class="output-example wallet-funded-output"><figcaption><span class="output-mark" aria-hidden="true">↳</span> After funding <small>amount varies</small></figcaption><pre><code>Balance of mywallet:account-0 on testnet: … CSPR</code></pre></figure>
+                </div>
+                <div class="broadcast-intro"><span class="mini-kicker">PREVIEW, THEN SEND</span><p>The first command speculatively executes without submitting. <code>--broadcast</code> sends the transaction and waits for execution.</p></div>
+                <div class="code-window"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy deploy commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash"># Preview the install
+casthon deploy --network testnet --from mywallet:account-0 \
+  --arg initial:Bool=false
+
+# Submit when the preview looks right
+casthon deploy --network testnet --from mywallet:account-0 \
+  --arg initial:Bool=false --broadcast</code></pre></div>
+                <div class="output-pair"><figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Preview output</figcaption><pre><code>Execution succeeded.
+Gas consumed: … CSPR</code></pre></figure><figure class="output-example"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Broadcast output</figcaption><pre><code>Executed in block …
+Transaction: …
+Recorded …/deployments/testnet/flipper.json</code></pre></figure></div>
+                <div class="deploy-after"><div><span class="mini-kicker">AFTER DEPLOYMENT</span><h4>Talk to your contract.</h4><p>Casthon records the executed deployment and its ABI, so the contract name is enough for a later call.</p></div><div class="code-window code-window-small"><div class="code-title"><span>terminal</span><button class="copy-button" type="button" aria-label="Copy contract call commands">Copy <span aria-hidden="true">⧉</span></button></div><pre><code class="language-bash">casthon call flipper get --simulate -q
+casthon call flipper flip --broadcast</code></pre></div></div>
+                <figure class="output-example call-output"><figcaption><span class="output-mark" aria-hidden="true">↳</span> Example output <small>getter, then broadcast call</small></figcaption><pre><code>false
+Executed in block …</code></pre></figure>
+                <div class="step-note step-note-light"><span aria-hidden="true">↳</span><p>Replace <code>mywallet:account-0</code> with your configured signer. Broadcast calls submit transactions too. <a href="https://github.com/veles-labs/casthon/blob/main/docs/casthon.md#deploying-to-a-network">Read the deployment guide ↗</a></p></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="pipeline" id="how-it-works" aria-labelledby="pipeline-title">
+        <div class="container">
+          <div class="section-intro">
+            <span class="kicker">02 / THE IDEA</span>
+            <h2 id="pipeline-title">One clear path from source to chain.</h2>
+            <p>Casthon connects the Python workflow you know to the Casper runtime. Your contract stays readable all the way through the build.</p>
+          </div>
+          <div class="pipeline-grid" role="list">
+            <div class="pipeline-item" role="listitem"><span class="pipeline-icon">{ }</span><span class="pipeline-number">01</span><h3>Write Python</h3><p>Classes, typed entry points, and persistent state.</p></div>
+            <div class="pipeline-arrow" aria-hidden="true">→</div>
+            <div class="pipeline-item" role="listitem"><span class="pipeline-icon">✓</span><span class="pipeline-number">02</span><h3>Test locally</h3><p>Use the generated tests and the same source file.</p></div>
+            <div class="pipeline-arrow" aria-hidden="true">→</div>
+            <div class="pipeline-item" role="listitem"><span class="pipeline-icon">▣</span><span class="pipeline-number">03</span><h3>Build Wasm</h3><p>Freeze Python with MicroPython for Casper.</p></div>
+            <div class="pipeline-arrow" aria-hidden="true">→</div>
+            <div class="pipeline-item" role="listitem"><span class="pipeline-icon">↗</span><span class="pipeline-number">04</span><h3>Deploy</h3><p>Preview execution, then broadcast when ready.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="next-steps" id="next-steps" aria-labelledby="next-title">
+        <div class="container next-grid">
+          <div class="next-copy"><span class="kicker">03 / KEEP EXPLORING</span><h2 id="next-title">Your first contract is just the beginning.</h2><p>Follow the next guides here, then open the full source references when you need every detail.</p><a class="button button-primary" href="python-api.html">Continue with the API <span aria-hidden="true">↗</span></a></div>
+          <div class="resource-grid">
+            <a class="resource-card" href="python-api.html"><span>01 / REFERENCE</span><h3>Python API</h3><p>Contracts, storage, typed arguments, events, and calls.</p><b aria-hidden="true">↗</b></a>
+            <a class="resource-card" href="testing.html"><span>02 / PRACTICE</span><h3>Testing guide</h3><p>Mock state, invocation boundaries, Wasm, and live networks.</p><b aria-hidden="true">↗</b></a>
+            <a class="resource-card" href="examples.html"><span>03 / EXAMPLES</span><h3>More contracts</h3><p>Flipper, Counter, token, NFT, and procedural examples.</p><b aria-hidden="true">↗</b></a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#top"><img src="assets/casthon-logo.png" width="32" height="32" alt="" /><span>casthon<span class="brand-dot">.</span></span></a><p>Python smart contracts for Casper. Developer preview.</p><a href="llms.txt">llms.txt ↗</a></div></footer>
+  </body>
+</html>
