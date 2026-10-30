@@ -41,7 +41,7 @@ class ConstantHashTests(unittest.TestCase):
                       if isinstance(item, types.CodeType) and item.co_name == "inline")
         self.assertIn(EXPECTED, inline.co_consts)
         instructions = list(dis.get_instructions(inline))
-        self.assertTrue(any(item.opname == "LOAD_CONST" and item.argval == EXPECTED for item in instructions))
+        self.assertTrue(any(item.opname in ("LOAD_CONST", "RETURN_CONST") and item.argval == EXPECTED for item in instructions))
         self.assertFalse(any("CALL" in item.opname for item in instructions))
         self.assertNotIn("const_blake2b", compiled.co_names)
         self.assertNotIn("hashlib", compiled.co_names)
