@@ -7,14 +7,14 @@ Install the CLI with `cargo install casthon --locked`; its compiler resources ar
 ## Website guides
 
 - [Getting started](https://veles-labs.github.io/casthon/): Set up the toolchain, scaffold Flipper, write a contract, test, build, and deploy.
-- [Python API guide](https://veles-labs.github.io/casthon/python-api.html): Class contracts, persistent state, typed arguments, mixin walkthrough link, installation, errors, and Bytesrepr-default events with optional JSON.
+- [Python API guide](https://veles-labs.github.io/casthon/python-api.html): Class contracts, persistent state, typed arguments, mixin walkthrough link, compile-time BLAKE2b constants, installation, errors, and Bytesrepr-default events with optional JSON.
 - [Testing guide](https://veles-labs.github.io/casthon/testing.html): Native Python tests, ContractHarness, compiled Wasm, local-network tests, and print debugging by build profile.
 - [Contract examples](https://veles-labs.github.io/casthon/examples.html): Flipper, Counter with Ownable and Pausable mixins, CEP-18 token, CEP-78 NFT, and procedural Basic examples.
 
 ## Detailed Markdown references
 
 - [CLI and deployment](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/casthon.md): Requirements, commands, project configuration, build artifacts, and network behavior.
-- [Python API](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/python-api.md): Full class and procedural API, reusable mixins, ABI types, state, calls, errors, and events.
+- [Python API](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/python-api.md): Full class and procedural API, reusable mixins, ABI types, compile-time BLAKE2b constants, state, calls, errors, and events.
 - [Testing contracts](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/testing.md): MockHost, ContractHarness, rollback, Wasm tests, live devnets, and captured contract prints.
 - [CEP-18 guide](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/cep18.md): Fungible-token behavior, events, permissions, and upgrades.
 - [CEP-78 guide](https://raw.githubusercontent.com/veles-labs/casthon/main/docs/cep78.md): NFT metadata, ownership, receipts, and upgrades.

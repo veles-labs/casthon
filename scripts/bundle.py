@@ -172,6 +172,9 @@ class Lower(ast.NodeTransformer):
         return node
 
     def visit_FunctionDef(self, node):
+        if self.sdk and node.name == "const_blake2b" and self.path.name == "__init__.py":
+            # Native authoring helper only; application calls have become literals.
+            return None
         if self.sdk and node.name == "__class_getitem__":
             # Contract subscriptions become .of(); MicroPython needs no generic hooks.
             return None
@@ -458,7 +461,11 @@ def lower(path, sdk=False, project_root=None):
     tree = ast.parse(path.read_text())
     if not sdk:
         check_profile(tree)
-    tree = Lower(sdk, None if sdk else SourceGraph(project_root), path).visit(tree)
+    graph = None if sdk else SourceGraph(project_root)
+    if not sdk:
+        from constant_hashes import FoldConstantHashes
+        tree = FoldConstantHashes(graph, path).visit(tree)
+    tree = Lower(sdk, graph, path).visit(tree)
     return ast.unparse(ast.fix_missing_locations(tree)) + "\n"
 
 

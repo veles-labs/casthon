@@ -8,7 +8,7 @@ root = Path(__file__).resolve().parent.parent
 subprocess.run([sys.executable, "-m", "mypy"], cwd=root, check=True)
 flow = root / ".cache/revert_types.py"
 flow.write_text("""from typing import Mapping, NoReturn, Optional, assert_type
-from casthon import Key, URef, U32, U256, AccountHash, ContractHash, ContractPackageHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, SerializedCLValue, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
+from casthon import const_blake2b, Key, URef, U32, U256, AccountHash, ContractHash, ContractPackageHash, Dictionary, Ret, Revert, ApiError, UserError, CLU32, SerializedCLValue, OptionalArg, MISSING, export, Event, Bytesrepr, Json, JsonBytes, MessageEncoder, MessageString, MessageBytes, emit
 from casthon.contract_api import runtime
 from casthon.contracts import Contract
 from casthon.testing import DevnetNetwork, TestAccount, SimulationResult
@@ -16,6 +16,7 @@ from contracts import counter
 from contracts.my_token import MyToken
 from contracts.cep18_events import EventsMode, Mint, ChangeSecurity
 from contracts import typed_exports
+assert_type(const_blake2b("MINTER_ROLE"), bytes)
 class Properties(Contract):
     value: U32 = runtime.named_keys.property()
     target: ContractHash = runtime.named_keys.property()

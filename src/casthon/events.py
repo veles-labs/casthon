@@ -133,7 +133,7 @@ def _record(value: object) -> Event:
 class Bytesrepr(MessageEncoder):
     """Encode fields in declaration order, without an event envelope."""
 
-    def to_message(self) -> MessageString | MessageBytes:
+    def to_message(self: object) -> MessageString | MessageBytes:
         record = _record(self)
         data = b""
         for name, annotation in event_schema(type(record)).fields:

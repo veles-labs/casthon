@@ -71,6 +71,12 @@ back its storage write too.
 exports. The top-level `call` creates the package and stores the deployed hashes
 explicitly. [The Python API guide](docs/python-api.md) explains the boundaries.
 
+For a fixed role identifier, use `from casthon import const_blake2b` and
+`MINTER_ROLE = const_blake2b("MINTER_ROLE")`. The compiler emits literal bytes;
+native tests compute the same BLAKE2b-256 digest without a Casper host. See
+[compile-time hashes](docs/python-api.md#compile-time-hashes) for restrictions and
+bytecode verification.
+
 ## Try it
 
 Install the CLI with Cargo, then use a generated project. You need Python 3.11+,

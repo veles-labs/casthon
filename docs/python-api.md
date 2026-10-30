@@ -8,6 +8,7 @@ commands live in the [CLI guide](casthon.md); contract tests have their own
 For a shorter path with copyable examples, see the
 [website Python API guide](../website/python-api.html).
 
+- [Compile-time hashes](#compile-time-hashes)
 - [Classes and state](#class-contracts)
 - [Reusable contract mixins](#reusable-contract-mixins)
 - [Typed arguments](#typed-arguments)
@@ -17,6 +18,48 @@ For a shorter path with copyable examples, see the
 - [Low-level API](#low-level-api)
 - [Typed state references](#typed-state-references)
 - [Events](#events)
+
+## Compile-time hashes
+
+`const_blake2b` produces a 32-byte BLAKE2b-256 digest for a literal `str` or
+`bytes` argument. Text is encoded as UTF-8. Use it for fixed role IDs or other
+known identifiers:
+
+```python
+from casthon import const_blake2b
+
+MINTER_ROLE = const_blake2b("MINTER_ROLE")
+assert MINTER_ROLE == const_blake2b(b"MINTER_ROLE")
+```
+
+In ordinary Python the helper uses `hashlib` and needs no Casper host. In a
+contract build, Casthon replaces each call with a bytes literal **before**
+MicroPython bytecode compilation. The digest is stored in the `.mpy` constant
+object table; an inline call becomes `LOAD_CONST_OBJ`, without a hash call or
+host invocation. The native helper and its imports are removed from frozen code.
+This precomputes the hash; it does not make a Python global immutable or inline
+all later reads of that global.
+
+Only one positional string/bytes literal is accepted. Dynamic values, function
+calls, keyword arguments, and escaping the helper as a function value fail at
+build time. Import it at module scope; import aliases and qualified calls such
+as `casthon.const_blake2b("MINTER_ROLE")` are supported, while shadowing the
+intrinsic import is rejected. It is a Casthon intrinsic, not a general Python
+compile-time evaluator and not a `micropython.const` import.
+
+For data known only during execution, use
+`casthon.contract_api.runtime.blake2b(data)` instead.
+
+From the Casthon checkout, verify the lowered CPython bytecode and the compiled
+MicroPython bytecode/Wasm behavior with:
+
+```sh
+casthon test -- tests/test_const_blake2b.py -q
+casthon test --wasm -- tests/wasm/test_wasm_constants.py -q
+```
+
+The compiled test inspects the `.mpy` object table and instructions, then runs
+both Wasm variants with the hash host function configured to fail if called.
 
 ## Python functions and Wasm exports
 

@@ -114,3 +114,18 @@ from .events import (
     Event as Event, MessageEncoder as MessageEncoder, Bytesrepr as Bytesrepr,
     Json as Json, JsonBytes as JsonBytes, emit as emit,
 )
+
+
+def const_blake2b(value: str | bytes, /) -> bytes:
+    """BLAKE2b-256 of UTF-8 text or bytes; literal calls fold during compilation.
+
+    This native implementation needs no Casper host. The contract compiler
+    replaces calls with bytes literals and removes this helper from frozen code.
+    """
+    from hashlib import blake2b
+
+    if isinstance(value, str):
+        value = value.encode("utf-8")
+    if type(value) is not bytes:
+        raise TypeError("const_blake2b expects str or bytes")
+    return blake2b(value, digest_size=32).digest()

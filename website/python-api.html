@@ -57,7 +57,7 @@ def get(self) -&gt; bool:
       <div class="container guide-layout">
         <aside class="guide-sidebar" aria-label="On this page">
           <p class="sidebar-title">ON THIS PAGE</p>
-          <nav><a href="#classes"><span>01</span> Class contracts</a><a href="#state"><span>02</span> Persistent state</a><a href="#types"><span>03</span> Types &amp; returns</a><a href="#install"><span>04</span> Install &amp; call</a><a href="#errors"><span>05</span> Errors &amp; events</a></nav>
+          <nav><a href="#classes"><span>01</span> Class contracts</a><a href="#state"><span>02</span> Persistent state</a><a href="#types"><span>03</span> Types &amp; returns</a><a href="#install"><span>04</span> Install &amp; call</a><a href="#errors"><span>05</span> Errors &amp; events</a><a href="#constants"><span>06</span> Compile-time hashes</a></nav>
           <div class="sidebar-help"><span aria-hidden="true">✳</span><p>Need every detail?<br /><a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md">Read the full API ↗</a></p></div>
         </aside>
         <div class="guide-content">
@@ -236,6 +236,16 @@ def call() -&gt; None:
     named_keys["greeter_access"] = access</code></pre></div>
             <div class="guide-facts"><div><b>Default: Bytesrepr</b><span><code>greet("Ada")</code> sends example payload <code>03 00 00 00 41 64 61</code>: a four-byte string length, then UTF-8 text.</span></div><div><b>Optional: JSON</b><span><code>greet_json("Ada")</code> sends example message string <code>{"name":"Ada"}</code>.</span></div></div>
             <div class="guide-callout"><strong>Other formats and failures</strong><p>Inherit <code>Json</code> to make JSON the default for a record, or use <code>JsonBytes</code> for UTF-8 JSON bytes. A malformed record or encoder failure raises an ordinary catchable Python exception. Delivery uses the host API, so a host error arrives as <code>ApiError</code>. For a different topic, register it and call <code>emit(event, topic="audit")</code>. CES also accepts plain event records and encodes their fields as Bytesrepr. The <a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md#events">full events reference ↗</a> covers encoder selection and CES.</p></div>
+          </section>
+          <section class="guide-section" id="constants" aria-labelledby="constants-title">
+            <div class="guide-section-top"><span class="step-number">06</span><span class="step-label">HASH A KNOWN IDENTIFIER</span></div>
+            <h2 id="constants-title">Compute the hash before the contract runs.</h2>
+            <p><code>const_blake2b</code> produces a 32-byte BLAKE2b-256 digest. It accepts a literal string (encoded as UTF-8) or bytes. Casthon replaces the call with literal bytes before compiling MicroPython bytecode.</p>
+            <div class="code-window"><div class="code-title"><span>Fixed role identifier</span><button class="copy-button" type="button" aria-label="Copy compile-time hash example">Copy ⧉</button></div><pre><code class="language-python">from casthon import const_blake2b
+
+MINTER_ROLE = const_blake2b("MINTER_ROLE")</code></pre></div>
+            <div class="guide-facts"><div><b>Native tests</b><span>Python computes the same digest with hashlib, without a Casper host.</span></div><div><b>Compiled contract</b><span>The digest is a bytes object in the MicroPython constant table. An inline call becomes LOAD_CONST_OBJ.</span></div></div>
+            <div class="guide-callout"><strong>Literal arguments only</strong><p>Import at module scope. One positional string or bytes literal is required; dynamic inputs, function-valued references, and shadowed imports fail at build time. This precomputes the digest but does not make globals immutable. For runtime input, use <code>runtime.blake2b(data)</code>. See the <a href="https://github.com/veles-labs/casthon/blob/main/docs/python-api.md#compile-time-hashes">full reference and bytecode checks ↗</a>.</p></div>
           </section>
         </div>
       </div>
